@@ -23,22 +23,50 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate Brazilian phone format
+    const cleanNumber = phoneNumber.replace(/\D/g, "");
+    if (!cleanNumber.startsWith("55") || cleanNumber.length !== 13) {
+      return NextResponse.json(
+        { error: "Número de telefone inválido. Use o formato: +55 (11) 99999-9999" },
+        { status: 400 }
+      );
+    }
+
     // Generate 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Send SMS via Twilio
-    try {
-      await twilioClient.messages.create({
-        body: `Seu código de verificação é: ${code}`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phoneNumber,
-      });
-    } catch (twilioError: any) {
-      console.error("Twilio error:", twilioError);
-      return NextResponse.json(
-        { error: "Failed to send SMS. Please check the phone number." },
-        { status: 500 }
-      );
+    // Check if Twilio is configured
+    const twilioConfigured = !!(
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_PHONE_NUMBER
+    );
+
+    if (twilioConfigured) {
+      // Send SMS via Twilio
+      try {
+        await twilioClient.messages.create({
+          body: `Seu código de verificação Libertage é: ${code}`,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: phoneNumber,
+        });
+      } catch (twilioError: any) {
+        console.error("Twilio error:", twilioError);
+        return NextResponse.json(
+          { error: "Falha ao enviar SMS. Verifique o número de telefone." },
+          { status: 500 }
+        );
+      }
+    } else {
+      // Development mode: Log code to console
+      console.log("=".repeat(50));
+      console.log("📱 CÓDIGO DE VERIFICAÇÃO (DEV MODE)");
+      console.log("=".repeat(50));
+      console.log(`Telefone: ${phoneNumber}`);
+      console.log(`Código: ${code}`);
+      console.log("=".repeat(50));
+      console.log("⚠️  Configure Twilio para enviar SMS em produção");
+      console.log("=".repeat(50));
     }
 
     // Store code in a temporary storage (Redis recommended, or database)
@@ -51,11 +79,15 @@ export async function POST(request: Request) {
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
     };
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      devMode: !twilioConfigured,
+      ...(process.env.NODE_ENV === "development" && !twilioConfigured ? { code } : {})
+    });
   } catch (error) {
     console.error("Error sending verification:", error);
     return NextResponse.json(
-      { error: "Failed to send verification code" },
+      { error: "Falha ao enviar código de verificação" },
       { status: 500 }
     );
   }

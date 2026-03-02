@@ -47,6 +47,11 @@ export default function OnboardingPage() {
     try {
       // Remove formatting and add +55
       const cleanNumber = phoneNumber.replace(/\D/g, "");
+      
+      if (cleanNumber.length !== 11) {
+        throw new Error("Digite um número válido com DDD (11 dígitos)");
+      }
+      
       const fullNumber = `+55${cleanNumber}`;
       
       const res = await fetch("/api/onboarding/send-verification", {
@@ -55,9 +60,15 @@ export default function OnboardingPage() {
         body: JSON.stringify({ phoneNumber: fullNumber }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Failed to send code");
+      }
+
+      // In dev mode, show the code
+      if (data.devMode && data.code) {
+        alert(`MODO DEV: Seu código é ${data.code}`);
       }
 
       setStep("verify");
@@ -149,16 +160,15 @@ export default function OnboardingPage() {
               <form onSubmit={handleSendCode} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <Label htmlFor="phone">Número de telefone</Label>
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                     <span style={{
                       position: "absolute",
                       left: "0.75rem",
-                      top: "50%",
-                      transform: "translateY(-50%)",
                       color: "hsl(var(--muted-foreground))",
                       fontSize: "0.875rem",
-                      fontWeight: "500",
-                      pointerEvents: "none"
+                      fontWeight: "600",
+                      pointerEvents: "none",
+                      zIndex: 1
                     }}>
                       +55
                     </span>
@@ -170,7 +180,7 @@ export default function OnboardingPage() {
                       value={phoneNumber}
                       onChange={handlePhoneChange}
                       placeholder="(11) 99999-9999"
-                      style={{ paddingLeft: "3rem" }}
+                      style={{ paddingLeft: "3.5rem" }}
                     />
                   </div>
                   <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))" }}>
