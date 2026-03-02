@@ -45,11 +45,16 @@ export async function POST(request: Request) {
 
     if (!existingUser) {
       console.log("📝 Creating user in users table...");
+      
+      // Generate a default name from email
+      const defaultName = authUser.email?.split('@')[0] || 'User';
+      
       const { error: createError } = await serviceSupabase
         .from("users")
         .insert({
           id: authUser.id,
           email: authUser.email,
+          name: defaultName,
           terms_accepted_at: new Date().toISOString(),
           onboarding_completed: true,
         });
