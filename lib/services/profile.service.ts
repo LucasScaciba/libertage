@@ -82,11 +82,21 @@ export class ProfileService {
 
     // Check slug cooldown if slug is being changed
     if (data.slug) {
-      const canChange = await this.canChangeSlug(profileId);
-      if (!canChange) {
-        throw new Error("Slug can only be changed once every 90 days");
+      // Get current profile to check if slug actually changed
+      const { data: currentProfile } = await supabase
+        .from("profiles")
+        .select("slug")
+        .eq("id", profileId)
+        .single();
+
+      // Only check cooldown if slug is actually different
+      if (currentProfile && currentProfile.slug !== data.slug) {
+        const canChange = await this.canChangeSlug(profileId);
+        if (!canChange) {
+          throw new Error("Slug can only be changed once every 90 days");
+        }
+        updateData.slug_last_changed_at = new Date().toISOString();
       }
-      updateData.slug_last_changed_at = new Date().toISOString();
     }
 
     const { data: profile, error } = await supabase
