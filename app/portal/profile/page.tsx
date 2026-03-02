@@ -493,10 +493,7 @@ export default function ProfileEditPage() {
           formData.long_description
         );
       case "location":
-        return !!(
-          formData.cep &&
-          formData.street_number
-        );
+        return true; // Optional - CEP and street number are not required
       case "pricing":
       case "links":
       case "media":
@@ -510,8 +507,7 @@ export default function ProfileEditPage() {
 
   const isFormValid = (): boolean => {
     return validateSection("basic") && 
-           validateSection("description") && 
-           validateSection("location");
+           validateSection("description");
   };
 
   const goToNextSection = () => {
@@ -817,10 +813,9 @@ export default function ProfileEditPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                   <div>
-                    <Label htmlFor="cep">CEP *</Label>
+                    <Label htmlFor="cep">CEP</Label>
                     <Input
                       id="cep"
-                      required
                       value={formData.cep}
                       onChange={(e) => handleCepChange(e.target.value)}
                       placeholder="00000-000"
@@ -840,10 +835,9 @@ export default function ProfileEditPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="street_number">Número *</Label>
+                    <Label htmlFor="street_number">Número</Label>
                     <Input
                       id="street_number"
-                      required
                       value={formData.street_number}
                       onChange={(e) => setFormData({ ...formData, street_number: e.target.value })}
                       placeholder="123"
