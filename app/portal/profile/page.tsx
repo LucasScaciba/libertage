@@ -31,9 +31,6 @@ export default function ProfileEditPage() {
     latitude: 0,
     longitude: 0,
     age_attribute: "",
-    weight: 60,
-    height: 165,
-    shoe_size: 37,
     pricing_packages: [] as any[],
     external_links: [] as any[],
     selected_features: [] as string[],
@@ -94,9 +91,6 @@ export default function ProfileEditPage() {
           latitude: data.profile.latitude || 0,
           longitude: data.profile.longitude || 0,
           age_attribute: data.profile.age_attribute || "",
-          weight: data.profile.weight || 60,
-          height: data.profile.height || 165,
-          shoe_size: data.profile.shoe_size || 37,
           pricing_packages: data.profile.pricing_packages || [],
           external_links: data.profile.external_links || [],
           selected_features: data.profile.selected_features || [],
@@ -612,81 +606,6 @@ export default function ProfileEditPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                </div>
-
-                {/* Physical Measurements */}
-                <div style={{ 
-                  padding: "1.5rem", 
-                  backgroundColor: "hsl(var(--muted))", 
-                  borderRadius: "var(--radius)",
-                  marginTop: "1rem"
-                }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1.5rem" }}>
-                    Medidas Físicas
-                  </h3>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
-                    {/* Weight */}
-                    <div>
-                      <Label htmlFor="weight">Peso: {formData.weight} kg</Label>
-                      <input
-                        id="weight"
-                        type="range"
-                        min="40"
-                        max="150"
-                        value={formData.weight}
-                        onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) })}
-                        style={{ 
-                          width: "100%", 
-                          marginTop: "0.5rem",
-                          accentColor: "hsl(var(--primary))"
-                        }}
-                      />
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        <span>40kg</span>
-                        <span>150kg</span>
-                      </div>
-                    </div>
-
-                    {/* Height */}
-                    <div>
-                      <Label htmlFor="height">Altura: {formData.height} cm</Label>
-                      <input
-                        id="height"
-                        type="range"
-                        min="140"
-                        max="200"
-                        value={formData.height}
-                        onChange={(e) => setFormData({ ...formData, height: parseInt(e.target.value) })}
-                        style={{ 
-                          width: "100%", 
-                          marginTop: "0.5rem",
-                          accentColor: "hsl(var(--primary))"
-                        }}
-                      />
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        <span>1.40m</span>
-                        <span>2.00m</span>
-                      </div>
-                    </div>
-
-                    {/* Shoe Size */}
-                    <div>
-                      <Label htmlFor="shoe_size">Tamanho do Pé</Label>
-                      <Input
-                        id="shoe_size"
-                        type="number"
-                        min="33"
-                        max="44"
-                        value={formData.shoe_size}
-                        onChange={(e) => setFormData({ ...formData, shoe_size: parseInt(e.target.value) || 33 })}
-                        placeholder="37"
-                      />
-                      <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        Tamanho entre 33 e 44
-                      </p>
-                    </div>
                   </div>
                 </div>
               </CardContent>
