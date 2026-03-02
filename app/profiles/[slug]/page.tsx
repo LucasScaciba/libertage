@@ -49,7 +49,7 @@ export default function PublicProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`/api/profiles/${slug}`);
+      const res = await fetch(`/api/profiles/by-slug/${slug}`);
       
       if (!res.ok) {
         if (res.status === 404) {
