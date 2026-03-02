@@ -291,8 +291,8 @@ export default function ProfileEditPage() {
       
       const method = profile ? "PATCH" : "POST";
 
-      // Remove availability from the data being sent (it's stored in a separate table)
-      const { availability, ...profileData } = formData;
+      // Remove fields that don't exist in DB or are stored in separate tables
+      const { availability, cep, street_number, ...profileData } = formData;
 
       const res = await fetch(url, {
         method,
