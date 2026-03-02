@@ -10,80 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 
-// Mock data for development
-const MOCK_PROFILES = [
-  {
-    id: "1",
-    slug: "maria-silva-fotografia",
-    display_name: "Maria Silva",
-    short_description: "Fotógrafa profissional especializada em eventos corporativos e casamentos. Mais de 10 anos de experiência capturando momentos únicos.",
-    category: "Fotografia",
-    city: "São Paulo",
-    region: "SP",
-    media: [
-      {
-        public_url: "https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&h=300&fit=crop"
-      }
-    ]
-  },
-  {
-    id: "2",
-    slug: "joao-santos-design",
-    display_name: "João Santos",
-    short_description: "Designer gráfico e UI/UX com foco em identidade visual e experiência do usuário. Projetos para startups e empresas consolidadas.",
-    category: "Design",
-    city: "Rio de Janeiro",
-    region: "RJ",
-    media: [
-      {
-        public_url: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop"
-      }
-    ]
-  },
-  {
-    id: "3",
-    slug: "ana-costa-consultoria",
-    display_name: "Ana Costa",
-    short_description: "Consultora de marketing digital com especialização em estratégias de crescimento e gestão de redes sociais para pequenas e médias empresas.",
-    category: "Marketing",
-    city: "Belo Horizonte",
-    region: "MG",
-    media: [
-      {
-        public_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop"
-      }
-    ]
-  },
-  {
-    id: "4",
-    slug: "carlos-oliveira-dev",
-    display_name: "Carlos Oliveira",
-    short_description: "Desenvolvedor full-stack especializado em React, Node.js e cloud computing. Criação de aplicações web escaláveis e performáticas.",
-    category: "Tecnologia",
-    city: "Curitiba",
-    region: "PR",
-    media: [
-      {
-        public_url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=300&fit=crop"
-      }
-    ]
-  },
-  {
-    id: "5",
-    slug: "patricia-lima-arquitetura",
-    display_name: "Patrícia Lima",
-    short_description: "Arquiteta com expertise em projetos residenciais e comerciais. Foco em sustentabilidade e design contemporâneo que valoriza cada espaço.",
-    category: "Arquitetura",
-    city: "Porto Alegre",
-    region: "RS",
-    media: [
-      {
-        public_url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=300&fit=crop"
-      }
-    ]
-  }
-];
-
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
   const [regularProfiles, setRegularProfiles] = useState<any[]>([]);
@@ -143,30 +69,47 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Use mock data instead of API call
-    setTimeout(() => {
-      setBoostedProfiles([MOCK_PROFILES[0], MOCK_PROFILES[1]]); // First 2 as boosted
-      setRegularProfiles(MOCK_PROFILES.slice(2)); // Rest as regular
-      setAvailableFilters({
-        categories: ["Fotografia", "Design", "Marketing", "Tecnologia", "Arquitetura"],
-        cities: ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Porto Alegre"],
-        regions: ["SP", "RJ", "MG", "PR", "RS"],
-      });
-      setLoading(false);
-    }, 500);
+    loadProfiles();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const loadProfiles = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/catalog");
+      if (res.ok) {
+        const data = await res.json();
+        setBoostedProfiles(data.boostedProfiles || []);
+        setRegularProfiles(data.regularProfiles || []);
+        setAvailableFilters(data.filters || { categories: [], cities: [], regions: [] });
+      }
+    } catch (error) {
+      console.error("Error loading profiles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock search - filter profiles based on search term
-    const searchTerm = filters.search.toLowerCase();
-    const filtered = MOCK_PROFILES.filter(profile => 
-      profile.display_name.toLowerCase().includes(searchTerm) ||
-      profile.short_description.toLowerCase().includes(searchTerm) ||
-      profile.category.toLowerCase().includes(searchTerm)
-    );
-    setBoostedProfiles(filtered.slice(0, 2));
-    setRegularProfiles(filtered.slice(2));
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filters.search) params.append("search", filters.search);
+      if (filters.category) params.append("category", filters.category);
+      if (filters.city) params.append("city", filters.city);
+      if (filters.region) params.append("region", filters.region);
+
+      const res = await fetch(`/api/catalog?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBoostedProfiles(data.boostedProfiles || []);
+        setRegularProfiles(data.regularProfiles || []);
+      }
+    } catch (error) {
+      console.error("Error searching profiles:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const ProfileCard = ({ profile, isBoosted = false }: any) => (
@@ -794,17 +737,28 @@ export default function Home() {
               </Button>
               <Button
                 style={{ backgroundColor: "black", color: "white" }}
-                onClick={() => {
+                onClick={async () => {
                   setIsAdvancedFiltersOpen(false);
-                  // Apply filters without form submission
-                  const searchTerm = filters.search.toLowerCase();
-                  const filtered = MOCK_PROFILES.filter(profile => 
-                    profile.display_name.toLowerCase().includes(searchTerm) ||
-                    profile.short_description.toLowerCase().includes(searchTerm) ||
-                    profile.category.toLowerCase().includes(searchTerm)
-                  );
-                  setBoostedProfiles(filtered.slice(0, 2));
-                  setRegularProfiles(filtered.slice(2));
+                  // Apply filters via API
+                  try {
+                    setLoading(true);
+                    const params = new URLSearchParams();
+                    if (filters.search) params.append("search", filters.search);
+                    if (filters.category) params.append("category", filters.category);
+                    if (filters.city) params.append("city", filters.city);
+                    if (filters.region) params.append("region", filters.region);
+
+                    const res = await fetch(`/api/catalog?${params.toString()}`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      setBoostedProfiles(data.boostedProfiles || []);
+                      setRegularProfiles(data.regularProfiles || []);
+                    }
+                  } catch (error) {
+                    console.error("Error applying filters:", error);
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
               >
                 FILTRAR
