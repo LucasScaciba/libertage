@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import featuresServicesConfig from "@/lib/config/features-services.json";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -33,7 +32,6 @@ export default function ProfileEditPage() {
     age_attribute: "",
     pricing_packages: [] as any[],
     external_links: [] as any[],
-    selected_features: [] as string[],
     availability: [
       { day: "Segunda-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
       { day: "Terça-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
@@ -61,12 +59,6 @@ export default function ProfileEditPage() {
   // Generate age options (18-60)
   const ageOptions = Array.from({ length: 43 }, (_, i) => i + 18);
 
-  // Load features and services from config
-  const featuresAndServices = featuresServicesConfig.categories.reduce((acc, category) => {
-    acc[category.name] = category.options;
-    return acc;
-  }, {} as Record<string, string[]>);
-
   useEffect(() => {
     fetchProfile();
     fetchSubscription();
@@ -93,7 +85,6 @@ export default function ProfileEditPage() {
           age_attribute: data.profile.age_attribute || "",
           pricing_packages: data.profile.pricing_packages || [],
           external_links: data.profile.external_links || [],
-          selected_features: data.profile.selected_features || [],
           availability: data.profile.availability || [
             { day: "Segunda-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
             { day: "Terça-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
@@ -364,29 +355,6 @@ export default function ProfileEditPage() {
     setFormData({ ...formData, external_links: updated });
   };
 
-  const toggleFeature = (feature: string) => {
-    const isSelected = formData.selected_features.includes(feature);
-    const updated = isSelected
-      ? formData.selected_features.filter(f => f !== feature)
-      : [...formData.selected_features, feature];
-    setFormData({ ...formData, selected_features: updated });
-  };
-
-  const toggleFeatureSingleSelect = (categoryId: string, feature: string) => {
-    // Remove all features from this category first
-    const categoryConfig = featuresServicesConfig.categories.find(c => c.id === categoryId);
-    if (!categoryConfig) return;
-
-    const categoryOptions = categoryConfig.options;
-    const withoutCategory = formData.selected_features.filter(f => !categoryOptions.includes(f));
-    
-    // Add the new selection (or leave empty if deselecting)
-    const isCurrentlySelected = formData.selected_features.includes(feature);
-    const updated = isCurrentlySelected ? withoutCategory : [...withoutCategory, feature];
-    
-    setFormData({ ...formData, selected_features: updated });
-  };
-
   const updateAvailability = (index: number, field: string, value: any) => {
     const updated = [...formData.availability];
     updated[index] = { ...updated[index], [field]: value };
@@ -399,7 +367,6 @@ export default function ProfileEditPage() {
     { id: "pricing", label: "Valores" },
     { id: "links", label: "Links Externos" },
     { id: "media", label: "Fotos e Vídeos" },
-    { id: "features", label: "Características e Serviços" },
     { id: "availability", label: "Horários" },
   ];
 
@@ -1054,134 +1021,6 @@ export default function ProfileEditPage() {
                   >
                     Ver Planos
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Features */}
-          {activeSection === "features" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Características e Serviços</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                {featuresServicesConfig.categories.map((category) => (
-                  <div key={category.id}>
-                    <div style={{ marginBottom: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600" }}>
-                        {category.name}
-                      </h3>
-                      {!category.multiSelect && (
-                        <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                          Selecione apenas uma opção
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
-                      {category.options.map((option) => {
-                        const isSelected = formData.selected_features.includes(option);
-                        return (
-                          <label
-                            key={option}
-                            style={{
-                              position: "relative",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "0.625rem",
-                              padding: "0.75rem 1.25rem",
-                              border: "2px solid #e5e7eb",
-                              borderRadius: "9999px",
-                              cursor: "pointer",
-                              backgroundColor: isSelected ? "#f3f4f6" : "white",
-                              transition: "all 0.2s ease",
-                              fontSize: "0.9375rem",
-                              fontWeight: "500",
-                              color: "#1f2937",
-                              userSelect: "none",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f9fafb";
-                              e.currentTarget.style.borderColor = "#d1d5db";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = isSelected ? "#f3f4f6" : "white";
-                              e.currentTarget.style.borderColor = "#e5e7eb";
-                            }}
-                          >
-                            <input
-                              type={category.multiSelect ? "checkbox" : "radio"}
-                              name={category.multiSelect ? undefined : `category-${category.id}`}
-                              checked={isSelected}
-                              onChange={() => {
-                                if (category.multiSelect) {
-                                  toggleFeature(option);
-                                } else {
-                                  toggleFeatureSingleSelect(category.id, option);
-                                }
-                              }}
-                              style={{ 
-                                position: "absolute",
-                                opacity: 0,
-                                width: 0,
-                                height: 0,
-                                cursor: "pointer"
-                              }}
-                            />
-                            {/* Check icon circle */}
-                            <div
-                              style={{
-                                width: "1.5rem",
-                                height: "1.5rem",
-                                borderRadius: "50%",
-                                backgroundColor: isSelected ? "#1f2937" : "transparent",
-                                border: isSelected ? "none" : "2px solid #d1d5db",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                                transition: "all 0.2s ease",
-                              }}
-                            >
-                              {isSelected && (
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 14 14"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
-                                    stroke="white"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-                            <span>{option}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                
-                <div style={{ 
-                  padding: "1rem 1.5rem", 
-                  backgroundColor: "#dbeafe", 
-                  borderLeft: "4px solid #3b82f6",
-                  borderRadius: "var(--radius)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "0.75rem"
-                }}>
-                  <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>💡</span>
-                  <p style={{ fontSize: "0.875rem", color: "#1e40af", margin: 0, lineHeight: "1.5" }}>
-                    <strong>Dica:</strong> Algumas categorias permitem múltiplas seleções, outras apenas uma opção. Clique nas opções para selecioná-las.
-                  </p>
                 </div>
               </CardContent>
             </Card>
