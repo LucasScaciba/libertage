@@ -323,6 +323,61 @@ export default function ProfileEditPage() {
     }
   };
 
+  const handlePublish = async () => {
+    if (!profile) {
+      setError("Salve o perfil antes de publicar");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const res = await fetch(`/api/profiles/${profile.id}/publish`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to publish profile");
+      }
+
+      setSuccess("Perfil publicado com sucesso! Agora ele está visível no catálogo.");
+      await fetchProfile();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!profile) return;
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const res = await fetch(`/api/profiles/${profile.id}/unpublish`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to unpublish profile");
+      }
+
+      setSuccess("Perfil despublicado. Ele não está mais visível no catálogo.");
+      await fetchProfile();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addPricingPackage = () => {
     setFormData({
       ...formData,
@@ -1482,6 +1537,24 @@ export default function ProfileEditPage() {
             >
               {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
+
+            {/* Publish/Unpublish Button */}
+            {profile && (
+              <Button
+                type="button"
+                variant={profile.status === "published" ? "outline" : "default"}
+                onClick={profile.status === "published" ? handleUnpublish : handlePublish}
+                disabled={loading || !isFormValid()}
+                style={{
+                  backgroundColor: profile.status === "published" ? undefined : "hsl(142 76% 36%)",
+                  color: profile.status === "published" ? undefined : "white",
+                  opacity: !isFormValid() ? 0.5 : 1,
+                  cursor: !isFormValid() ? "not-allowed" : "pointer",
+                }}
+              >
+                {loading ? "Processando..." : profile.status === "published" ? "Despublicar Perfil" : "Publicar Perfil"}
+              </Button>
+            )}
           </div>
         </form>
       </div>
