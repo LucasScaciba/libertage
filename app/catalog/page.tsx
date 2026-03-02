@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 export default function CatalogPage() {
@@ -74,125 +77,150 @@ export default function CatalogPage() {
 
   const ProfileCard = ({ profile, isBoosted = false }: any) => (
     <Link href={`/profiles/${profile.slug}`}>
-      <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden cursor-pointer">
+      <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
         {profile.media?.[0]?.public_url && (
-          <img
-            src={profile.media[0].public_url}
-            alt={profile.display_name}
-            className="w-full h-48 object-cover"
-          />
+          <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
+            <img
+              src={profile.media[0].public_url}
+              alt={profile.display_name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
         )}
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <CardContent style={{ padding: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
               {profile.display_name}
             </h3>
             {isBoosted && (
-              <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+              <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
                 Destaque
-              </span>
+              </Badge>
             )}
           </div>
-          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+          <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {profile.short_description}
           </p>
-          <div className="flex items-center text-sm text-gray-500 space-x-2">
+          <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
             <span>{profile.city}</span>
             <span>•</span>
             <span>{profile.region}</span>
           </div>
-          <div className="mt-2">
-            <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-              {profile.category}
-            </span>
-          </div>
-        </div>
-      </div>
+          <Badge variant="secondary">{profile.category}</Badge>
+        </CardContent>
+      </Card>
     </Link>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: "100vh" }}>
       {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+      <header style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+        <div className="container-custom" style={{ padding: "1.5rem 1rem" }}>
+          <h1 style={{ fontSize: "1.875rem", fontWeight: "700" }}>
             Catálogo de Serviços Premium
           </h1>
+          <p style={{ marginTop: "0.5rem", color: "hsl(var(--muted-foreground))" }}>
+            Encontre os melhores profissionais para seu projeto
+          </p>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="container-custom" style={{ padding: "2rem 1rem" }}>
         {/* Search and Filters */}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div>
+        <Card style={{ marginBottom: "2rem" }}>
+          <CardContent style={{ padding: "1.5rem" }}>
+            <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <Input
                 type="text"
                 placeholder="Buscar por nome ou descrição..."
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <select
-                className="block w-full rounded-md border border-gray-300 px-3 py-2"
-                value={filters.category}
-                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-              >
-                <option value="">Todas as categorias</option>
-                {availableFilters.categories.map((cat: string) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+                <select
+                  style={{ 
+                    width: "100%", 
+                    height: "2.5rem", 
+                    borderRadius: "var(--radius)", 
+                    border: "1px solid hsl(var(--input))", 
+                    backgroundColor: "hsl(var(--background))",
+                    padding: "0 0.75rem",
+                    fontSize: "0.875rem"
+                  }}
+                  value={filters.category}
+                  onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                >
+                  <option value="">Todas as categorias</option>
+                  {availableFilters.categories.map((cat: string) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
 
-              <select
-                className="block w-full rounded-md border border-gray-300 px-3 py-2"
-                value={filters.city}
-                onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-              >
-                <option value="">Todas as cidades</option>
-                {availableFilters.cities.map((city: string) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
+                <select
+                  style={{ 
+                    width: "100%", 
+                    height: "2.5rem", 
+                    borderRadius: "var(--radius)", 
+                    border: "1px solid hsl(var(--input))", 
+                    backgroundColor: "hsl(var(--background))",
+                    padding: "0 0.75rem",
+                    fontSize: "0.875rem"
+                  }}
+                  value={filters.city}
+                  onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                >
+                  <option value="">Todas as cidades</option>
+                  {availableFilters.cities.map((city: string) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
 
-              <select
-                className="block w-full rounded-md border border-gray-300 px-3 py-2"
-                value={filters.region}
-                onChange={(e) => setFilters({ ...filters, region: e.target.value })}
-              >
-                <option value="">Todas as regiões</option>
-                {availableFilters.regions.map((region: string) => (
-                  <option key={region} value={region}>
-                    {region}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <select
+                  style={{ 
+                    width: "100%", 
+                    height: "2.5rem", 
+                    borderRadius: "var(--radius)", 
+                    border: "1px solid hsl(var(--input))", 
+                    backgroundColor: "hsl(var(--background))",
+                    padding: "0 0.75rem",
+                    fontSize: "0.875rem"
+                  }}
+                  value={filters.region}
+                  onChange={(e) => setFilters({ ...filters, region: e.target.value })}
+                >
+                  <option value="">Todas as regiões</option>
+                  {availableFilters.regions.map((region: string) => (
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <Button type="submit">Buscar</Button>
-          </form>
-        </div>
+              <Button type="submit">Buscar</Button>
+            </form>
+          </CardContent>
+        </Card>
 
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Carregando...</p>
+          <div style={{ textAlign: "center", padding: "3rem 0" }}>
+            <p style={{ color: "hsl(var(--muted-foreground))" }}>Carregando...</p>
           </div>
         ) : (
           <>
             {/* Boosted Profiles Section */}
             {boostedProfiles.length > 0 && (
-              <div className="mb-12">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <div style={{ marginBottom: "3rem" }}>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" }}>
                   Perfis em Destaque
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
                   {boostedProfiles.map((profile) => (
                     <ProfileCard key={profile.id} profile={profile} isBoosted />
                   ))}
@@ -202,12 +230,12 @@ export default function CatalogPage() {
 
             {/* Regular Profiles Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" }}>
                 {boostedProfiles.length > 0 ? "Todos os Perfis" : "Perfis"}
               </h2>
               {regularProfiles.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
                     {regularProfiles.map((profile) => (
                       <ProfileCard key={profile.id} profile={profile} />
                     ))}
@@ -215,7 +243,7 @@ export default function CatalogPage() {
 
                   {/* Pagination */}
                   {hasMore && (
-                    <div className="mt-8 text-center">
+                    <div style={{ marginTop: "2rem", textAlign: "center" }}>
                       <Button onClick={() => setPage(page + 1)}>
                         Carregar Mais
                       </Button>
@@ -223,7 +251,7 @@ export default function CatalogPage() {
                   )}
                 </>
               ) : (
-                <p className="text-center text-gray-500 py-12">
+                <p style={{ textAlign: "center", color: "hsl(var(--muted-foreground))", padding: "3rem 0" }}>
                   Nenhum perfil encontrado com os filtros selecionados.
                 </p>
               )}
