@@ -151,12 +151,12 @@ export class SubscriptionService {
     if (!plan) throw new Error("Plan not found");
 
     // Get subscription from Stripe with retry logic
-    const stripeSubscription = await withRetry(
+    const stripeSubscription: any = await withRetry(
       async () => await stripe.subscriptions.retrieve(
         session.subscription as string
       ),
       { maxAttempts: 3 }
-    ) as Stripe.Subscription;
+    );
 
     // Upsert subscription
     await supabase.from("subscriptions").upsert({
