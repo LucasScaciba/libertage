@@ -34,7 +34,9 @@ export async function POST(request: Request) {
     }
 
     if (Date.now() > storedData.expiresAt) {
-      delete global.verificationCodes[user.id];
+      if (global.verificationCodes) {
+        delete global.verificationCodes[user.id];
+      }
       return NextResponse.json(
         { error: "Verification code expired. Please request a new one." },
         { status: 400 }
@@ -61,7 +63,9 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     // Clean up verification code
-    delete global.verificationCodes[user.id];
+    if (global.verificationCodes) {
+      delete global.verificationCodes[user.id];
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
