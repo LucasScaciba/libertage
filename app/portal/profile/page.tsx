@@ -18,8 +18,6 @@ export default function ProfileEditPage() {
   const [profile, setProfile] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [activeSection, setActiveSection] = useState("basic");
-  const [cepLoading, setCepLoading] = useState(false);
-  const [cepError, setCepError] = useState("");
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -223,54 +221,6 @@ export default function ProfileEditPage() {
       await fetchMedia();
     } catch (err: any) {
       setError(err.message || "Erro ao excluir mídia");
-    }
-  };
-
-  const fetchAddressByCep = async (cep: string) => {
-    // Remove non-numeric characters
-    const cleanCep = cep.replace(/\D/g, "");
-    
-    // Validate CEP format (8 digits)
-    if (cleanCep.length !== 8) {
-      setCepError("CEP deve ter 8 dígitos");
-      return;
-    }
-
-    setCepLoading(true);
-    setCepError("");
-
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
-
-      if (data.erro) {
-        setCepError("CEP não encontrado");
-        return;
-      }
-
-      // Update form with address data
-      setFormData({
-        ...formData,
-        cep: cleanCep,
-        city: data.localidade || "",
-        region: data.uf || "",
-      });
-    } catch (err) {
-      console.error("Error fetching CEP:", err);
-      setCepError("Erro ao buscar CEP. Tente novamente.");
-    } finally {
-      setCepLoading(false);
-    }
-  };
-
-  const handleCepChange = (value: string) => {
-    const cleanValue = value.replace(/\D/g, "").slice(0, 8);
-    setFormData({ ...formData, cep: cleanValue });
-    setCepError("");
-
-    // Auto-fetch when CEP is complete
-    if (cleanValue.length === 8) {
-      fetchAddressByCep(cleanValue);
     }
   };
 
