@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe/client";
+import Stripe from "stripe";
 import { withRetry } from "@/lib/utils/retry";
 import { logger } from "@/lib/utils/logger";
 
@@ -155,7 +156,7 @@ export class SubscriptionService {
         session.subscription as string
       ),
       { maxAttempts: 3 }
-    );
+    ) as Stripe.Subscription;
 
     // Upsert subscription
     await supabase.from("subscriptions").upsert({
