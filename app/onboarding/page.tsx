@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -88,108 +92,99 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Complete seu cadastro
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {step === "phone" && "Precisamos verificar seu número de telefone"}
-            {step === "verify" && "Digite o código enviado para seu telefone"}
-            {step === "terms" && "Aceite os termos para continuar"}
-          </p>
-        </div>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem 1rem" }}>
+      <div style={{ width: "100%", maxWidth: "28rem" }}>
+        <Card>
+          <CardHeader style={{ textAlign: "center" }}>
+            <CardTitle style={{ fontSize: "1.875rem", fontWeight: "700" }}>
+              Complete seu cadastro
+            </CardTitle>
+            <CardDescription style={{ marginTop: "0.5rem" }}>
+              {step === "phone" && "Precisamos verificar seu número de telefone"}
+              {step === "verify" && "Digite o código enviado para seu telefone"}
+              {step === "terms" && "Aceite os termos para continuar"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <div style={{ 
+                backgroundColor: "hsl(var(--destructive))", 
+                color: "hsl(var(--destructive-foreground))", 
+                padding: "0.75rem 1rem", 
+                borderRadius: "var(--radius)",
+                marginBottom: "1.5rem"
+              }}>
+                {error}
+              </div>
+            )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
+            {step === "phone" && (
+              <form onSubmit={handleSendCode} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <Label htmlFor="phone">Número de telefone</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+55 (11) 99999-9999"
+                  />
+                </div>
+                <Button type="submit" disabled={loading} style={{ width: "100%" }}>
+                  {loading ? "Enviando..." : "Enviar código"}
+                </Button>
+              </form>
+            )}
 
-        {step === "phone" && (
-          <form onSubmit={handleSendCode} className="mt-8 space-y-6">
-            <div>
-              <label htmlFor="phone" className="sr-only">
-                Telefone
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {loading ? "Enviando..." : "Enviar código"}
-            </button>
-          </form>
-        )}
+            {step === "verify" && (
+              <form onSubmit={handleVerifyCode} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <Label htmlFor="code">Código de verificação</Label>
+                  <Input
+                    id="code"
+                    name="code"
+                    type="text"
+                    required
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="000000"
+                    maxLength={6}
+                  />
+                </div>
+                <Button type="submit" disabled={loading} style={{ width: "100%" }}>
+                  {loading ? "Verificando..." : "Verificar código"}
+                </Button>
+              </form>
+            )}
 
-        {step === "verify" && (
-          <form onSubmit={handleVerifyCode} className="mt-8 space-y-6">
-            <div>
-              <label htmlFor="code" className="sr-only">
-                Código de verificação
-              </label>
-              <input
-                id="code"
-                name="code"
-                type="text"
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="000000"
-                maxLength={6}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {loading ? "Verificando..." : "Verificar código"}
-            </button>
-          </form>
-        )}
-
-        {step === "terms" && (
-          <form onSubmit={handleComplete} className="mt-8 space-y-6">
-            <div className="flex items-start">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                Eu aceito os{" "}
-                <a href="/terms" className="text-indigo-600 hover:text-indigo-500">
-                  termos e condições
-                </a>
-              </label>
-            </div>
-            <button
-              type="submit"
-              disabled={loading || !termsAccepted}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {loading ? "Finalizando..." : "Completar cadastro"}
-            </button>
-          </form>
-        )}
+            {step === "terms" && (
+              <form onSubmit={handleComplete} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
+                  <input
+                    id="terms"
+                    name="terms"
+                    type="checkbox"
+                    required
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    style={{ marginTop: "0.25rem" }}
+                  />
+                  <Label htmlFor="terms" style={{ fontWeight: "400", cursor: "pointer" }}>
+                    Eu aceito os{" "}
+                    <a href="/terms" style={{ color: "hsl(var(--primary))", textDecoration: "underline" }}>
+                      termos e condições
+                    </a>
+                  </Label>
+                </div>
+                <Button type="submit" disabled={loading || !termsAccepted} style={{ width: "100%" }}>
+                  {loading ? "Finalizando..." : "Completar cadastro"}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
