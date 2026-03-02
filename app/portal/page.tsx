@@ -21,8 +21,8 @@ export default async function PortalPage() {
   }
 
   // Get user's profile
-  const { data: profile } = await (await import("@/lib/supabase/server"))
-    .createClient()
+  const supabase = await (await import("@/lib/supabase/server")).createClient();
+  const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("user_id", user.id)
