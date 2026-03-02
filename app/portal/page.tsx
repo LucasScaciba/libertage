@@ -1,4 +1,4 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService } from "@/lib/services/auth-server.service";
 import { ProfileService } from "@/lib/services/profile.service";
 import { AnalyticsService } from "@/lib/services/analytics.service";
 import { SubscriptionService } from "@/lib/services/subscription.service";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 
 export default async function PortalPage() {
-  const user = await AuthService.getCurrentUser();
+  const user = await AuthServerService.getCurrentUser();
 
   if (!user) {
     redirect("/login");
