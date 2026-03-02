@@ -16,20 +16,6 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    // Check if phone is verified
-    const { data: userData } = await supabase
-      .from("users")
-      .select("phone_verified_at")
-      .eq("id", user.id)
-      .single();
-
-    if (!userData?.phone_verified_at) {
-      return NextResponse.json(
-        { error: "Phone number must be verified first" },
-        { status: 400 }
-      );
-    }
-
     // Complete onboarding
     const { error } = await supabase
       .from("users")
