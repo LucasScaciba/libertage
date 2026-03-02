@@ -7,8 +7,6 @@ interface CreateProfileInput {
   category: string;
   short_description: string;
   long_description: string;
-  cep?: string;
-  street_number?: string;
   city: string;
   region: string;
   latitude?: number;
@@ -24,8 +22,6 @@ interface UpdateProfileInput {
   category?: string;
   short_description?: string;
   long_description?: string;
-  cep?: string;
-  street_number?: string;
   city?: string;
   region?: string;
   latitude?: number;
@@ -56,8 +52,6 @@ export class ProfileService {
         category: data.category,
         short_description: data.short_description,
         long_description: data.long_description,
-        cep: data.cep,
-        street_number: data.street_number,
         city: data.city,
         region: data.region,
         latitude,
