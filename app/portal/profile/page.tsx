@@ -291,12 +291,15 @@ export default function ProfileEditPage() {
       
       const method = profile ? "PATCH" : "POST";
 
+      // Remove availability from the data being sent (it's stored in a separate table)
+      const { availability, ...profileData } = formData;
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          age_attribute: formData.age_attribute ? parseInt(formData.age_attribute) : null,
+          ...profileData,
+          age_attribute: profileData.age_attribute ? parseInt(profileData.age_attribute) : null,
         }),
       });
 
