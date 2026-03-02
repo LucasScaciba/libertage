@@ -1,4 +1,4 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { MediaService } from "@/lib/services/media.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
     const data = await request.json();
 
     const { profileId, type, storage_path, file_size, is_cover, sort_order } = data;

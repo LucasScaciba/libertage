@@ -1,10 +1,10 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
     const { termsAccepted } = await request.json();
 
     if (!termsAccepted) {

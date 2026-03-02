@@ -1,9 +1,9 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
     const { phoneNumber } = await request.json();
 
     if (!phoneNumber) {

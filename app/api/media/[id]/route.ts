@@ -1,4 +1,4 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { MediaService } from "@/lib/services/media.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
     const data = await request.json();
     const mediaId = params.id;
 
@@ -45,7 +45,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
     const mediaId = params.id;
 
     // Verify ownership through profile

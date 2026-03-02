@@ -1,4 +1,4 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { ProfileService } from "@/lib/services/profile.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
     const data = await request.json();
     const profileId = params.id;
 

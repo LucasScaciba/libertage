@@ -1,4 +1,4 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { ProfileService } from "@/lib/services/profile.service";
 import { NextResponse } from "next/server";
 
@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     // Require admin role
-    const user = await AuthService.requireRole("admin");
+    const user = await AuthServerService.requireRole("admin");
     const profileId = params.id;
 
     await ProfileService.unpublishProfile(profileId, user.id);

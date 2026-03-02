@@ -1,10 +1,10 @@
-import { AuthService } from "@/lib/services/auth.service";
+import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
 import { SubscriptionService } from "@/lib/services/subscription.service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const user = await AuthService.requireAuth();
+    const user = await AuthServerService.requireAuth();
 
     const portalUrl = await SubscriptionService.getCustomerPortalUrl(user.id);
 
