@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Disable Turbopack in development for better Tailwind v4 compatibility
+  experimental: {
+    turbo: undefined,
+  },
 };
 
 export default nextConfig;

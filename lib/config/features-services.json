@@ -1,0 +1,192 @@
+{
+  "categories": [
+    {
+      "id": "services",
+      "name": "Serviços",
+      "description": "Tipos de serviços oferecidos",
+      "multiSelect": true,
+      "options": [
+        "Massagem",
+        "Acompanhante",
+        "Chamada de vídeo"
+      ]
+    },
+    {
+      "id": "payment",
+      "name": "Formas de Pagamento",
+      "description": "Métodos de pagamento aceitos",
+      "multiSelect": true,
+      "options": [
+        "PIX",
+        "Dinheiro",
+        "Cartão de Crédito",
+        "Cartão de Débito",
+        "Bitcoin",
+        "PayPal",
+        "Outros"
+      ]
+    },
+    {
+      "id": "ethnicity",
+      "name": "Etnia",
+      "description": "Etnia",
+      "multiSelect": false,
+      "options": [
+        "Branca",
+        "Caboclo",
+        "Cafuzo",
+        "Indígena",
+        "Mestiço",
+        "Mulato",
+        "Oriental",
+        "Pardo",
+        "Preto"
+      ]
+    },
+    {
+      "id": "hair",
+      "name": "Cabelo",
+      "description": "Cor do cabelo",
+      "multiSelect": false,
+      "options": [
+        "Moreno",
+        "Loira",
+        "Ruiva",
+        "Colorido",
+        "Grisalho",
+        "Raspado"
+      ]
+    },
+    {
+      "id": "body",
+      "name": "Corpo",
+      "description": "Tipo de corpo",
+      "multiSelect": false,
+      "options": [
+        "Magra",
+        "Natural",
+        "Gordinha"
+      ]
+    },
+    {
+      "id": "breast_size",
+      "name": "Tamanho dos Seios",
+      "description": "Tamanho dos seios",
+      "multiSelect": false,
+      "options": [
+        "Pequenos",
+        "Médios",
+        "Grandes"
+      ]
+    },
+    {
+      "id": "breast_type",
+      "name": "Seios",
+      "description": "Tipo de seios",
+      "multiSelect": false,
+      "options": [
+        "Naturais",
+        "Com Silicone"
+      ]
+    },
+    {
+      "id": "eye_color",
+      "name": "Cor dos Olhos",
+      "description": "Cor dos olhos",
+      "multiSelect": false,
+      "options": [
+        "Azul",
+        "Castanho",
+        "Cinza",
+        "Mel",
+        "Verde",
+        "Escuros",
+        "Lentes de Contato Colorida"
+      ]
+    },
+    {
+      "id": "body_hair",
+      "name": "Pelos Corporais",
+      "description": "Estilo de pelos corporais",
+      "multiSelect": false,
+      "options": [
+        "Depilado",
+        "Aparado",
+        "Somente o Necessário",
+        "Peluda"
+      ]
+    },
+    {
+      "id": "location",
+      "name": "Local de Atendimento",
+      "description": "Locais onde atende",
+      "multiSelect": true,
+      "options": [
+        "A Domicílio",
+        "Saídas",
+        "Meu Local",
+        "Festas",
+        "Hotel",
+        "Jantar",
+        "Viagem"
+      ]
+    },
+    {
+      "id": "attend",
+      "name": "Atendo",
+      "description": "Público atendido",
+      "multiSelect": true,
+      "options": [
+        "Homens",
+        "Mulheres",
+        "Homens Trans",
+        "Mulheres Trans",
+        "Não Binários",
+        "Casais",
+        "Deficientes Físicos"
+      ]
+    },
+    {
+      "id": "languages",
+      "name": "Idiomas",
+      "description": "Idiomas falados",
+      "multiSelect": true,
+      "options": [
+        "Português",
+        "Inglês",
+        "Espanhol",
+        "Italiano",
+        "Francês",
+        "Alemão",
+        "Outros"
+      ]
+    },
+    {
+      "id": "lifestyle",
+      "name": "Estilo de Vida",
+      "description": "Características pessoais",
+      "multiSelect": true,
+      "options": [
+        "Não Fumante",
+        "Fumante",
+        "Não Bebe",
+        "Bebe",
+        "Com Tatuagem",
+        "Sem Tatuagem",
+        "Com Piercing",
+        "Sem Piercing"
+      ]
+    },
+    {
+      "id": "additional_services",
+      "name": "Serviços Adicionais",
+      "description": "Serviços extras oferecidos",
+      "multiSelect": true,
+      "options": [
+        "Laranja",
+        "Banana",
+        "Uva"
+      ]
+    }
+  ]
+}
