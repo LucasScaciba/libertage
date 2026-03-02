@@ -16,8 +16,6 @@ export async function POST(request: Request) {
       "long_description",
       "city",
       "region",
-      "latitude",
-      "longitude",
     ];
 
     for (const field of requiredFields) {

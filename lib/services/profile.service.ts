@@ -9,8 +9,8 @@ interface CreateProfileInput {
   long_description: string;
   city: string;
   region: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   age_attribute?: number;
   external_links?: any[];
   pricing_packages?: any[];
@@ -35,8 +35,12 @@ export class ProfileService {
   static async createProfile(userId: string, data: CreateProfileInput): Promise<Profile> {
     const supabase = await createClient();
 
+    // Use default coordinates (center of Brazil) if not provided
+    const latitude = data.latitude || -14.235;
+    const longitude = data.longitude || -51.9253;
+
     // Generate geohash for privacy
-    const geohash = require("geohash").encode(data.latitude, data.longitude, 5);
+    const geohash = require("geohash").encode(latitude, longitude, 5);
 
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -49,8 +53,8 @@ export class ProfileService {
         long_description: data.long_description,
         city: data.city,
         region: data.region,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude,
+        longitude,
         geohash,
         age_attribute: data.age_attribute,
         external_links: data.external_links || [],
