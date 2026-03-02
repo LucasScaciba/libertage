@@ -13,10 +13,16 @@ declare global {
 
 export async function POST(request: Request) {
   try {
+    console.log("📞 Starting phone verification process...");
+    
     const user = await AuthServerService.requireAuth();
+    console.log(`👤 User authenticated: ${user.id}`);
+    
     const { phoneNumber } = await request.json();
+    console.log(`📱 Phone number received: ${phoneNumber}`);
 
     if (!phoneNumber) {
+      console.log("❌ No phone number provided");
       return NextResponse.json(
         { error: "Phone number is required" },
         { status: 400 }
@@ -25,7 +31,10 @@ export async function POST(request: Request) {
 
     // Validate Brazilian phone format
     const cleanNumber = phoneNumber.replace(/\D/g, "");
+    console.log(`🔍 Clean number: ${cleanNumber} (length: ${cleanNumber.length})`);
+    
     if (!cleanNumber.startsWith("55") || cleanNumber.length !== 13) {
+      console.log("❌ Invalid phone format");
       return NextResponse.json(
         { error: "Número de telefone inválido. Use o formato: +55 (11) 99999-9999" },
         { status: 400 }
@@ -34,16 +43,19 @@ export async function POST(request: Request) {
 
     // Generate 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`🔐 Generated code: ${code}`);
 
     // Check if Twilio is configured
     const twilioConfigured = !!(
       twilioClient &&
       process.env.TWILIO_PHONE_NUMBER
     );
+    console.log(`🔧 Twilio configured: ${twilioConfigured}`);
 
     if (twilioConfigured) {
       // Send SMS via Twilio
       try {
+        console.log("📤 Attempting to send SMS via Twilio...");
         await twilioClient!.messages.create({
           body: `Seu código de verificação Libertage é: ${code}`,
           from: process.env.TWILIO_PHONE_NUMBER,
@@ -51,7 +63,7 @@ export async function POST(request: Request) {
         });
         console.log(`✅ SMS sent successfully to ${phoneNumber}`);
       } catch (twilioError: any) {
-        console.error("Twilio error:", twilioError);
+        console.error("❌ Twilio error:", twilioError);
         return NextResponse.json(
           { error: "Falha ao enviar SMS. Verifique o número de telefone." },
           { status: 500 }
@@ -78,14 +90,24 @@ export async function POST(request: Request) {
       phoneNumber,
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
     };
+    console.log(`💾 Code stored for user ${user.id}`);
 
-    return NextResponse.json({ 
+    const response = { 
       success: true,
       devMode: !twilioConfigured,
-      ...(process.env.NODE_ENV === "development" && !twilioConfigured ? { code } : {})
+      // Always return code in dev mode or when Twilio is not configured
+      ...(!twilioConfigured ? { code } : {})
+    };
+    console.log("✅ Returning success response:", response);
+
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error("❌ Error sending verification:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
     });
-  } catch (error) {
-    console.error("Error sending verification:", error);
     return NextResponse.json(
       { error: "Falha ao enviar código de verificação" },
       { status: 500 }
