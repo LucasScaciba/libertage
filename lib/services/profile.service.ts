@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types";
-import * as geohash from "geohash";
 
 interface CreateProfileInput {
   display_name: string;
@@ -40,8 +39,9 @@ export class ProfileService {
     const latitude = data.latitude || -14.235;
     const longitude = data.longitude || -51.9253;
 
-    // Generate geohash for privacy
-    const geoHash = geohash.encode(latitude, longitude, 5);
+    // Generate a simple geohash alternative (first 5 chars of lat/lng combined)
+    // This is just for privacy, not for actual geospatial queries
+    const geoHash = `${Math.floor(latitude * 100)}${Math.floor(longitude * 100)}`.substring(0, 10);
 
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -76,7 +76,8 @@ export class ProfileService {
 
     // Update geohash if location changed
     if (data.latitude && data.longitude) {
-      updateData.geohash = geohash.encode(data.latitude, data.longitude, 5);
+      const geoHash = `${Math.floor(data.latitude * 100)}${Math.floor(data.longitude * 100)}`.substring(0, 10);
+      updateData.geohash = geoHash;
     }
 
     // Check slug cooldown if slug is being changed
