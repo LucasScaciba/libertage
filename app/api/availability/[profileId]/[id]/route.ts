@@ -1,16 +1,16 @@
-import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
+import { AuthServerService } from "@/lib/services/auth-server.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { profileId: string; id: string } }
+  { params }: { params: Promise<{ profileId: string; id: string }> }
 ) {
   try {
     const user = await AuthServerService.requireAuth();
     const data = await request.json();
     const supabase = await createClient();
-    const { profileId, id } = params;
+    const { profileId, id } = await params;
 
     // Verify profile ownership
     const { data: profile } = await supabase
@@ -57,12 +57,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { profileId: string; id: string } }
+  { params }: { params: Promise<{ profileId: string; id: string }> }
 ) {
   try {
     const user = await AuthServerService.requireAuth();
     const supabase = await createClient();
-    const { profileId, id } = params;
+    const { profileId, id } = await params;
 
     // Verify profile ownership
     const { data: profile } = await supabase

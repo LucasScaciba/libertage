@@ -1,15 +1,15 @@
-import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
+import { AuthServerService } from "@/lib/services/auth-server.service";
 import { ProfileService } from "@/lib/services/profile.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await AuthServerService.requireAuth();
-    const profileId = params.id;
+    const { id: profileId } = await params;
 
     // Verify ownership
     const supabase = await createClient();
