@@ -1,4 +1,4 @@
-import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
+import { AuthServerService } from "@/lib/services/auth-server.service";
 import { MediaService } from "@/lib/services/media.service";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";

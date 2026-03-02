@@ -1,4 +1,4 @@
-import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
+import { AuthServerService } from "@/lib/services/auth-server.service";
 import { SubscriptionService } from "@/lib/services/subscription.service";
 import { NextResponse } from "next/server";
 

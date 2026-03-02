@@ -1,5 +1,14 @@
-import { AuthServerService as AuthServerService } from "@/lib/services/auth-server.service";
+import { AuthServerService } from "@/lib/services/auth-server.service";
 import { NextResponse } from "next/server";
+
+// Type declaration for global verification codes storage
+declare global {
+  var verificationCodes: Record<string, {
+    code: string;
+    phoneNumber: string;
+    expiresAt: number;
+  }> | undefined;
+}
 
 export async function POST(request: Request) {
   try {
