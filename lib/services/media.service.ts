@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import type { Media } from "@/types";
 
 export class MediaService {
@@ -100,7 +100,7 @@ export class MediaService {
       sort_order?: number;
     }
   ): Promise<Media> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     // If this is set as cover, unset other covers
     if (data.is_cover) {
