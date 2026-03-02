@@ -1,4 +1,5 @@
 import { AuthServerService } from "@/lib/services/auth-server.service";
+import { twilioClient } from "@/lib/twilio/client";
 import { NextResponse } from "next/server";
 
 // Type declaration for global verification codes storage
@@ -25,9 +26,20 @@ export async function POST(request: Request) {
     // Generate 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // TODO: Send SMS via Twilio or other provider
-    // For now, we'll just log it (in production, implement actual SMS sending)
-    console.log(`Verification code for ${phoneNumber}: ${code}`);
+    // Send SMS via Twilio
+    try {
+      await twilioClient.messages.create({
+        body: `Seu código de verificação é: ${code}`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phoneNumber,
+      });
+    } catch (twilioError: any) {
+      console.error("Twilio error:", twilioError);
+      return NextResponse.json(
+        { error: "Failed to send SMS. Please check the phone number." },
+        { status: 500 }
+      );
+    }
 
     // Store code in a temporary storage (Redis recommended, or database)
     // For MVP, we'll use a simple in-memory store
