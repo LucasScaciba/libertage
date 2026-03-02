@@ -37,19 +37,19 @@ export async function POST(request: Request) {
 
     // Check if Twilio is configured
     const twilioConfigured = !!(
-      process.env.TWILIO_ACCOUNT_SID &&
-      process.env.TWILIO_AUTH_TOKEN &&
+      twilioClient &&
       process.env.TWILIO_PHONE_NUMBER
     );
 
     if (twilioConfigured) {
       // Send SMS via Twilio
       try {
-        await twilioClient.messages.create({
+        await twilioClient!.messages.create({
           body: `Seu código de verificação Libertage é: ${code}`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: phoneNumber,
         });
+        console.log(`✅ SMS sent successfully to ${phoneNumber}`);
       } catch (twilioError: any) {
         console.error("Twilio error:", twilioError);
         return NextResponse.json(
