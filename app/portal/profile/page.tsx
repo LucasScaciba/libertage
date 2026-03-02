@@ -62,8 +62,13 @@ export default function ProfileEditPage() {
   useEffect(() => {
     fetchProfile();
     fetchSubscription();
-    fetchMedia();
   }, []);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchMedia();
+    }
+  }, [profile?.id]);
 
   const fetchProfile = async () => {
     try {
@@ -115,15 +120,16 @@ export default function ProfileEditPage() {
   };
 
   const fetchMedia = async () => {
+    if (!profile?.id) return;
+    
     try {
-      const res = await fetch("/api/media");
+      const res = await fetch(`/api/media?profileId=${profile.id}`);
       const data = await res.json();
       if (data.media) {
         setMediaFiles(data.media);
       }
     } catch (err) {
       console.error("Error fetching media:", err);
-      // If fetch fails, keep existing mock media
     }
   };
 
@@ -139,35 +145,76 @@ export default function ProfileEditPage() {
       return;
     }
 
+    if (!profile?.id) {
+      setError("Salve o perfil antes de adicionar mídias");
+      return;
+    }
+
     setUploadingMedia(true);
     setError("");
 
     try {
       const file = files[0];
       
-      // Create local URL for preview (mock upload)
-      const localUrl = URL.createObjectURL(file);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Create mock media object
-      const mockMedia = {
-        id: `mock-${Date.now()}`,
-        profile_id: profile?.id || "mock-profile",
-        media_type: type,
-        url: localUrl,
-        filename: file.name,
-        created_at: new Date().toISOString(),
-      };
+      // Step 1: Get upload URL
+      const uploadUrlRes = await fetch("/api/media/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileId: profile.id,
+          fileType: file.type,
+          fileSize: file.size,
+        }),
+      });
 
-      // Add to local state
-      setMediaFiles([...mediaFiles, mockMedia]);
+      if (!uploadUrlRes.ok) {
+        const data = await uploadUrlRes.json();
+        throw new Error(data.error || "Failed to get upload URL");
+      }
+
+      const { uploadUrl, path } = await uploadUrlRes.json();
+
+      // Step 2: Upload file to storage
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload file");
+      }
+
+      // Step 3: Create media record
+      const mediaRes = await fetch("/api/media", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileId: profile.id,
+          type,
+          storage_path: path,
+          file_size: file.size,
+          is_cover: mediaFiles.length === 0, // First media is cover
+          sort_order: mediaFiles.length,
+        }),
+      });
+
+      if (!mediaRes.ok) {
+        const data = await mediaRes.json();
+        throw new Error(data.error || "Failed to create media record");
+      }
+
       setSuccess(`${type === "photo" ? "Foto" : "Vídeo"} adicionado com sucesso!`);
+      
+      // Refresh media list
+      await fetchMedia();
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
+      console.error("Error uploading media:", err);
       setError(err.message || "Erro ao fazer upload");
     } finally {
       setUploadingMedia(false);
@@ -180,31 +227,21 @@ export default function ProfileEditPage() {
     if (!confirm("Tem certeza que deseja excluir esta mídia?")) return;
 
     try {
-      // For mock media, just remove from state
-      if (mediaId.startsWith("mock-")) {
-        const mediaToDelete = mediaFiles.find(m => m.id === mediaId);
-        if (mediaToDelete?.url.startsWith("blob:")) {
-          URL.revokeObjectURL(mediaToDelete.url);
-        }
-        setMediaFiles(mediaFiles.filter(m => m.id !== mediaId));
-        setSuccess("Mídia excluída com sucesso!");
-        setTimeout(() => setSuccess(""), 3000);
-        return;
-      }
-
-      // For real media, call API
       const res = await fetch(`/api/media/${mediaId}`, {
         method: "DELETE",
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error);
+        throw new Error(data.error || "Failed to delete media");
       }
 
       setSuccess("Mídia excluída com sucesso!");
       await fetchMedia();
+      
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
+      console.error("Error deleting media:", err);
       setError(err.message || "Erro ao excluir mídia");
     }
   };
