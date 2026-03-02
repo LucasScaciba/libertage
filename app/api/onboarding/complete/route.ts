@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -33,7 +33,11 @@ export async function POST(request: Request) {
 
     // Check if user exists in users table, if not create it
     console.log("🔍 Checking if user exists in users table...");
-    const { data: existingUser } = await supabase
+    
+    // Use service client to bypass RLS for user creation/update
+    const serviceSupabase = createServiceClient();
+    
+    const { data: existingUser } = await serviceSupabase
       .from("users")
       .select("id")
       .eq("id", authUser.id)
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
 
     if (!existingUser) {
       console.log("📝 Creating user in users table...");
-      const { error: createError } = await supabase
+      const { error: createError } = await serviceSupabase
         .from("users")
         .insert({
           id: authUser.id,
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
     } else {
       // Update existing user
       console.log("💾 Updating user onboarding status...");
-      const { error: updateError } = await supabase
+      const { error: updateError } = await serviceSupabase
         .from("users")
         .update({
           terms_accepted_at: new Date().toISOString(),
@@ -75,7 +79,7 @@ export async function POST(request: Request) {
 
     // Create free subscription for new user
     console.log("🔍 Looking for free plan...");
-    const { data: freePlan, error: planError } = await supabase
+    const { data: freePlan, error: planError } = await serviceSupabase
       .from("plans")
       .select("id")
       .eq("code", "free")
@@ -87,7 +91,7 @@ export async function POST(request: Request) {
       console.log(`✅ Free plan found: ${freePlan.id}`);
       
       // Check if subscription already exists
-      const { data: existingSub } = await supabase
+      const { data: existingSub } = await serviceSupabase
         .from("subscriptions")
         .select("id")
         .eq("user_id", authUser.id)
@@ -95,7 +99,7 @@ export async function POST(request: Request) {
 
       if (!existingSub) {
         console.log("💾 Creating subscription...");
-        const { error: subError } = await supabase.from("subscriptions").insert({
+        const { error: subError } = await serviceSupabase.from("subscriptions").insert({
           user_id: authUser.id,
           plan_id: freePlan.id,
           status: "active",
