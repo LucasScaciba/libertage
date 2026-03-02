@@ -28,8 +28,6 @@ export default function ProfileEditPage() {
     category: "",
     short_description: "",
     long_description: "",
-    cep: "",
-    street_number: "",
     city: "",
     region: "",
     latitude: 0,
@@ -93,8 +91,6 @@ export default function ProfileEditPage() {
           category: data.profile.category || "",
           short_description: data.profile.short_description || "",
           long_description: data.profile.long_description || "",
-          cep: data.profile.cep || "",
-          street_number: data.profile.street_number || "",
           city: data.profile.city || "",
           region: data.profile.region || "",
           latitude: data.profile.latitude || 0,
@@ -291,8 +287,8 @@ export default function ProfileEditPage() {
       
       const method = profile ? "PATCH" : "POST";
 
-      // Remove fields that don't exist in DB or are stored in separate tables
-      const { availability, cep, street_number, ...profileData } = formData;
+      // Remove availability from the data being sent (it's stored in a separate table)
+      const { availability, ...profileData } = formData;
 
       const res = await fetch(url, {
         method,
@@ -456,7 +452,6 @@ export default function ProfileEditPage() {
   const sections = [
     { id: "basic", label: "Informações Básicas" },
     { id: "description", label: "Descrições" },
-    { id: "location", label: "Localização" },
     { id: "pricing", label: "Valores" },
     { id: "links", label: "Links Externos" },
     { id: "media", label: "Fotos e Vídeos" },
@@ -492,8 +487,6 @@ export default function ProfileEditPage() {
           formData.short_description &&
           formData.long_description
         );
-      case "location":
-        return true; // Optional - CEP and street number are not required
       case "pricing":
       case "links":
       case "media":
@@ -785,76 +778,6 @@ export default function ProfileEditPage() {
                     placeholder="Descreva seus serviços em detalhes. Esta descrição aparecerá no modal do seu perfil."
                   />
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Location */}
-          {activeSection === "location" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Localização</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                <div style={{ 
-                  padding: "0.75rem 1rem", 
-                  backgroundColor: "#dbeafe", 
-                  borderLeft: "4px solid #3b82f6",
-                  borderRadius: "var(--radius)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "0.75rem"
-                }}>
-                  <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>🔒</span>
-                  <p style={{ fontSize: "0.875rem", color: "#1e40af", margin: 0, lineHeight: "1.5" }}>
-                    <strong>Privacidade:</strong> Seu endereço exato não será exibido no perfil. Mostraremos apenas uma região aproximada para proteger sua privacidade.
-                  </p>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
-                  <div>
-                    <Label htmlFor="cep">CEP</Label>
-                    <Input
-                      id="cep"
-                      value={formData.cep}
-                      onChange={(e) => handleCepChange(e.target.value)}
-                      placeholder="00000-000"
-                      maxLength={9}
-                      disabled={cepLoading}
-                    />
-                    {cepLoading && (
-                      <p style={{ fontSize: "0.75rem", color: "#3b82f6", marginTop: "0.25rem" }}>
-                        Buscando endereço...
-                      </p>
-                    )}
-                    {cepError && (
-                      <p style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: "0.25rem" }}>
-                        {cepError}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="street_number">Número</Label>
-                    <Input
-                      id="street_number"
-                      value={formData.street_number}
-                      onChange={(e) => setFormData({ ...formData, street_number: e.target.value })}
-                      placeholder="123"
-                    />
-                  </div>
-                </div>
-
-                {formData.city && formData.region && (
-                  <div style={{ padding: "1rem", backgroundColor: "hsl(var(--accent))", borderRadius: "var(--radius)" }}>
-                    <p style={{ fontSize: "0.875rem", fontWeight: "600", marginBottom: "0.25rem" }}>
-                      Endereço detectado:
-                    </p>
-                    <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))" }}>
-                      {formData.city} - {formData.region}
-                    </p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           )}
