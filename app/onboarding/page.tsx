@@ -16,16 +16,43 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Format phone number as user types (11) 99999-9999
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const numbers = value.replace(/\D/g, "");
+    
+    // Limit to 11 digits (DDD + 9 digits)
+    const limited = numbers.slice(0, 11);
+    
+    // Apply mask
+    if (limited.length <= 2) {
+      return limited;
+    } else if (limited.length <= 7) {
+      return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+    } else {
+      return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhoneNumber(formatted);
+  };
+
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+      // Remove formatting and add +55
+      const cleanNumber = phoneNumber.replace(/\D/g, "");
+      const fullNumber = `+55${cleanNumber}`;
+      
       const res = await fetch("/api/onboarding/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ phoneNumber: fullNumber }),
       });
 
       if (!res.ok) {
@@ -122,15 +149,33 @@ export default function OnboardingPage() {
               <form onSubmit={handleSendCode} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <Label htmlFor="phone">Número de telefone</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="+55 (11) 99999-9999"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <span style={{
+                      position: "absolute",
+                      left: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      color: "hsl(var(--muted-foreground))",
+                      fontSize: "0.875rem",
+                      fontWeight: "500",
+                      pointerEvents: "none"
+                    }}>
+                      +55
+                    </span>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={phoneNumber}
+                      onChange={handlePhoneChange}
+                      placeholder="(11) 99999-9999"
+                      style={{ paddingLeft: "3rem" }}
+                    />
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))" }}>
+                    Digite seu número com DDD
+                  </p>
                 </div>
                 <Button type="submit" disabled={loading} style={{ width: "100%" }}>
                   {loading ? "Enviando..." : "Enviar código"}
