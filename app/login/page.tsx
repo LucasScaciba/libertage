@@ -20,7 +20,7 @@ export default function LoginPage() {
         <Card>
           <CardHeader style={{ textAlign: "center" }}>
             <CardTitle style={{ fontSize: "1.875rem", fontWeight: "700" }}>
-              Premium Service Marketplace
+              Libertage
             </CardTitle>
             <CardDescription style={{ marginTop: "0.5rem" }}>
               Entre com sua conta Google para continuar
@@ -48,6 +48,18 @@ export default function LoginPage() {
               </svg>
               Entrar com Google
             </Button>
+            
+            <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", textAlign: "center", marginTop: "0.5rem" }}>
+              Ao se cadastrar, você concorda com nossos{" "}
+              <Link href="/terms" style={{ textDecoration: "underline" }}>
+                Termos de Uso
+              </Link>{" "}
+              e{" "}
+              <Link href="/privacy" style={{ textDecoration: "underline" }}>
+                Política de Privacidade
+              </Link>
+            </p>
+
             <div style={{ textAlign: "center", marginTop: "1rem" }}>
               <Link href="/" style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", textDecoration: "underline" }}>
                 Voltar para home

@@ -1,92 +1,143 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PricingCards } from "@/components/pricing-cards";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { AuthService } from "@/lib/services/auth.service";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleComplete = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await fetch("/api/subscriptions/plans");
+      const data = await res.json();
+      
+      // Transform plans to include features
+      const transformedPlans = (data.plans || []).map((plan: any) => ({
+        ...plan,
+        features: {
+          coverPhoto: true,
+          externalLinks: plan.code !== "free",
+          stories: plan.code === "black",
+          boosts: plan.code === "black",
+        },
+      }));
+      
+      setPlans(transformedPlans);
+    } catch (err) {
+      console.error("Error fetching plans:", err);
+    }
+  };
+
+  const handleSelectPlan = async (planCode: string) => {
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("/api/onboarding/complete", {
+      // Complete onboarding first
+      const onboardingRes = await fetch("/api/onboarding/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ termsAccepted }),
+        body: JSON.stringify({ termsAccepted: true }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
+      if (!onboardingRes.ok) {
+        const data = await onboardingRes.json();
         throw new Error(data.error || "Failed to complete onboarding");
       }
 
-      // Redirect to plans page for new users
-      router.push("/portal/plans");
+      // If free plan, go directly to profile
+      if (planCode === "free") {
+        router.push("/portal/profile");
+        return;
+      }
+
+      // For paid plans, go to checkout
+      const checkoutRes = await fetch("/api/subscriptions/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planCode }),
+      });
+
+      const checkoutData = await checkoutRes.json();
+
+      if (!checkoutRes.ok) {
+        throw new Error(checkoutData.error || "Failed to create checkout");
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = checkoutData.url;
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem 1rem" }}>
-      <div style={{ width: "100%", maxWidth: "28rem" }}>
-        <Card>
-          <CardHeader style={{ textAlign: "center" }}>
-            <CardTitle style={{ fontSize: "1.875rem", fontWeight: "700" }}>
-              Complete seu cadastro
-            </CardTitle>
-            <CardDescription style={{ marginTop: "0.5rem" }}>
-              Aceite os termos para continuar
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div style={{ 
-                backgroundColor: "hsl(var(--destructive))", 
-                color: "hsl(var(--destructive-foreground))", 
-                padding: "0.75rem 1rem", 
-                borderRadius: "var(--radius)",
-                marginBottom: "1.5rem"
-              }}>
-                {error}
-              </div>
-            )}
+  const handleLogout = async () => {
+    try {
+      await AuthService.signOut();
+      router.push("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
-            <form onSubmit={handleComplete} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  required
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  style={{ marginTop: "0.25rem" }}
-                />
-                <Label htmlFor="terms" style={{ fontWeight: "400", cursor: "pointer" }}>
-                  Eu aceito os{" "}
-                  <a href="/terms" style={{ color: "hsl(var(--primary))", textDecoration: "underline" }}>
-                    termos e condições
-                  </a>
-                </Label>
-              </div>
-              <Button type="submit" disabled={loading || !termsAccepted} style={{ width: "100%" }}>
-                {loading ? "Finalizando..." : "Completar cadastro"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: "hsl(var(--background))" }}>
+      {/* Simple Header */}
+      <header style={{ 
+        borderBottom: "1px solid hsl(var(--border))", 
+        padding: "1rem 2rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: "700" }}>Libertage</h1>
+        <Button variant="ghost" onClick={handleLogout}>
+          Sair
+        </Button>
+      </header>
+
+      {/* Plans Selection */}
+      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "3rem 1rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: "0.5rem" }}>
+            Escolha seu plano
+          </h2>
+          <p style={{ color: "hsl(var(--muted-foreground))" }}>
+            Selecione o plano ideal para começar
+          </p>
+        </div>
+
+        {error && (
+          <div style={{ 
+            marginBottom: "2rem", 
+            backgroundColor: "hsl(var(--destructive))/10", 
+            border: "1px solid hsl(var(--destructive))", 
+            color: "hsl(var(--destructive))", 
+            padding: "1rem", 
+            borderRadius: "var(--radius)",
+            maxWidth: "48rem",
+            margin: "0 auto 2rem"
+          }}>
+            {error}
+          </div>
+        )}
+
+        <PricingCards
+          plans={plans}
+          onSelectPlan={handleSelectPlan}
+          loading={loading}
+        />
       </div>
     </div>
   );
