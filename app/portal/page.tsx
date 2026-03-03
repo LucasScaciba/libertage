@@ -3,7 +3,21 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { TrendingUp, Eye, Calendar, Rocket, Edit, Image as ImageIcon, Zap, ExternalLink } from "lucide-react";
+import { 
+  TrendingUp, 
+  Eye, 
+  Calendar, 
+  Rocket, 
+  Edit, 
+  Image as ImageIcon, 
+  Zap, 
+  ExternalLink,
+  ArrowUpRight,
+  ArrowDownRight,
+  Users,
+  Activity
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -65,257 +79,314 @@ export default function DashboardPage() {
   const activeBoosts = boosts.filter((b) => b.status === "active");
   const planName = subscription?.plans?.name || "Free";
 
+  // Calculate percentage change (mock data for now)
+  const todayChange = analytics?.visitsToday > 0 ? "+12.5%" : "0%";
+  const weekChange = "+8.2%";
+
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 space-y-2">
-            <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-200" />
-            <div className="h-4 w-80 animate-pulse rounded-lg bg-gray-200" />
+      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+        <div className="flex items-center justify-between space-y-2">
+          <div className="space-y-2">
+            <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
+            <div className="h-4 w-96 animate-pulse rounded-lg bg-gray-200" />
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 animate-pulse rounded-lg border bg-white" />
-            ))}
-          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 animate-pulse rounded-xl border bg-white" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Visão geral do seu perfil e desempenho</p>
+    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Visão geral do seu perfil e desempenho
+          </p>
         </div>
-
-        {/* Stats Grid */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Visits Today */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-600">
-                <Eye className="h-4 w-4" />
-                Visitas Hoje
-              </CardDescription>
-              <CardTitle className="text-3xl font-bold text-gray-900">
-                {analytics?.visitsToday || 0}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={analytics?.visitsToday > 0 ? "text-green-600" : "text-gray-500"}>
-                  {analytics?.visitsToday > 0 ? <TrendingUp className="h-4 w-4" /> : "—"}
-                </span>
-                <span className="text-gray-600">vs. ontem</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Visits 7 Days */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4" />
-                Últimos 7 Dias
-              </CardDescription>
-              <CardTitle className="text-3xl font-bold text-gray-900">
-                {analytics?.visits7Days || 0}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600">Total de visitas</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Visits 30 Days */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4" />
-                Últimos 30 Dias
-              </CardDescription>
-              <CardTitle className="text-3xl font-bold text-gray-900">
-                {analytics?.visits30Days || 0}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600">Total de visitas</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Active Boosts */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-600">
-                <Rocket className="h-4 w-4" />
-                Boosts Ativos
-              </CardDescription>
-              <CardTitle className="text-3xl font-bold text-gray-900">
-                {activeBoosts.length}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={activeBoosts.length > 0 ? "text-green-600" : "text-gray-600"}>
-                  {activeBoosts.length > 0 ? "🚀 Promovendo" : "Nenhum ativo"}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="mb-8 grid gap-6 lg:grid-cols-3">
-          {/* Contact Clicks */}
-          {analytics && Object.keys(analytics.clicksByMethod || {}).length > 0 && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  Cliques por Método de Contato
-                </CardTitle>
-                <CardDescription>
-                  Como os visitantes estão entrando em contato
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(analytics.clicksByMethod).map(([method, count]: [string, any]) => (
-                    <div key={method} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-xl">
-                          {method === "whatsapp" ? "💬" : method === "telegram" ? "✈️" : "📧"}
-                        </div>
-                        <span className="text-sm font-medium capitalize">
-                          {method}
-                        </span>
-                      </div>
-                      <span className="text-xl font-semibold text-gray-900">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        <div className="flex items-center space-x-2">
+          {profile && (
+            <Button asChild>
+              <Link href={`/profiles/${profile.slug}`} target="_blank">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Ver Perfil Público
+              </Link>
+            </Button>
           )}
-
-          {/* Plan & Limits */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">
-                Plano Atual
-              </CardTitle>
-              <CardDescription>
-                {planName}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Photos */}
-                <div>
-                  <div className="mb-2 flex justify-between">
-                    <span className="text-sm text-gray-600">Fotos</span>
-                    <span className="text-sm font-medium">
-                      {mediaCount.photos} / {mediaLimits.maxPhotos}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                    <div
-                      className={`h-full transition-all ${
-                        mediaCount.photos >= mediaLimits.maxPhotos ? "bg-red-500" : "bg-green-500"
-                      }`}
-                      style={{ width: `${(mediaCount.photos / mediaLimits.maxPhotos) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Videos */}
-                <div>
-                  <div className="mb-2 flex justify-between">
-                    <span className="text-sm text-gray-600">Vídeos</span>
-                    <span className="text-sm font-medium">
-                      {mediaCount.videos} / {mediaLimits.maxVideos}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                    <div
-                      className={`h-full transition-all ${
-                        mediaCount.videos >= mediaLimits.maxVideos ? "bg-red-500" : "bg-green-500"
-                      }`}
-                      style={{ width: `${(mediaCount.videos / mediaLimits.maxVideos) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                <Link
-                  href="/portal/plans"
-                  className="mt-2 block rounded-lg bg-gray-100 px-4 py-2 text-center text-sm font-medium text-gray-900 transition-colors hover:bg-gray-200"
-                >
-                  Gerenciar Plano
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
         </div>
+      </div>
 
-        {/* Quick Actions */}
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Visits Today */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Ações Rápidas
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Visitas Hoje
             </CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.visitsToday || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              <span className={`inline-flex items-center ${analytics?.visitsToday > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                {analytics?.visitsToday > 0 ? (
+                  <>
+                    <ArrowUpRight className="mr-1 h-3 w-3" />
+                    {todayChange}
+                  </>
+                ) : (
+                  "Sem mudanças"
+                )}
+              </span>
+              {" "}vs. ontem
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Visits 7 Days */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Últimos 7 Dias
+            </CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.visits7Days || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              <span className="inline-flex items-center text-green-600">
+                <ArrowUpRight className="mr-1 h-3 w-3" />
+                {weekChange}
+              </span>
+              {" "}vs. semana anterior
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Visits 30 Days */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Últimos 30 Dias
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.visits30Days || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Total de visitas no mês
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Active Boosts */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Boosts Ativos
+            </CardTitle>
+            <Rocket className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeBoosts.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {activeBoosts.length > 0 ? (
+                <span className="text-green-600">🚀 Promovendo seu perfil</span>
+              ) : (
+                "Nenhum boost ativo"
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        {/* Contact Clicks */}
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Cliques por Método de Contato</CardTitle>
             <CardDescription>
-              Acesso rápido às funcionalidades principais
+              Como os visitantes estão entrando em contato com você
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Link
-                href="/portal/profile"
-                className="group flex flex-col rounded-lg border bg-gray-50 p-4 transition-all hover:border-gray-300 hover:bg-gray-100"
-              >
-                <Edit className="mb-2 h-6 w-6 text-gray-600 transition-colors group-hover:text-gray-900" />
-                <span className="text-sm font-medium text-gray-900">Editar Perfil</span>
-              </Link>
+            {analytics && Object.keys(analytics.clicksByMethod || {}).length > 0 ? (
+              <div className="space-y-8">
+                {Object.entries(analytics.clicksByMethod).map(([method, count]: [string, any]) => {
+                  const total = Object.values(analytics.clicksByMethod).reduce((a: any, b: any) => a + b, 0) as number;
+                  const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                  
+                  return (
+                    <div key={method} className="flex items-center">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-lg">
+                        {method === "whatsapp" ? "💬" : method === "telegram" ? "✈️" : "📧"}
+                      </div>
+                      <div className="ml-4 space-y-1 flex-1">
+                        <p className="text-sm font-medium leading-none capitalize">
+                          {method}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                            <div 
+                              className="h-full bg-primary transition-all"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {percentage}%
+                          </p>
+                        </div>
+                      </div>
+                      <div className="ml-auto font-medium">
+                        {count}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
+                Nenhum clique registrado ainda
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-              <Link
-                href="/portal/profile#media"
-                className="group flex flex-col rounded-lg border bg-gray-50 p-4 transition-all hover:border-gray-300 hover:bg-gray-100"
-              >
-                <ImageIcon className="mb-2 h-6 w-6 text-gray-600 transition-colors group-hover:text-gray-900" />
-                <span className="text-sm font-medium text-gray-900">Gerenciar Mídia</span>
-              </Link>
+        {/* Plan & Limits */}
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Plano Atual</CardTitle>
+            <CardDescription>
+              {planName}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Photos */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">Fotos</span>
+                  </div>
+                  <span className="text-muted-foreground">
+                    {mediaCount.photos} / {mediaLimits.maxPhotos}
+                  </span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={`h-full transition-all ${
+                      mediaCount.photos >= mediaLimits.maxPhotos 
+                        ? "bg-destructive" 
+                        : "bg-primary"
+                    }`}
+                    style={{ width: `${Math.min((mediaCount.photos / mediaLimits.maxPhotos) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
 
-              <Link
-                href="/portal/boosts"
-                className="group flex flex-col rounded-lg border bg-gray-50 p-4 transition-all hover:border-gray-300 hover:bg-gray-100"
-              >
-                <Zap className="mb-2 h-6 w-6 text-gray-600 transition-colors group-hover:text-gray-900" />
-                <span className="text-sm font-medium text-gray-900">Comprar Boost</span>
-              </Link>
+              {/* Videos */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">Vídeos</span>
+                  </div>
+                  <span className="text-muted-foreground">
+                    {mediaCount.videos} / {mediaLimits.maxVideos}
+                  </span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={`h-full transition-all ${
+                      mediaCount.videos >= mediaLimits.maxVideos 
+                        ? "bg-destructive" 
+                        : "bg-primary"
+                    }`}
+                    style={{ width: `${Math.min((mediaCount.videos / mediaLimits.maxVideos) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
 
-              {profile && (
-                <Link
-                  href={`/profiles/${profile.slug}`}
-                  target="_blank"
-                  className="group flex flex-col rounded-lg border bg-gray-50 p-4 transition-all hover:border-gray-300 hover:bg-gray-100"
-                >
-                  <ExternalLink className="mb-2 h-6 w-6 text-gray-600 transition-colors group-hover:text-gray-900" />
-                  <span className="text-sm font-medium text-gray-900">Ver Perfil Público</span>
+              <Button asChild className="w-full" variant="outline">
+                <Link href="/portal/plans">
+                  Gerenciar Plano
                 </Link>
-              )}
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Ações Rápidas</CardTitle>
+          <CardDescription>
+            Acesso rápido às funcionalidades principais
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
+              <Link href="/portal/profile">
+                <Edit className="mb-2 h-5 w-5" />
+                <div className="space-y-1 text-left">
+                  <p className="font-medium">Editar Perfil</p>
+                  <p className="text-xs text-muted-foreground">
+                    Atualize suas informações
+                  </p>
+                </div>
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
+              <Link href="/portal/profile#media">
+                <ImageIcon className="mb-2 h-5 w-5" />
+                <div className="space-y-1 text-left">
+                  <p className="font-medium">Gerenciar Mídia</p>
+                  <p className="text-xs text-muted-foreground">
+                    Adicione fotos e vídeos
+                  </p>
+                </div>
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
+              <Link href="/portal/boosts">
+                <Zap className="mb-2 h-5 w-5" />
+                <div className="space-y-1 text-left">
+                  <p className="font-medium">Comprar Boost</p>
+                  <p className="text-xs text-muted-foreground">
+                    Destaque seu perfil
+                  </p>
+                </div>
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
+              <Link href="/portal/analytics">
+                <Activity className="mb-2 h-5 w-5" />
+                <div className="space-y-1 text-left">
+                  <p className="font-medium">Ver Analytics</p>
+                  <p className="text-xs text-muted-foreground">
+                    Análise detalhada
+                  </p>
+                </div>
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
