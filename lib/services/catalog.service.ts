@@ -4,7 +4,7 @@ import { withCache } from "@/lib/utils/cache";
 
 export interface CatalogFilters {
   search?: string;
-  category?: string;
+  service?: string;
   city?: string;
   region?: string;
   features?: string[];
@@ -153,9 +153,9 @@ export class CatalogService {
       );
     }
 
-    // Category filter
-    if (filters.category) {
-      query = query.eq("category", filters.category);
+    // Service filter (check if service is in selected_features array)
+    if (filters.service) {
+      query = query.contains("selected_features", [filters.service]);
     }
 
     // City filter

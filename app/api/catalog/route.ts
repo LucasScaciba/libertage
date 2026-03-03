@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     // Parse filters
     const filters = {
       search: searchParams.get("search") || undefined,
-      category: searchParams.get("category") || undefined,
+      service: searchParams.get("service") || undefined,
       city: searchParams.get("city") || undefined,
       region: searchParams.get("region") || undefined,
       features: searchParams.get("features")?.split(",") || undefined,
