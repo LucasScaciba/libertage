@@ -141,6 +141,18 @@ export default function PlansPage() {
         <p className="mt-2 text-muted-foreground">
           Escolha o plano ideal para o seu negócio
         </p>
+        
+        {/* Debug info - temporary */}
+        {currentPlan && (
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <p className="text-sm">
+              <strong>Plano atual no banco:</strong> {currentPlan.name} ({currentPlan.code})
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Se você acabou de fazer um pagamento e o plano não atualizou, recarregue a página ou entre em contato com o suporte.
+            </p>
+          </div>
+        )}
       </div>
 
       {error && (
