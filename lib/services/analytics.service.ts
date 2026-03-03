@@ -144,7 +144,8 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const { data, error } = await supabase
+    // Try to fetch with device_type first
+    let { data, error } = await supabase
       .from("analytics_events")
       .select("created_at, device_type")
       .eq("profile_id", profileId)
@@ -152,12 +153,30 @@ export class AnalyticsService {
       .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: true });
 
+    // If device_type column doesn't exist, fetch without it
+    if (error && error.message?.includes("device_type")) {
+      console.log("device_type column not found, fetching without it");
+      const result = await supabase
+        .from("analytics_events")
+        .select("created_at")
+        .eq("profile_id", profileId)
+        .eq("event_type", "visit")
+        .gte("created_at", startDate.toISOString())
+        .order("created_at", { ascending: true });
+      
+      // Add device_type as null for compatibility
+      data = result.data?.map(item => ({ ...item, device_type: null })) || null;
+      error = result.error;
+    }
+
     if (error) {
       console.error("Error fetching visits by date:", error);
       return [];
     }
 
     console.log("Raw visits data:", data);
+    console.log("Profile ID:", profileId);
+    console.log("Start date:", startDate.toISOString());
 
     // Group by date and device type
     const visitsByDate: Record<string, { mobile: number; desktop: number; tablet: number }> = {};
