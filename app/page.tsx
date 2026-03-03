@@ -45,15 +45,8 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  // Mock gallery images (usando a mesma imagem 6 vezes para demonstração)
-  const galleryImages = selectedProfile ? [
-    selectedProfile.media?.[0]?.public_url,
-    selectedProfile.media?.[0]?.public_url,
-    selectedProfile.media?.[0]?.public_url,
-    selectedProfile.media?.[0]?.public_url,
-    selectedProfile.media?.[0]?.public_url,
-    selectedProfile.media?.[0]?.public_url,
-  ] : [];
+  // Gallery images from profile media
+  const galleryImages = selectedProfile?.media?.map((m: any) => m.public_url) || [];
 
   const openGallery = (index: number) => {
     setCurrentImageIndex(index);
@@ -344,16 +337,15 @@ export default function Home() {
                       <Badge>{selectedProfile.category}</Badge>
                       <Badge variant="secondary">{selectedProfile.city}</Badge>
                       <Badge variant="secondary">{selectedProfile.region}</Badge>
-                      <Badge variant="secondary">R$ 300/h</Badge>
                     </div>
                   </div>
 
                   {/* Photo Gallery */}
                   <div style={{ marginBottom: "1.5rem" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
-                      {[0, 1, 2, 3].map((i) => (
+                      {selectedProfile.media?.filter((m: any) => m.type === "photo").slice(0, 8).map((media: any, i: number) => (
                         <div
-                          key={i}
+                          key={media.id}
                           onClick={() => openGallery(i)}
                           style={{
                             aspectRatio: "1",
@@ -366,181 +358,89 @@ export default function Home() {
                           onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
                         >
                           <img
-                            src={selectedProfile.media?.[0]?.public_url || ""}
+                            src={media.public_url}
                             alt={`Foto ${i + 1}`}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           />
                         </div>
                       ))}
                     </div>
-                    {/* Video Thumbnail */}
-                    <div 
-                      onClick={() => openGallery(4)}
-                      style={{ marginTop: "0.5rem", position: "relative", borderRadius: "var(--radius)", overflow: "hidden", cursor: "pointer" }}
-                    >
-                      <img
-                        src={selectedProfile.media?.[0]?.public_url || ""}
-                        alt="Video"
-                        style={{ width: "100%", height: "8rem", objectFit: "cover", filter: "brightness(0.7)" }}
-                      />
-                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-                        <div style={{ 
-                          width: "3rem", 
-                          height: "3rem", 
-                          borderRadius: "50%", 
-                          backgroundColor: "rgba(255,255,255,0.9)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center"
-                        }}>
-                          ▶
+                    {/* Video Thumbnails */}
+                    {selectedProfile.media?.filter((m: any) => m.type === "video").map((media: any, i: number) => (
+                      <div 
+                        key={media.id}
+                        onClick={() => openGallery(selectedProfile.media.filter((m: any) => m.type === "photo").length + i)}
+                        style={{ marginTop: "0.5rem", position: "relative", borderRadius: "var(--radius)", overflow: "hidden", cursor: "pointer" }}
+                      >
+                        <video
+                          src={media.public_url}
+                          style={{ width: "100%", height: "8rem", objectFit: "cover", filter: "brightness(0.7)" }}
+                        />
+                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+                          <div style={{ 
+                            width: "3rem", 
+                            height: "3rem", 
+                            borderRadius: "50%", 
+                            backgroundColor: "rgba(255,255,255,0.9)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}>
+                            ▶
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Características */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                      Características
-                    </h3>
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      {["Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica", "Tag Característica"].map((tag, i) => (
-                        <Badge key={i} variant="outline">{tag}</Badge>
-                      ))}
-                    </div>
+                    ))}
                   </div>
 
                   {/* Descrição Longa */}
                   <div style={{ marginBottom: "1.5rem" }}>
-                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", marginBottom: "1rem" }}>
-                      Descrição longa Maecenas non sem tempus, vulputate sapien ac, semper nulla. Duis sit amet faucibus odio. Mauris venenatis urna urna, sed urna metus. Proin consequat iaculis lorem, a finibus. Etiam vel sapien sed risus sollicitudin eleifend eu ac mollis est sit amet odio rutrum, quis ultrices elit vestibulum.
+                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+                      {selectedProfile.long_description}
                     </p>
-                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", marginBottom: "1rem" }}>
-                      Aliquam mattis, felis sit amet interdum orci, vel auctor enim nisi a velit. Suspendisse at ligula eleifend, pretium mi et, porta ipsum. Nunc mollis velit sem, id sollicitudin massa malesuada sed.
-                    </p>
-                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", marginBottom: "1rem" }}>
-                      Phasellus dapibus consequat neque sed accumsan. Aliquam faucibus ornare semper. Donec nec porta odio, at aliquet lacus. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed est tellus. Phasellus nec metus finibus, scelerisque tortor eget, auctor felis.
-                    </p>
-                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6" }}>
-                      Donec ac finibus tellus. Pellentesque eros tellus, varius id turpis ac, molestie feugiat mauris. Nunc dui turpis, euismod ut elit eu, bibendum justo. Suspendisse a lectus eget mauris porttitor imperdiet.
-                    </p>
-                  </div>
-
-                  {/* Serviços */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                      Serviços
-                    </h3>
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      {["Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço", "Tag serviço"].map((tag, i) => (
-                        <Badge key={i} variant="outline">{tag}</Badge>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
                 {/* Right Column - Sidebar (will be below on mobile) */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                   {/* Contact Buttons */}
-                  <Button style={{ backgroundColor: "#25D366", color: "white" }} size="lg">
-                    WHATSAPP
-                  </Button>
-                  <Button style={{ backgroundColor: "#0088cc", color: "white" }} size="lg">
-                    TELEGRAM
-                  </Button>
+                  {selectedProfile.external_links?.map((link: any, i: number) => {
+                    const isWhatsApp = link.label?.toLowerCase().includes("whatsapp") || link.url?.includes("wa.me");
+                    const isTelegram = link.label?.toLowerCase().includes("telegram") || link.url?.includes("t.me");
+                    
+                    return (
+                      <Button
+                        key={i}
+                        onClick={() => window.open(link.url, "_blank")}
+                        style={{
+                          backgroundColor: isWhatsApp ? "#25D366" : isTelegram ? "#0088cc" : "hsl(var(--primary))",
+                          color: "white"
+                        }}
+                        size="lg"
+                      >
+                        {link.label?.toUpperCase() || "LINK"}
+                      </Button>
+                    );
+                  })}
 
                   {/* Valores */}
-                  <Card>
-                    <CardContent style={{ padding: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Valores
-                      </h3>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {[
-                          { label: "1h", value: "R$ 300,00" },
-                          { label: "2h", value: "R$ 380,00" },
-                          { label: "3h", value: "R$ 500,00" },
-                          { label: "Pernoite", value: "R$ 2300,00" },
-                          { label: "Serviço Custom", value: "R$ 90,00" },
-                        ].map((item, i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                            <span>{item.label}</span>
-                            <span style={{ fontWeight: "600" }}>{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Horários */}
-                  <Card>
-                    <CardContent style={{ padding: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Horários
-                      </h3>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo", "Feriados"].map((day, i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                            <span>{day}</span>
-                            <span>9h - 18h</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Local */}
-                  <Card>
-                    <CardContent style={{ padding: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Local
-                      </h3>
-                      <div style={{ width: "100%", height: "12rem", backgroundColor: "hsl(var(--muted))", borderRadius: "var(--radius)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ color: "hsl(var(--muted-foreground))" }}>Mapa</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Dados do Perfil */}
-                  <Card>
-                    <CardContent style={{ padding: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Dados do Perfil
-                      </h3>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.875rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span>N. de visitas hoje</span>
-                          <span style={{ fontWeight: "600" }}>49.859.503</span>
+                  {selectedProfile.pricing_packages && selectedProfile.pricing_packages.length > 0 && (
+                    <Card>
+                      <CardContent style={{ padding: "1rem" }}>
+                        <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                          Valores
+                        </h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {selectedProfile.pricing_packages.map((pkg: any, i: number) => (
+                            <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
+                              <span>{pkg.label}</span>
+                              <span style={{ fontWeight: "600" }}>{pkg.price}</span>
+                            </div>
+                          ))}
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span>Desde</span>
-                          <span style={{ fontWeight: "600" }}>21/01/2023</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span>Verificado em</span>
-                          <span style={{ fontWeight: "600" }}>27/01/2024</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Outros Links */}
-                  <Card>
-                    <CardContent style={{ padding: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Outros Links
-                      </h3>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {["Link custom 01", "Link custom 02", "Link custom 03", "Link custom 04"].map((link, i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                            <span>{link}</span>
-                            <a href="#" style={{ color: "hsl(var(--primary))", textDecoration: "none" }}>Acessar</a>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Denunciar Perfil */}
                   <Button variant="ghost" style={{ color: "hsl(var(--muted-foreground))", fontSize: "0.875rem" }}>
