@@ -35,9 +35,18 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case "checkout.session.completed":
+        console.log("=== Checkout Session Completed ===");
         const session = event.data.object;
+        console.log("Session ID:", session.id);
+        console.log("Session mode:", session.mode);
+        console.log("Session metadata:", session.metadata);
+        console.log("Customer:", session.customer);
+        console.log("Subscription:", session.subscription);
+        
         if (session.mode === "subscription") {
+          console.log("Processing subscription checkout...");
           await SubscriptionService.handleCheckoutCompleted(session);
+          console.log("Subscription checkout processed successfully");
         } else if (session.mode === "payment" && session.metadata?.boost_id) {
           // Handle boost payment
           const paymentIntent = await stripe.paymentIntents.retrieve(
@@ -51,14 +60,19 @@ export async function POST(request: Request) {
         break;
 
       case "customer.subscription.updated":
+        console.log("=== Subscription Updated ===");
+        console.log("Subscription ID:", event.data.object.id);
+        console.log("Status:", event.data.object.status);
         await SubscriptionService.handleSubscriptionUpdated(event.data.object);
         break;
 
       case "customer.subscription.deleted":
+        console.log("=== Subscription Deleted ===");
         await SubscriptionService.handleSubscriptionDeleted(event.data.object);
         break;
 
       case "invoice.payment_failed":
+        console.log("=== Invoice Payment Failed ===");
         await SubscriptionService.handleInvoicePaymentFailed(event.data.object);
         break;
 
@@ -69,6 +83,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   } catch (error: any) {
     console.error("Error processing webhook:", error);
+    console.error("Error stack:", error.stack);
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }

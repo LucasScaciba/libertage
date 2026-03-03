@@ -17,11 +17,41 @@ export default function PlansPage() {
     
     // Check if coming back from successful payment
     const success = searchParams.get('success');
-    if (success === 'true') {
-      // Redirect to profile edit page
-      router.push('/portal/profile');
+    const sessionId = searchParams.get('session_id');
+    
+    if (success === 'true' && sessionId) {
+      verifyAndActivateSubscription(sessionId);
     }
   }, [searchParams, router]);
+
+  const verifyAndActivateSubscription = async (sessionId: string) => {
+    try {
+      console.log("Verificando sessão do Stripe...");
+      
+      const res = await fetch("/api/subscriptions/verify-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log("Assinatura ativada com sucesso!");
+        // Wait a moment for the subscription to be fully processed
+        setTimeout(() => {
+          router.push('/portal/profile');
+        }, 1000);
+      } else {
+        console.error("Erro ao verificar sessão:", data.error);
+        // Still redirect but show the error
+        setError("Pagamento processado, mas houve um problema ao ativar a assinatura. Entre em contato com o suporte.");
+      }
+    } catch (err: any) {
+      console.error("Erro ao verificar sessão:", err);
+      setError("Erro ao verificar pagamento. Por favor, recarregue a página.");
+    }
+  };
 
   const fetchPlans = async () => {
     try {
