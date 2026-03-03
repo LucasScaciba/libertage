@@ -393,6 +393,26 @@ export default function Home() {
                     ))}
                   </div>
 
+                  {/* Medidas Físicas */}
+                  {(selectedProfile.weight || selectedProfile.height || selectedProfile.shoe_size) && (
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                        Medidas Físicas
+                      </h3>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        {selectedProfile.weight && (
+                          <Badge variant="outline">Peso: {selectedProfile.weight}kg</Badge>
+                        )}
+                        {selectedProfile.height && (
+                          <Badge variant="outline">Altura: {selectedProfile.height}cm</Badge>
+                        )}
+                        {selectedProfile.shoe_size && (
+                          <Badge variant="outline">Calçado: {selectedProfile.shoe_size}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Descrição Longa */}
                   <div style={{ marginBottom: "1.5rem" }}>
                     <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
