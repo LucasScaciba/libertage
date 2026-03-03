@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import type { Report } from "@/types";
 
 /**
  * Admin Reports Page - List and manage reports
@@ -169,17 +167,17 @@ export default function AdminReportsPage() {
       <Card className="p-4 mb-6">
         <div className="flex gap-4 items-center">
           <label className="font-medium">Filter by status:</label>
-          <Select
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-48"
+            className="w-48 flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <option value="">All</option>
             <option value="new">New</option>
             <option value="under_review">Under Review</option>
             <option value="resolved">Resolved</option>
             <option value="dismissed">Dismissed</option>
-          </Select>
+          </select>
         </div>
       </Card>
 
@@ -249,16 +247,16 @@ export default function AdminReportsPage() {
 
               {/* Actions */}
               <div className="flex gap-2 flex-wrap">
-                <Select
+                <select
                   value={report.status}
                   onChange={(e) => updateReportStatus(report.id, e.target.value)}
-                  className="w-48"
+                  className="w-48 flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="new">New</option>
                   <option value="under_review">Under Review</option>
                   <option value="resolved">Resolved</option>
                   <option value="dismissed">Dismissed</option>
-                </Select>
+                </select>
 
                 <Button
                   variant="outline"
