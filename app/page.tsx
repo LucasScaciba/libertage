@@ -752,7 +752,7 @@ export default function Home() {
                     setLoading(true);
                     const params = new URLSearchParams();
                     if (filters.search) params.append("search", filters.search);
-                    if (filters.category) params.append("category", filters.category);
+                    if (filters.service) params.append("service", filters.service);
                     if (filters.city) params.append("city", filters.city);
                     if (filters.region) params.append("region", filters.region);
 
