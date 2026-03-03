@@ -74,6 +74,11 @@ export class AnalyticsService {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
+    console.log('[Analytics] Calculating periods from:', now.toISOString());
+    console.log('[Analytics] 24h ago:', twentyFourHoursAgo.toISOString());
+    console.log('[Analytics] 7d ago:', sevenDaysAgo.toISOString());
+    console.log('[Analytics] 30d ago:', thirtyDaysAgo.toISOString());
+
     // Get visits for different time periods
     const [todayVisits, sevenDayVisits, thirtyDayVisits, twelveMonthVisits, clicks] =
       await Promise.all([
@@ -117,6 +122,13 @@ export class AnalyticsService {
           .eq("event_type", "contact_click"),
       ]);
 
+    console.log('[Analytics] Results:', {
+      visitsToday: todayVisits.count,
+      visits7Days: sevenDayVisits.count,
+      visits30Days: thirtyDayVisits.count,
+      visits12Months: twelveMonthVisits.count,
+    });
+
     // Group clicks by method
     const clicksByMethod: Record<string, number> = {};
     if (clicks.data) {
@@ -141,8 +153,9 @@ export class AnalyticsService {
   static async getVisitsByDate(profileId: string, days: number = 90): Promise<VisitsByDate[]> {
     const supabase = await createClient();
 
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const now = new Date();
+    const startDate = new Date(now.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+    startDate.setHours(0, 0, 0, 0); // Start of the first day
 
     // Try to fetch with device_type first
     let { data, error } = await supabase
@@ -195,9 +208,11 @@ export class AnalyticsService {
 
     // Convert to array and fill missing dates with zeros
     const result: VisitsByDate[] = [];
-    for (let i = 0; i < days; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - (days - 1 - i));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
       const dateStr = date.toISOString().split("T")[0];
 
       result.push({
