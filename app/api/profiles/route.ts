@@ -14,7 +14,6 @@ export async function POST(request: Request) {
       "short_description",
       "long_description",
       "city",
-      "region",
     ];
 
     for (const field of requiredFields) {
@@ -29,6 +28,13 @@ export async function POST(request: Request) {
     // Set default category if not provided
     if (!data.category) {
       data.category = "general";
+    }
+
+    // Set default region if not provided (extract from city or use default)
+    if (!data.region) {
+      // Try to extract state from city string (e.g., "São Paulo - SP" -> "SP")
+      const cityParts = data.city.split(" - ");
+      data.region = cityParts.length > 1 ? cityParts[1] : "BR";
     }
 
     // Validate short_description length

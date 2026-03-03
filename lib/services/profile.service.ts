@@ -8,7 +8,7 @@ interface CreateProfileInput {
   short_description: string;
   long_description: string;
   city: string;
-  region: string;
+  region?: string;
   latitude?: number;
   longitude?: number;
   age_attribute?: number;
@@ -53,6 +53,13 @@ export class ProfileService {
     // This is just for privacy, not for actual geospatial queries
     const geoHash = `${Math.floor(latitude * 100)}${Math.floor(longitude * 100)}`.substring(0, 10);
 
+    // Extract region from city if not provided
+    let region = data.region;
+    if (!region) {
+      const cityParts = data.city.split(" - ");
+      region = cityParts.length > 1 ? cityParts[1] : "BR";
+    }
+
     const { data: profile, error } = await supabase
       .from("profiles")
       .insert({
@@ -63,7 +70,7 @@ export class ProfileService {
         short_description: data.short_description,
         long_description: data.long_description,
         city: data.city,
-        region: data.region,
+        region: region,
         latitude,
         longitude,
         geohash: geoHash,
