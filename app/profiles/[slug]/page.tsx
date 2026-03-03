@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Head from "next/head";
 
 interface ProfileData {
   profile: any;
@@ -22,6 +21,12 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+
+  useEffect(() => {
+    if (data?.profile?.display_name) {
+      document.title = `${data.profile.display_name} — Libertage`;
+    }
+  }, [data?.profile?.display_name]);
 
   useEffect(() => {
     fetchProfile();
@@ -79,32 +84,22 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <>
-        <Head>
-          <title>Carregando... — Libertage</title>
-        </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <p className="text-gray-500">Carregando...</p>
-        </div>
-      </>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">Carregando...</p>
+      </div>
     );
   }
 
   if (error || !data) {
     return (
-      <>
-        <Head>
-          <title>Perfil não encontrado — Libertage</title>
-        </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-900 text-xl mb-4">{error}</p>
-            <Link href="/catalog">
-              <Button>Voltar ao Catálogo</Button>
-            </Link>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-900 text-xl mb-4">{error}</p>
+          <Link href="/catalog">
+            <Button>Voltar ao Catálogo</Button>
+          </Link>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -150,19 +145,7 @@ export default function PublicProfilePage() {
   };
 
   return (
-    <>
-      <Head>
-        <title>{profile.display_name} — Libertage</title>
-        <meta name="description" content={`${profile.short_description} | ${profile.city}, ${profile.region}`} />
-        <meta name="keywords" content={`${profile.display_name}, ${profile.city}, ${profile.region}, serviços premium`} />
-        <meta property="og:title" content={`${profile.display_name} — Libertage`} />
-        <meta property="og:description" content={profile.short_description} />
-        {coverMedia?.public_url && (
-          <meta property="og:image" content={coverMedia.public_url} />
-        )}
-        <meta property="og:type" content="profile" />
-      </Head>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
@@ -381,6 +364,6 @@ export default function PublicProfilePage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

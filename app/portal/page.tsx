@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Head from "next/head"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { SectionCards } from "@/components/section-cards"
 
@@ -16,6 +15,10 @@ interface AnalyticsSummary {
 export default function PortalPage() {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    document.title = "Painel — Libertage";
+  }, []);
 
   useEffect(() => {
     fetchAnalytics()
@@ -36,18 +39,13 @@ export default function PortalPage() {
   }
 
   return (
-    <>
-      <Head>
-        <title>Painel — Libertage</title>
-      </Head>
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <SectionCards analytics={analytics} loading={loading} />
-          <div className="px-4 lg:px-6">
-            <ChartAreaInteractive />
-          </div>
+    <div className="@container/main flex flex-1 flex-col gap-2">
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <SectionCards analytics={analytics} loading={loading} />
+        <div className="px-4 lg:px-6">
+          <ChartAreaInteractive />
         </div>
       </div>
-    </>
+    </div>
   )
 }

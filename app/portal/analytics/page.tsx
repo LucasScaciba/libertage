@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -19,6 +18,10 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = "Analytics — Libertage";
+  }, []);
 
   useEffect(() => {
     fetchAnalytics();
@@ -51,43 +54,29 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <>
-        <Head>
-          <title>Analytics — Libertage</title>
-        </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <p className="text-gray-500">Carregando analytics...</p>
-        </div>
-      </>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">Carregando analytics...</p>
+      </div>
     );
   }
 
   if (error || !data) {
     return (
-      <>
-        <Head>
-          <title>Analytics — Libertage</title>
-        </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-900 text-xl mb-4">{error}</p>
-            <Link href="/portal">
-              <Button>Voltar ao Portal</Button>
-            </Link>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-900 text-xl mb-4">{error}</p>
+          <Link href="/portal">
+            <Button>Voltar ao Portal</Button>
+          </Link>
         </div>
-      </>
+      </div>
     );
   }
 
   const totalClicks = Object.values(data.clicksByMethod).reduce((sum, count) => sum + count, 0);
 
   return (
-    <>
-      <Head>
-        <title>Analytics — Libertage</title>
-      </Head>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}
@@ -259,7 +248,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

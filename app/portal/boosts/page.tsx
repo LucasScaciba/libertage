@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +26,10 @@ export default function BoostsPage() {
   const [loading, setLoading] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    document.title = "Boosts — Libertage";
+  }, []);
 
   useEffect(() => {
     fetchProfile();
@@ -159,11 +162,7 @@ export default function BoostsPage() {
   };
 
   return (
-    <>
-      <Head>
-        <title>Boosts — Libertage</title>
-      </Head>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Boosts</h1>
@@ -365,7 +364,6 @@ export default function BoostsPage() {
           )}
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Head from "next/head";
 import { PricingCards } from "@/components/pricing-cards";
 
 export default function PlansPage() {
@@ -12,6 +11,10 @@ export default function PlansPage() {
   const [currentPlan, setCurrentPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    document.title = "Meu Plano — Libertage";
+  }, []);
 
   useEffect(() => {
     fetchPlans();
@@ -114,11 +117,7 @@ export default function PlansPage() {
   };
 
   return (
-    <>
-      <Head>
-        <title>Meu Plano — Libertage</title>
-      </Head>
-      <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Meu Plano</h1>
         <p className="mt-2 text-muted-foreground">
@@ -139,6 +138,5 @@ export default function PlansPage() {
         loading={loading}
       />
     </div>
-    </>
   );
 }

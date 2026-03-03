@@ -1,12 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import { AuthService } from "@/lib/services/auth.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Head from "next/head";
 
 export default function LoginPage() {
+  useEffect(() => {
+    document.title = "Login — Libertage";
+  }, []);
+
   const handleGoogleLogin = async () => {
     try {
       await AuthService.signInWithGoogle();
@@ -16,13 +20,7 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      <Head>
-        <title>Login — Libertage</title>
-        <meta name="description" content="Entre na sua conta Libertage para acessar seu perfil e gerenciar seus serviços." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Head>
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem 1rem" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem 1rem" }}>
       <div style={{ width: "100%", maxWidth: "28rem" }}>
         <Card>
           <CardHeader style={{ textAlign: "center" }}>
@@ -75,6 +73,6 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
