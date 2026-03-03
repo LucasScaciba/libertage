@@ -55,14 +55,6 @@ export default function ProfileEditPage() {
     ] as any[],
   });
 
-  // State for city search
-  const [citySearch, setCitySearch] = useState("");
-
-  // Filter cities based on search
-  const filteredCities = brazilianCities.filter(city =>
-    city.toLowerCase().includes(citySearch.toLowerCase())
-  );
-
   // Generate age options (18-60)
   const ageOptions = Array.from({ length: 43 }, (_, i) => i + 18);
 
@@ -628,40 +620,27 @@ export default function ProfileEditPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                   <div>
                     <Label htmlFor="city">Cidade *</Label>
-                    <div style={{ position: "relative" }}>
-                      <Input
-                        id="city-search"
-                        type="text"
-                        placeholder="Buscar cidade..."
-                        value={citySearch}
-                        onChange={(e) => setCitySearch(e.target.value)}
-                        onFocus={() => setCitySearch("")}
-                        style={{ marginBottom: "0.5rem" }}
-                      />
-                      <select
-                        id="city"
-                        required
-                        value={formData.city}
-                        onChange={(e) => {
-                          setFormData({ ...formData, city: e.target.value });
-                          setCitySearch("");
-                        }}
-                        style={{ minWidth: "100%", maxHeight: "200px" }}
-                        size={5}
-                      >
-                        <option value="">Selecione uma cidade</option>
-                        {filteredCities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                      {formData.city && (
-                        <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginTop: "0.5rem" }}>
-                          Selecionado: {formData.city}
-                        </p>
-                      )}
-                    </div>
+                    <select
+                      id="city"
+                      required
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      style={{ 
+                        width: "100%",
+                        padding: "0.5rem",
+                        borderRadius: "var(--radius)",
+                        border: "1px solid hsl(var(--input))",
+                        backgroundColor: "hsl(var(--background))",
+                        fontSize: "0.875rem"
+                      }}
+                    >
+                      <option value="">Selecione uma cidade</option>
+                      {brazilianCities.sort().map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -671,7 +650,14 @@ export default function ProfileEditPage() {
                       required
                       value={formData.age_attribute}
                       onChange={(e) => setFormData({ ...formData, age_attribute: e.target.value })}
-                      style={{ minWidth: "100%" }}
+                      style={{ 
+                        width: "100%",
+                        padding: "0.5rem",
+                        borderRadius: "var(--radius)",
+                        border: "1px solid hsl(var(--input))",
+                        backgroundColor: "hsl(var(--background))",
+                        fontSize: "0.875rem"
+                      }}
                     >
                       <option value="">Selecione sua idade</option>
                       {ageOptions.map((age) => (
