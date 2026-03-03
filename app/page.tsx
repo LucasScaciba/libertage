@@ -489,6 +489,48 @@ export default function Home() {
                     </Card>
                   )}
 
+                  {/* Outros Links */}
+                  {selectedProfile.external_links && selectedProfile.external_links.length > 0 && (
+                    <Card>
+                      <CardContent style={{ padding: "1rem" }}>
+                        <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                          Outros Links
+                        </h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {selectedProfile.external_links.map((link: any, i: number) => (
+                            <div 
+                              key={i} 
+                              style={{ 
+                                display: "flex", 
+                                justifyContent: "space-between", 
+                                alignItems: "center",
+                                fontSize: "0.875rem",
+                                padding: "0.5rem 0",
+                                borderBottom: i < selectedProfile.external_links.length - 1 ? "1px solid hsl(var(--border))" : "none"
+                              }}
+                            >
+                              <span style={{ color: "hsl(var(--muted-foreground))" }}>{link.label}</span>
+                              <button
+                                onClick={() => window.open(link.url, "_blank")}
+                                style={{
+                                  backgroundColor: "transparent",
+                                  border: "none",
+                                  color: "hsl(var(--primary))",
+                                  cursor: "pointer",
+                                  fontSize: "0.875rem",
+                                  fontWeight: "500",
+                                  textDecoration: "underline"
+                                }}
+                              >
+                                Acessar
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Denunciar Perfil */}
                   <Button variant="ghost" style={{ color: "hsl(var(--muted-foreground))", fontSize: "0.875rem" }}>
                     ⚠️ Denunciar Perfil
