@@ -141,6 +141,10 @@ export class SubscriptionService {
     const userId = session.metadata.user_id;
     const planCode = session.metadata.plan_code;
 
+    console.log("=== handleCheckoutCompleted ===");
+    console.log("User ID:", userId);
+    console.log("Plan code:", planCode);
+
     // Get plan
     const { data: plan } = await supabase
       .from("plans")
@@ -150,6 +154,8 @@ export class SubscriptionService {
 
     if (!plan) throw new Error("Plan not found");
 
+    console.log("Plan found:", plan.id);
+
     // Get subscription from Stripe with retry logic
     const stripeSubscription: any = await withRetry(
       async () => await stripe.subscriptions.retrieve(
@@ -158,19 +164,45 @@ export class SubscriptionService {
       { maxAttempts: 3 }
     );
 
+    console.log("Stripe subscription retrieved:", {
+      id: stripeSubscription.id,
+      status: stripeSubscription.status,
+      current_period_start: stripeSubscription.current_period_start,
+      current_period_end: stripeSubscription.current_period_end,
+    });
+
+    // Validate and convert timestamps
+    const periodStart = stripeSubscription.current_period_start 
+      ? new Date(stripeSubscription.current_period_start * 1000).toISOString()
+      : new Date().toISOString();
+    
+    const periodEnd = stripeSubscription.current_period_end
+      ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days from now
+
+    console.log("Period dates:", { periodStart, periodEnd });
+
     // Upsert subscription
-    await supabase.from("subscriptions").upsert({
+    const { error: upsertError } = await supabase.from("subscriptions").upsert({
       user_id: userId,
       plan_id: plan.id,
       stripe_customer_id: session.customer as string,
       stripe_subscription_id: session.subscription as string,
       status: "active",
-      current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+      current_period_start: periodStart,
+      current_period_end: periodEnd,
     });
+
+    if (upsertError) {
+      console.error("Error upserting subscription:", upsertError);
+      throw upsertError;
+    }
+
+    console.log("Subscription upserted successfully");
 
     // Auto-publish profile if eligible
     await this.checkAndPublishProfile(userId);
+    console.log("Profile publish check completed");
   }
 
   static async handleSubscriptionUpdated(subscription: any): Promise<void> {
