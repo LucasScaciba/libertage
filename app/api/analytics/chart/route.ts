@@ -37,9 +37,9 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get("days") || "90");
 
     // Get visits by date
-    const visitsByDate = await AnalyticsService.getVisitsByDate(profile.id, days);
+    const chartData = await AnalyticsService.getVisitsByDate(profile.id, days);
 
-    return NextResponse.json({ visitsByDate });
+    return NextResponse.json({ chartData });
   } catch (error) {
     console.error("Error fetching analytics chart:", error);
     return NextResponse.json(

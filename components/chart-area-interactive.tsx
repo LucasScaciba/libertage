@@ -6,7 +6,6 @@ import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -18,17 +17,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
 
 export const description = "Gráfico interativo de visitantes"
 
@@ -52,22 +40,14 @@ const chartConfig = {
 
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
-  const [timeRange, setTimeRange] = React.useState("90d")
   const [chartData, setChartData] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
-
-  React.useEffect(() => {
-    if (isMobile) {
-      setTimeRange("7d")
-    }
-  }, [isMobile])
 
   React.useEffect(() => {
     const fetchChartData = async () => {
       try {
         setLoading(true)
-        const days = timeRange === "90d" ? 90 : timeRange === "30d" ? 30 : 7
-        const res = await fetch(`/api/analytics/chart?days=${days}`)
+        const res = await fetch(`/api/analytics/chart?days=7`)
         const data = await res.json()
         
         if (data.chartData) {
@@ -81,64 +61,13 @@ export function ChartAreaInteractive() {
     }
 
     fetchChartData()
-  }, [timeRange])
-
-  const getTimeRangeLabel = () => {
-    switch (timeRange) {
-      case "90d":
-        return "Últimos 3 meses"
-      case "30d":
-        return "Últimos 30 dias"
-      case "7d":
-        return "Últimos 7 dias"
-      default:
-        return "Últimos 3 meses"
-    }
-  }
+  }, [])
 
   return (
     <Card className="@container/card">
       <CardHeader>
         <CardTitle>Total de Visitantes</CardTitle>
-        <CardDescription>
-          <span className="hidden @[540px]/card:block">
-            {getTimeRangeLabel()}
-          </span>
-          <span className="@[540px]/card:hidden">{getTimeRangeLabel()}</span>
-        </CardDescription>
-        <CardAction>
-          <ToggleGroup
-            type="single"
-            value={timeRange}
-            onValueChange={setTimeRange}
-            variant="outline"
-            className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
-          >
-            <ToggleGroupItem value="90d">Últimos 3 meses</ToggleGroupItem>
-            <ToggleGroupItem value="30d">Últimos 30 dias</ToggleGroupItem>
-            <ToggleGroupItem value="7d">Últimos 7 dias</ToggleGroupItem>
-          </ToggleGroup>
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger
-              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
-              size="sm"
-              aria-label="Selecione um período"
-            >
-              <SelectValue placeholder="Últimos 3 meses" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="90d" className="rounded-lg">
-                Últimos 3 meses
-              </SelectItem>
-              <SelectItem value="30d" className="rounded-lg">
-                Últimos 30 dias
-              </SelectItem>
-              <SelectItem value="7d" className="rounded-lg">
-                Últimos 7 dias
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </CardAction>
+        <CardDescription>Últimos 7 dias</CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         {loading ? (
