@@ -805,7 +805,7 @@ export default function Home() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {galleryImages.map((img, index) => (
+            {galleryImages.map((img: string, index: number) => (
               <div
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
