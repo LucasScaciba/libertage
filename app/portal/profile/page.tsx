@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import featuresServicesConfig from "@/lib/config/features-services.json";
 
 export default function ProfileEditPage() {
@@ -20,6 +21,7 @@ export default function ProfileEditPage() {
   const [activeSection, setActiveSection] = useState("basic");
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     display_name: "",
     slug: "",
@@ -77,6 +79,12 @@ export default function ProfileEditPage() {
   useEffect(() => {
     fetchProfile();
     fetchSubscription();
+    
+    // Check if welcome modal has been shown
+    const hasSeenWelcome = localStorage.getItem('profile_welcome_seen');
+    if (!hasSeenWelcome) {
+      setIsWelcomeModalOpen(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -1610,6 +1618,46 @@ export default function ProfileEditPage() {
             )}
           </div>
         </form>
+
+        {/* Welcome Modal */}
+        <Dialog open={isWelcomeModalOpen} onOpenChange={() => {}}>
+          <DialogContent>
+            <div style={{ textAlign: "center", padding: "1rem" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎉</div>
+              
+              <h2 style={{ fontSize: "1.75rem", fontWeight: "700", marginBottom: "1rem" }}>
+                Boas vindas!
+              </h2>
+              
+              <p style={{ 
+                color: "hsl(var(--muted-foreground))", 
+                marginBottom: "2rem",
+                lineHeight: "1.6",
+                fontSize: "1rem"
+              }}>
+                É mais do que um prazer ter você aqui conosco! Agora é hora de customizar o seu anúncio personalizado com todo carinho!
+              </p>
+
+              <Button
+                onClick={() => {
+                  localStorage.setItem('profile_welcome_seen', 'true');
+                  setIsWelcomeModalOpen(false);
+                }}
+                style={{
+                  width: "100%",
+                  backgroundColor: "black",
+                  color: "white",
+                  padding: "1rem",
+                  fontSize: "1rem",
+                  fontWeight: "600"
+                }}
+                size="lg"
+              >
+                Vamos começar!
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

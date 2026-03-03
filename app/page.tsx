@@ -18,6 +18,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [isAgeWarningOpen, setIsAgeWarningOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [filters, setFilters] = useState({
     search: "",
@@ -63,6 +64,12 @@ export default function Home() {
 
   useEffect(() => {
     loadProfiles();
+    
+    // Check if age warning has been shown
+    const hasSeenWarning = localStorage.getItem('age_warning_seen');
+    if (!hasSeenWarning) {
+      setIsAgeWarningOpen(true);
+    }
   }, []);
 
   const loadProfiles = async () => {
@@ -167,10 +174,7 @@ export default function Home() {
           {/* Right Buttons */}
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <Link href="/login">
-              <Button variant="ghost">Minha Conta</Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline">Quero Anunciar</Button>
+              <Button style={{ backgroundColor: "black", color: "white" }}>Acessar/Anunciar</Button>
             </Link>
           </div>
         </div>
@@ -934,6 +938,61 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Age Warning Modal */}
+      <Dialog open={isAgeWarningOpen} onOpenChange={() => {}}>
+        <DialogContent 
+          style={{ 
+            maxWidth: "28rem",
+            backgroundColor: "white",
+            borderRadius: "1rem",
+            padding: "2rem"
+          }}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <div style={{ textAlign: "center" }}>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1rem" }}>
+              Atenção! Site com <span style={{ color: "#ef4444" }}>Conteúdo Adulto +18</span>.
+            </h2>
+            
+            <div style={{ 
+              textAlign: "left", 
+              color: "hsl(var(--muted-foreground))", 
+              marginBottom: "1.5rem",
+              lineHeight: "1.6"
+            }}>
+              <p style={{ marginBottom: "1rem" }}>
+                Entendo que este site apresenta conteúdo explícito destinado a adultos.
+              </p>
+              <p style={{ marginBottom: "1rem" }}>
+                Autorizo o uso de cookies e tecnologias para melhorar a minha experiência no site.
+              </p>
+              <p>
+                A profissão de acompanhante é legalizada no Brasil e deve ser respeitada.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => {
+                localStorage.setItem('age_warning_seen', 'true');
+                setIsAgeWarningOpen(false);
+              }}
+              style={{
+                width: "100%",
+                backgroundColor: "black",
+                color: "white",
+                padding: "1rem",
+                fontSize: "1rem",
+                fontWeight: "600"
+              }}
+              size="lg"
+            >
+              Concordar e acessar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
