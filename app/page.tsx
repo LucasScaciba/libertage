@@ -393,6 +393,13 @@ export default function Home() {
                     ))}
                   </div>
 
+                  {/* Descrição Longa */}
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+                      {selectedProfile.long_description}
+                    </p>
+                  </div>
+
                   {/* Características e Serviços */}
                   {selectedProfile.selected_features && selectedProfile.selected_features.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
@@ -406,13 +413,6 @@ export default function Home() {
                       </div>
                     </div>
                   )}
-
-                  {/* Descrição Longa */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
-                      {selectedProfile.long_description}
-                    </p>
-                  </div>
                 </div>
 
                 {/* Right Column - Sidebar (will be below on mobile) */}
