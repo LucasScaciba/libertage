@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUpIcon, TrendingDownIcon, Eye, Calendar, Rocket, Activity } from "lucide-react";
+import { TrendingUpIcon, Eye, Calendar, Rocket, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -10,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { SiteHeader } from "@/components/site-header";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -92,7 +90,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <SiteHeader />
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {/* Stats Cards */}
@@ -228,11 +225,6 @@ export default function DashboardPage() {
                 </div>
               </CardFooter>
             </Card>
-          </div>
-
-          {/* Chart */}
-          <div className="px-4 lg:px-6">
-            <ChartAreaInteractive />
           </div>
         </div>
       </div>
