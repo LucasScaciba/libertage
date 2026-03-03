@@ -1,12 +1,12 @@
 "use client"
 
 import {
-  BellIcon,
-  CreditCardIcon,
-  LogOutIcon,
-  MoreVerticalIcon,
-  UserCircleIcon,
-} from "lucide-react"
+  IconCreditCard,
+  IconDotsVertical,
+  IconLogout,
+  IconNotification,
+  IconUserCircle,
+} from "@tabler/icons-react"
 
 import {
   Avatar,
@@ -59,11 +59,11 @@ export function NavUser({
                   {user.email}
                 </span>
               </div>
-              <MoreVerticalIcon className="ml-auto size-4" />
+              <IconDotsVertical className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -85,21 +85,21 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <UserCircleIcon />
+                <IconUserCircle />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCardIcon />
+                <IconCreditCard />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <BellIcon />
+                <IconNotification />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOutIcon />
+              <IconLogout />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

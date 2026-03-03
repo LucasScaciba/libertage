@@ -8,6 +8,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-slot="card"
     className={cn(
       "rounded-lg border bg-card text-card-foreground shadow-sm",
       className
@@ -28,6 +29,18 @@ const CardHeader = React.forwardRef<
   />
 ))
 CardHeader.displayName = "CardHeader"
+
+const CardAction = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("ml-auto", className)}
+    {...props}
+  />
+))
+CardAction.displayName = "CardAction"
 
 const CardTitle = React.forwardRef<
   HTMLDivElement,
@@ -76,4 +89,4 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, CardAction }
