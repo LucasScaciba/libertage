@@ -277,13 +277,13 @@ export default function Home() {
               <option value="Chamada de vídeo">Chamada de vídeo</option>
             </select>
 
-            {/* Todas as cidades */}
+            {/* Todos os estados */}
             <select
               value={filters.city}
               onChange={(e) => setFilters({ ...filters, city: e.target.value })}
               style={{ minWidth: "180px" }}
             >
-              <option value="">Todas as cidades</option>
+              <option value="">Todos os estados</option>
               {availableFilters.cities.map((city: string) => (
                 <option key={city} value={city}>
                   {city}

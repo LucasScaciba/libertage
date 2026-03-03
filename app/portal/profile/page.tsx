@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import featuresServicesConfig from "@/lib/config/features-services.json";
-import { brazilianCities } from "@/lib/data/brazilian-cities";
+import { brazilianStates } from "@/lib/data/brazilian-states";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -619,7 +619,7 @@ export default function ProfileEditPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                   <div>
-                    <Label htmlFor="city">Cidade *</Label>
+                    <Label htmlFor="city">Estado *</Label>
                     <select
                       id="city"
                       required
@@ -634,10 +634,10 @@ export default function ProfileEditPage() {
                         fontSize: "0.875rem"
                       }}
                     >
-                      <option value="">Selecione uma cidade</option>
-                      {brazilianCities.sort().map((city) => (
-                        <option key={city} value={city}>
-                          {city}
+                      <option value="">Selecione um estado</option>
+                      {brazilianStates.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
                         </option>
                       ))}
                     </select>

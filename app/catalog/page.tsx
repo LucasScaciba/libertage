@@ -187,7 +187,7 @@ export default function CatalogPage() {
                   value={filters.city}
                   onChange={(e) => setFilters({ ...filters, city: e.target.value })}
                 >
-                  <option value="">Todas as cidades</option>
+                  <option value="">Todos os estados</option>
                   {availableFilters.cities.map((city: string) => (
                     <option key={city} value={city}>
                       {city}
