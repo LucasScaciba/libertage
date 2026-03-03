@@ -1,17 +1,15 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react"
 import {
   IconDashboard,
   IconRocket,
   IconSettings,
   IconUser,
-  IconLifebuoy,
-  IconSend,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -23,13 +21,40 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "User Name",
-    email: "user@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [user, setUser] = useState<any>(null)
+  const [subscription, setSubscription] = useState<any>(null)
+
+  useEffect(() => {
+    fetchUserData()
+    fetchSubscription()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const res = await fetch("/api/auth/me")
+      if (res.ok) {
+        const data = await res.json()
+        setUser(data.user)
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error)
+    }
+  }
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await fetch("/api/subscriptions/plans")
+      if (res.ok) {
+        const data = await res.json()
+        setSubscription(data.subscription)
+      }
+    } catch (error) {
+      console.error("Error fetching subscription:", error)
+    }
+  }
+
+  const navMain = [
     {
       title: "Painel",
       url: "/portal",
@@ -50,22 +75,10 @@ const data = {
       url: "/portal/plans",
       icon: IconSettings,
     },
-  ],
-  navSecondary: [
-    {
-      title: "Suporte",
-      url: "#",
-      icon: IconLifebuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: IconSend,
-    },
-  ],
-}
+  ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const planName = subscription?.plan?.name || "Gratuito"
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -77,8 +90,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <IconDashboard className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Portal</span>
-                  <span className="truncate text-xs">Painel</span>
+                  <span className="truncate font-semibold">Libertage</span>
+                  <span className="truncate text-xs">Plano {planName}</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -86,11 +99,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} subscription={subscription} />
       </SidebarFooter>
     </Sidebar>
   )
