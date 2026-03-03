@@ -4,7 +4,7 @@ import { AnalyticsService } from "@/lib/services/analytics.service";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { profile_id } = body;
+    const { profile_id, device_type } = body;
 
     if (!profile_id) {
       return NextResponse.json(
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       request.headers.get("user-agent") ||
       "anonymous";
 
-    await AnalyticsService.trackVisit(profile_id, fingerprint);
+    await AnalyticsService.trackVisit(profile_id, fingerprint, device_type);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -71,11 +71,17 @@ export default function Home() {
 
   const trackVisit = async (profileId: string) => {
     try {
+      // Detect device type
+      const deviceType = typeof window !== "undefined" 
+        ? (window.innerWidth < 768 ? "mobile" : window.innerWidth < 1024 ? "tablet" : "desktop")
+        : "desktop";
+
       await fetch("/api/analytics/visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profile_id: profileId,
+          device_type: deviceType,
         }),
       });
     } catch (err) {
