@@ -941,55 +941,56 @@ export default function Home() {
 
       {/* Age Warning Modal */}
       <Dialog open={isAgeWarningOpen} onOpenChange={() => {}}>
-        <DialogContent 
-          style={{ 
-            maxWidth: "28rem",
-            backgroundColor: "white",
-            borderRadius: "1rem",
-            padding: "2rem"
-          }}
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <div style={{ textAlign: "center" }}>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1rem" }}>
-              Atenção! Site com <span style={{ color: "#ef4444" }}>Conteúdo Adulto +18</span>.
-            </h2>
-            
-            <div style={{ 
-              textAlign: "left", 
-              color: "hsl(var(--muted-foreground))", 
-              marginBottom: "1.5rem",
-              lineHeight: "1.6"
-            }}>
-              <p style={{ marginBottom: "1rem" }}>
-                Entendo que este site apresenta conteúdo explícito destinado a adultos.
-              </p>
-              <p style={{ marginBottom: "1rem" }}>
-                Autorizo o uso de cookies e tecnologias para melhorar a minha experiência no site.
-              </p>
-              <p>
-                A profissão de acompanhante é legalizada no Brasil e deve ser respeitada.
-              </p>
-            </div>
+        <DialogContent>
+          <div 
+            style={{ 
+              maxWidth: "28rem",
+              backgroundColor: "white",
+              borderRadius: "1rem",
+              padding: "2rem"
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1rem" }}>
+                Atenção! Site com <span style={{ color: "#ef4444" }}>Conteúdo Adulto +18</span>.
+              </h2>
+              
+              <div style={{ 
+                textAlign: "left", 
+                color: "hsl(var(--muted-foreground))", 
+                marginBottom: "1.5rem",
+                lineHeight: "1.6"
+              }}>
+                <p style={{ marginBottom: "1rem" }}>
+                  Entendo que este site apresenta conteúdo explícito destinado a adultos.
+                </p>
+                <p style={{ marginBottom: "1rem" }}>
+                  Autorizo o uso de cookies e tecnologias para melhorar a minha experiência no site.
+                </p>
+                <p>
+                  A profissão de acompanhante é legalizada no Brasil e deve ser respeitada.
+                </p>
+              </div>
 
-            <Button
-              onClick={() => {
-                localStorage.setItem('age_warning_seen', 'true');
-                setIsAgeWarningOpen(false);
-              }}
-              style={{
-                width: "100%",
-                backgroundColor: "black",
-                color: "white",
-                padding: "1rem",
-                fontSize: "1rem",
-                fontWeight: "600"
-              }}
-              size="lg"
-            >
-              Concordar e acessar
-            </Button>
+              <Button
+                onClick={() => {
+                  localStorage.setItem('age_warning_seen', 'true');
+                  setIsAgeWarningOpen(false);
+                }}
+                style={{
+                  width: "100%",
+                  backgroundColor: "black",
+                  color: "white",
+                  padding: "1rem",
+                  fontSize: "1rem",
+                  fontWeight: "600"
+                }}
+                size="lg"
+              >
+                Concordar e acessar
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
