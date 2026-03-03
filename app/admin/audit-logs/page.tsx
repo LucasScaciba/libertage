@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import type { AuditLog } from "@/types";
 
 /**
  * Admin Audit Logs Page - View system audit trail
@@ -96,17 +94,17 @@ export default function AdminAuditLogsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label>Action Type</Label>
-            <Select
+            <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              className="mt-1"
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">All Actions</option>
               <option value="profile_unpublished">Profile Unpublished</option>
               <option value="user_suspended">User Suspended</option>
               <option value="user_banned">User Banned</option>
               <option value="report_status_updated">Report Status Updated</option>
-            </Select>
+            </select>
           </div>
 
           <div>
