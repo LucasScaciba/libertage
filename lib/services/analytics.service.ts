@@ -69,7 +69,7 @@ export class AnalyticsService {
     const supabase = await createClient();
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
@@ -77,13 +77,13 @@ export class AnalyticsService {
     // Get visits for different time periods
     const [todayVisits, sevenDayVisits, thirtyDayVisits, twelveMonthVisits, clicks] =
       await Promise.all([
-        // Visits today
+        // Visits last 24 hours
         supabase
           .from("analytics_events")
           .select("*", { count: "exact", head: true })
           .eq("profile_id", profileId)
           .eq("event_type", "visit")
-          .gte("created_at", today.toISOString()),
+          .gte("created_at", twentyFourHoursAgo.toISOString()),
 
         // Visits last 7 days
         supabase
