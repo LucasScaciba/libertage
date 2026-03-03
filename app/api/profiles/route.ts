@@ -11,7 +11,6 @@ export async function POST(request: Request) {
     const requiredFields = [
       "display_name",
       "slug",
-      "category",
       "short_description",
       "long_description",
       "city",
@@ -25,6 +24,11 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+    }
+
+    // Set default category if not provided
+    if (!data.category) {
+      data.category = "general";
     }
 
     // Validate short_description length

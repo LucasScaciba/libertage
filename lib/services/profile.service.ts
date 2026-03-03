@@ -4,7 +4,7 @@ import type { Profile } from "@/types";
 interface CreateProfileInput {
   display_name: string;
   slug: string;
-  category: string;
+  category?: string;
   short_description: string;
   long_description: string;
   city: string;
@@ -59,7 +59,7 @@ export class ProfileService {
         user_id: userId,
         display_name: data.display_name,
         slug: data.slug,
-        category: data.category,
+        category: data.category || "general",
         short_description: data.short_description,
         long_description: data.long_description,
         city: data.city,
