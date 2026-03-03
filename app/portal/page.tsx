@@ -1,372 +1,412 @@
-import { AuthServerService } from "@/lib/services/auth-server.service";
-import { ProfileService } from "@/lib/services/profile.service";
-import { AnalyticsService } from "@/lib/services/analytics.service";
-import { SubscriptionService } from "@/lib/services/subscription.service";
-import { BoostService } from "@/lib/services/boost.service";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-export default async function PortalPage() {
-  const user = await AuthServerService.getCurrentUser();
+export default function DashboardPage() {
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [mediaCount, setMediaCount] = useState({ photos: 0, videos: 0 });
+  const [mediaLimits, setMediaLimits] = useState({ maxPhotos: 6, maxVideos: 1 });
+  const [boosts, setBoosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!user) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  // Get user's profile
-  const supabase = await (await import("@/lib/supabase/server")).createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-
-  // Get analytics summary
-  let analytics = null;
-  if (profile) {
+  const loadDashboardData = async () => {
     try {
-      analytics = await AnalyticsService.getAnalyticsSummary(profile.id);
+      // Load profile and subscription
+      const profileRes = await fetch("/api/profiles/me");
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        setProfile(profileData.profile);
+        setSubscription(profileData.subscription);
+
+        // Load analytics if profile exists
+        if (profileData.profile) {
+          const analyticsRes = await fetch(`/api/analytics/dashboard?profileId=${profileData.profile.id}`);
+          if (analyticsRes.ok) {
+            const analyticsData = await analyticsRes.json();
+            setAnalytics(analyticsData);
+          }
+
+          // Load media count
+          const mediaRes = await fetch(`/api/media?profileId=${profileData.profile.id}`);
+          if (mediaRes.ok) {
+            const mediaData = await mediaRes.json();
+            const photos = mediaData.media?.filter((m: any) => m.type === "photo").length || 0;
+            const videos = mediaData.media?.filter((m: any) => m.type === "video").length || 0;
+            setMediaCount({ photos, videos });
+          }
+        }
+
+        // Set media limits from subscription
+        if (profileData.subscription?.plans) {
+          setMediaLimits({
+            maxPhotos: profileData.subscription.plans.max_photos || 6,
+            maxVideos: profileData.subscription.plans.max_videos || 1,
+          });
+        }
+      }
+
+      // Load boosts
+      const boostsRes = await fetch("/api/boosts/me");
+      if (boostsRes.ok) {
+        const boostsData = await boostsRes.json();
+        setBoosts(boostsData.boosts || []);
+      }
     } catch (error) {
-      console.error("Error loading analytics:", error);
+      console.error("Error loading dashboard data:", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // Get subscription and limits
-  let subscription = null;
-  let mediaLimits = { maxPhotos: 3, maxVideos: 0 };
-  try {
-    subscription = await SubscriptionService.getCurrentSubscription(user.id);
-    mediaLimits = await SubscriptionService.getMediaLimits(user.id);
-  } catch (error) {
-    console.error("Error loading subscription:", error);
-  }
-
-  // Get boosts
-  let boosts: any[] = [];
-  try {
-    boosts = (await BoostService.getUserBoosts(user.id)) || [];
-  } catch (error) {
-    console.error("Error loading boosts:", error);
-  }
-
-  // Filter active and scheduled boosts
   const activeBoosts = boosts.filter((b) => b.status === "active");
-  const scheduledBoosts = boosts.filter((b) => b.status === "scheduled");
+  const planName = subscription?.plans?.name || "Free";
 
-  // Get current media count
-  let mediaCount = { photos: 0, videos: 0 };
-  if (profile) {
-    const supabase = await (await import("@/lib/supabase/server")).createClient();
-    const { count: photoCount } = await supabase
-      .from("media")
-      .select("*", { count: "exact", head: true })
-      .eq("profile_id", profile.id)
-      .eq("type", "photo");
-    const { count: videoCount } = await supabase
-      .from("media")
-      .select("*", { count: "exact", head: true })
-      .eq("profile_id", profile.id)
-      .eq("type", "video");
-    mediaCount = { photos: photoCount || 0, videos: videoCount || 0 };
+  if (loading) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <div style={{ maxWidth: "80rem", margin: "0 auto" }}>
+          <div style={{ marginBottom: "2rem" }}>
+            <div style={{ width: "12rem", height: "2rem", backgroundColor: "#e5e7eb", borderRadius: "0.5rem", marginBottom: "0.5rem" }} />
+            <div style={{ width: "20rem", height: "1rem", backgroundColor: "#e5e7eb", borderRadius: "0.5rem" }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} style={{ height: "8rem", backgroundColor: "white", borderRadius: "0.5rem", border: "1px solid #e5e7eb" }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
-
-  const planName = subscription?.plans
-    ? (subscription.plans as any).name
-    : "Free";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Portal do Provedor
+    <div style={{ padding: "2rem", backgroundColor: "#f9fafb", minHeight: "100vh" }}>
+      <div style={{ maxWidth: "80rem", margin: "0 auto" }}>
+        {/* Header */}
+        <div style={{ marginBottom: "2rem" }}>
+          <h1 style={{ fontSize: "1.875rem", fontWeight: "700", color: "#111827", marginBottom: "0.5rem" }}>
+            Dashboard
           </h1>
-          <p className="text-gray-600 mb-8">Bem-vindo, {user.name}!</p>
+          <p style={{ color: "#6b7280" }}>
+            Visão geral do seu perfil e desempenho
+          </p>
+        </div>
 
-          {/* Analytics Summary */}
-          {profile && analytics && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Estatísticas do Perfil
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardDescription>Visitas Hoje</CardDescription>
-                    <CardTitle className="text-3xl">
-                      {analytics.visitsToday}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardDescription>Últimos 7 Dias</CardDescription>
-                    <CardTitle className="text-3xl">
-                      {analytics.visits7Days}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardDescription>Últimos 30 Dias</CardDescription>
-                    <CardTitle className="text-3xl">
-                      {analytics.visits30Days}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardDescription>Últimos 12 Meses</CardDescription>
-                    <CardTitle className="text-3xl">
-                      {analytics.visits12Months}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
+        {/* Stats Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+          {/* Visits Today */}
+          <Card>
+            <CardHeader style={{ paddingBottom: "0.75rem" }}>
+              <CardDescription style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                Visitas Hoje
+              </CardDescription>
+              <CardTitle style={{ fontSize: "2rem", fontWeight: "700", color: "#111827" }}>
+                {analytics?.visitsToday || 0}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
+                <span style={{ color: analytics?.visitsToday > 0 ? "#10b981" : "#6b7280" }}>
+                  {analytics?.visitsToday > 0 ? "↑" : "—"}
+                </span>
+                <span style={{ color: "#6b7280" }}>vs. ontem</span>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Clicks by method */}
-              {Object.keys(analytics.clicksByMethod).length > 0 && (
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle>Cliques por Método de Contato</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {Object.entries(analytics.clicksByMethod).map(
-                        ([method, count]) => (
-                          <div
-                            key={method}
-                            className="flex justify-between items-center"
-                          >
-                            <span className="text-sm font-medium capitalize">
-                              {method}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                              {count} cliques
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+          {/* Visits 7 Days */}
+          <Card>
+            <CardHeader style={{ paddingBottom: "0.75rem" }}>
+              <CardDescription style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                Últimos 7 Dias
+              </CardDescription>
+              <CardTitle style={{ fontSize: "2rem", fontWeight: "700", color: "#111827" }}>
+                {analytics?.visits7Days || 0}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
+                <span style={{ color: "#6b7280" }}>Total de visitas</span>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Subscription & Media Limits */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Plano e Limites
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Plano Atual</CardTitle>
-                  <CardDescription>
-                    Você está no plano {planName}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Fotos</span>
-                      <span className="text-sm font-medium">
-                        {mediaCount.photos} / {mediaLimits.maxPhotos}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Vídeos</span>
-                      <span className="text-sm font-medium">
-                        {mediaCount.videos} / {mediaLimits.maxVideos}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Visits 30 Days */}
+          <Card>
+            <CardHeader style={{ paddingBottom: "0.75rem" }}>
+              <CardDescription style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                Últimos 30 Dias
+              </CardDescription>
+              <CardTitle style={{ fontSize: "2rem", fontWeight: "700", color: "#111827" }}>
+                {analytics?.visits30Days || 0}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
+                <span style={{ color: "#6b7280" }}>Total de visitas</span>
+              </div>
+            </CardContent>
+          </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Boost Credits</CardTitle>
-                  <CardDescription>
-                    Promova seu perfil no catálogo
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Boosts Ativos</span>
-                      <span className="text-sm font-medium">
-                        {activeBoosts.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Boosts Agendados</span>
-                      <span className="text-sm font-medium">
-                        {scheduledBoosts.length}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          {/* Active Boosts */}
+          <Card>
+            <CardHeader style={{ paddingBottom: "0.75rem" }}>
+              <CardDescription style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                Boosts Ativos
+              </CardDescription>
+              <CardTitle style={{ fontSize: "2rem", fontWeight: "700", color: "#111827" }}>
+                {activeBoosts.length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
+                <span style={{ color: activeBoosts.length > 0 ? "#10b981" : "#6b7280" }}>
+                  {activeBoosts.length > 0 ? "🚀 Promovendo" : "Nenhum ativo"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Active and Scheduled Boosts */}
-          {(activeBoosts.length > 0 || scheduledBoosts.length > 0) && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Seus Boosts
-              </h2>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    {activeBoosts.map((boost) => (
-                      <div
-                        key={boost.id}
-                        className="flex justify-between items-center p-3 bg-green-50 rounded-lg"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-green-900">
-                            Ativo Agora
-                          </span>
-                          <p className="text-xs text-green-700">
-                            Termina em{" "}
-                            {new Date(boost.end_time).toLocaleString("pt-BR")}
-                          </p>
+        {/* Two Column Layout */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1.5rem", marginBottom: "2rem" }}>
+          {/* Contact Clicks */}
+          {analytics && Object.keys(analytics.clicksByMethod || {}).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle style={{ fontSize: "1.125rem", fontWeight: "600" }}>
+                  Cliques por Método de Contato
+                </CardTitle>
+                <CardDescription>
+                  Como os visitantes estão entrando em contato
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  {Object.entries(analytics.clicksByMethod).map(([method, count]: [string, any]) => (
+                    <div key={method} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <div style={{
+                          width: "2.5rem",
+                          height: "2.5rem",
+                          borderRadius: "0.5rem",
+                          backgroundColor: "#f3f4f6",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "1.25rem"
+                        }}>
+                          {method === "whatsapp" ? "💬" : method === "telegram" ? "✈️" : "📧"}
                         </div>
-                        <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-200 rounded">
-                          ATIVO
+                        <span style={{ fontSize: "0.875rem", fontWeight: "500", textTransform: "capitalize" }}>
+                          {method}
                         </span>
                       </div>
-                    ))}
-                    {scheduledBoosts.map((boost) => (
-                      <div
-                        key={boost.id}
-                        className="flex justify-between items-center p-3 bg-blue-50 rounded-lg"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-blue-900">
-                            Agendado
-                          </span>
-                          <p className="text-xs text-blue-700">
-                            Inicia em{" "}
-                            {new Date(boost.start_time).toLocaleString("pt-BR")}
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-200 rounded">
-                          AGENDADO
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      <span style={{ fontSize: "1.25rem", fontWeight: "600", color: "#111827" }}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Quick Actions */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {/* Plan & Limits */}
+          <Card>
+            <CardHeader>
+              <CardTitle style={{ fontSize: "1.125rem", fontWeight: "600" }}>
+                Plano Atual
+              </CardTitle>
+              <CardDescription>
+                {planName}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {/* Photos */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                    <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>Fotos</span>
+                    <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
+                      {mediaCount.photos} / {mediaLimits.maxPhotos}
+                    </span>
+                  </div>
+                  <div style={{ width: "100%", height: "0.5rem", backgroundColor: "#e5e7eb", borderRadius: "9999px", overflow: "hidden" }}>
+                    <div style={{
+                      width: `${(mediaCount.photos / mediaLimits.maxPhotos) * 100}%`,
+                      height: "100%",
+                      backgroundColor: mediaCount.photos >= mediaLimits.maxPhotos ? "#ef4444" : "#10b981",
+                      transition: "width 0.3s"
+                    }} />
+                  </div>
+                </div>
+
+                {/* Videos */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                    <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>Vídeos</span>
+                    <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
+                      {mediaCount.videos} / {mediaLimits.maxVideos}
+                    </span>
+                  </div>
+                  <div style={{ width: "100%", height: "0.5rem", backgroundColor: "#e5e7eb", borderRadius: "9999px", overflow: "hidden" }}>
+                    <div style={{
+                      width: `${(mediaCount.videos / mediaLimits.maxVideos) * 100}%`,
+                      height: "100%",
+                      backgroundColor: mediaCount.videos >= mediaLimits.maxVideos ? "#ef4444" : "#10b981",
+                      transition: "width 0.3s"
+                    }} />
+                  </div>
+                </div>
+
+                <Link
+                  href="/portal/plans"
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    padding: "0.5rem",
+                    backgroundColor: "#f3f4f6",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    color: "#111827",
+                    textDecoration: "none",
+                    marginTop: "0.5rem"
+                  }}
+                >
+                  Gerenciar Plano
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle style={{ fontSize: "1.125rem", fontWeight: "600" }}>
               Ações Rápidas
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            </CardTitle>
+            <CardDescription>
+              Acesso rápido às funcionalidades principais
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <Link
                 href="/portal/profile"
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "1rem",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e5e7eb",
+                  textDecoration: "none",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f3f4f6";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f9fafb";
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                }}
               >
-                <div className="p-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Editar Perfil
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Atualize suas informações e disponibilidade
-                  </p>
-                </div>
+                <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>✏️</span>
+                <span style={{ fontSize: "0.875rem", fontWeight: "500", color: "#111827" }}>Editar Perfil</span>
               </Link>
 
               <Link
                 href="/portal/media"
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "1rem",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e5e7eb",
+                  textDecoration: "none",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f3f4f6";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f9fafb";
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                }}
               >
-                <div className="p-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Upload de Mídia
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Adicione fotos e vídeos ao seu perfil
-                  </p>
-                </div>
+                <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>📸</span>
+                <span style={{ fontSize: "0.875rem", fontWeight: "500", color: "#111827" }}>Gerenciar Mídia</span>
               </Link>
 
               <Link
                 href="/portal/boosts"
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "1rem",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e5e7eb",
+                  textDecoration: "none",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f3f4f6";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f9fafb";
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                }}
               >
-                <div className="p-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Comprar Boost
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Promova seu perfil por 2 horas
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                href="/portal/plans"
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="p-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Gerenciar Plano
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Upgrade ou gerencie sua assinatura
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                href="/portal/analytics"
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="p-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Ver Analytics Completo
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Análise detalhada de desempenho
-                  </p>
-                </div>
+                <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🚀</span>
+                <span style={{ fontSize: "0.875rem", fontWeight: "500", color: "#111827" }}>Comprar Boost</span>
               </Link>
 
               {profile && (
                 <Link
                   href={`/profiles/${profile.slug}`}
                   target="_blank"
-                  className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: "1rem",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "0.5rem",
+                    border: "1px solid #e5e7eb",
+                    textDecoration: "none",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f3f4f6";
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f9fafb";
+                    e.currentTarget.style.borderColor = "#e5e7eb";
+                  }}
                 >
-                  <div className="p-5">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Ver Perfil Público
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Veja como visitantes veem seu perfil
-                    </p>
-                  </div>
+                  <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>👁️</span>
+                  <span style={{ fontSize: "0.875rem", fontWeight: "500", color: "#111827" }}>Ver Perfil Público</span>
                 </Link>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
