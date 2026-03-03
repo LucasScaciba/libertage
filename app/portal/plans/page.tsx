@@ -11,7 +11,6 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [currentPlan, setCurrentPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -136,35 +135,6 @@ export default function PlansPage() {
     }
   };
 
-  const handleSyncSubscription = async () => {
-    setSyncing(true);
-    setError("");
-
-    try {
-      console.log("Sincronizando assinatura com Stripe...");
-      const res = await fetch("/api/subscriptions/sync", {
-        method: "POST",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to sync subscription");
-      }
-
-      console.log("✅ Assinatura sincronizada:", data);
-      alert(`Assinatura sincronizada com sucesso! Plano: ${data.plan.name}`);
-      
-      // Reload plans
-      await fetchPlans();
-    } catch (err: any) {
-      console.error("Erro ao sincronizar:", err);
-      setError(err.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -172,26 +142,6 @@ export default function PlansPage() {
         <p className="mt-2 text-muted-foreground">
           Escolha o plano ideal para o seu negócio
         </p>
-        
-        {/* Debug info - temporary */}
-        {currentPlan && (
-          <div className="mt-4 p-4 bg-muted rounded-lg">
-            <p className="text-sm">
-              <strong>Plano atual no banco:</strong> {currentPlan.name} ({currentPlan.code})
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Se você acabou de fazer um pagamento e o plano não atualizou, clique no botão abaixo para sincronizar.
-            </p>
-            <Button
-              onClick={handleSyncSubscription}
-              disabled={syncing}
-              variant="outline"
-              className="mt-2"
-            >
-              {syncing ? "Sincronizando..." : "Sincronizar com Stripe"}
-            </Button>
-          </div>
-        )}
       </div>
 
       {error && (
