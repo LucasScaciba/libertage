@@ -85,8 +85,13 @@ export async function POST() {
     console.log("Plan found:", plan.code, plan.name);
 
     // Prepare subscription data
-    const periodStart = new Date(stripeSubscription.current_period_start * 1000).toISOString();
-    const periodEnd = new Date(stripeSubscription.current_period_end * 1000).toISOString();
+    const periodStart = stripeSubscription.current_period_start 
+      ? new Date(stripeSubscription.current_period_start * 1000).toISOString()
+      : new Date().toISOString();
+    
+    const periodEnd = stripeSubscription.current_period_end
+      ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     console.log("Upserting subscription to database...");
 
