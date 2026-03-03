@@ -5,6 +5,14 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import {
+  Home,
+  User,
+  BarChart3,
+  Rocket,
+  CreditCard,
+  LogOut,
+} from "lucide-react";
 
 interface User {
   id: string;
@@ -22,7 +30,6 @@ export default function PortalLayout({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -49,7 +56,6 @@ export default function PortalLayout({
   };
 
   const checkSubscription = async () => {
-    // Skip subscription check for plans page (user needs to access it to subscribe)
     if (window.location.pathname === '/portal/plans') {
       setCheckingSubscription(false);
       return;
@@ -59,12 +65,9 @@ export default function PortalLayout({
       const res = await fetch("/api/profiles/me");
       if (res.ok) {
         const data = await res.json();
-        
-        // Check if user has active subscription
         const hasActiveSubscription = data.subscription?.status === 'active';
         
         if (!hasActiveSubscription) {
-          // Redirect to plans page if no active subscription
           router.push('/portal/plans');
           return;
         }
@@ -85,7 +88,6 @@ export default function PortalLayout({
     }
   };
 
-  // Get initials from name
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -96,11 +98,11 @@ export default function PortalLayout({
   };
 
   const navigation = [
-    { name: "Dashboard", href: "/portal", icon: "📊" },
-    { name: "Perfil", href: "/portal/profile", icon: "👤" },
-    { name: "Analytics", href: "/portal/analytics", icon: "📈" },
-    { name: "Boosts", href: "/portal/boosts", icon: "🚀" },
-    { name: "Planos", href: "/portal/plans", icon: "💎" },
+    { name: "Dashboard", href: "/portal", icon: Home },
+    { name: "Perfil", href: "/portal/profile", icon: User },
+    { name: "Analytics", href: "/portal/analytics", icon: BarChart3 },
+    { name: "Boosts", href: "/portal/boosts", icon: Rocket },
+    { name: "Planos", href: "/portal/plans", icon: CreditCard },
   ];
 
   const isActive = (href: string) => {
@@ -111,111 +113,74 @@ export default function PortalLayout({
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", backgroundColor: "#f9fafb" }}>
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside style={{
-        width: "16rem",
-        backgroundColor: "white",
-        borderRight: "1px solid #e5e7eb",
-        display: "flex",
-        flexDirection: "column",
-        position: "fixed",
-        height: "100vh",
-        overflowY: "auto"
-      }}>
+      <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-white sm:flex">
         {/* Logo */}
-        <div style={{ padding: "1.5rem 1rem", borderBottom: "1px solid #e5e7eb" }}>
-          <Link href="/portal">
+        <div className="flex h-16 items-center border-b px-6">
+          <Link href="/portal" className="flex items-center gap-2 font-semibold">
             <Image src="/libertage-logo.svg" alt="Libertage" width={120} height={36} priority />
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: "1rem" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "0.5rem",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  color: isActive(item.href) ? "#111827" : "#6b7280",
-                  backgroundColor: isActive(item.href) ? "#f3f4f6" : "transparent",
-                  textDecoration: "none",
-                  transition: "all 0.2s"
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(item.href)) {
-                    e.currentTarget.style.backgroundColor = "#f9fafb";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(item.href)) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                <span style={{ fontSize: "1.25rem" }}>{item.icon}</span>
-                <span>{item.name}</span>
-              </Link>
-            ))}
-          </div>
+        <nav className="flex-1 overflow-auto p-4">
+          <ul className="space-y-1">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
 
         {/* User Info */}
-        <div style={{ padding: "1rem", borderTop: "1px solid #e5e7eb" }}>
+        <div className="border-t p-4">
           {loading ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <div style={{ 
-                width: "2.5rem", 
-                height: "2.5rem", 
-                borderRadius: "50%", 
-                backgroundColor: "#e5e7eb",
-                animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
-              }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ width: "100%", height: "0.875rem", backgroundColor: "#e5e7eb", borderRadius: "0.25rem", marginBottom: "0.25rem" }} />
-                <div style={{ width: "80%", height: "0.75rem", backgroundColor: "#e5e7eb", borderRadius: "0.25rem" }} />
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-full animate-pulse rounded bg-gray-200" />
+                <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200" />
               </div>
             </div>
           ) : user ? (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-                <div style={{ 
-                  width: "2.5rem", 
-                  height: "2.5rem", 
-                  borderRadius: "50%", 
-                  backgroundColor: "#111827",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontWeight: "600",
-                  fontSize: "0.875rem"
-                }}>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white">
                   {getInitials(user.name)}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.875rem", fontWeight: "600", color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div className="flex-1 overflow-hidden">
+                  <p className="truncate text-sm font-medium text-gray-900">
                     {user.name}
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  </p>
+                  <p className="truncate text-xs text-gray-500">
                     {user.email}
-                  </div>
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={handleLogout} 
+              <Button
+                variant="outline"
+                onClick={handleLogout}
                 disabled={loading}
-                style={{ width: "100%", fontSize: "0.875rem" }}
+                className="w-full justify-start gap-2 text-sm"
               >
+                <LogOut className="h-4 w-4" />
                 Sair
               </Button>
             </div>
@@ -224,20 +189,12 @@ export default function PortalLayout({
       </aside>
 
       {/* Main Content */}
-      <main style={{ marginLeft: "16rem", flex: 1, minHeight: "100vh" }}>
+      <main className="flex-1 sm:pl-64">
         {checkingSubscription ? (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                width: "3rem", 
-                height: "3rem", 
-                border: "3px solid #e5e7eb",
-                borderTopColor: "#111827",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-                margin: "0 auto"
-              }} />
-              <p style={{ marginTop: "1rem", color: "#6b7280" }}>Verificando assinatura...</p>
+          <div className="flex min-h-screen items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
+              <p className="mt-4 text-sm text-gray-600">Verificando assinatura...</p>
             </div>
           </div>
         ) : (
@@ -247,4 +204,3 @@ export default function PortalLayout({
     </div>
   );
 }
-
