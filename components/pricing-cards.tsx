@@ -113,14 +113,32 @@ export function PricingCards({ plans, currentPlanCode, onSelectPlan, loading }: 
             </CardContent>
 
             <CardFooter>
-              <Button
-                className="w-full"
-                variant={isCurrent ? "outline" : (plan.code === "free" ? "default" : "outline")}
-                onClick={() => onSelectPlan(plan.code)}
-                disabled={loading || isCurrent}
-              >
-                {isCurrent ? "CONTRATADO" : "QUERO ESTE PLANO"}
-              </Button>
+              {isCurrent ? (
+                <Button
+                  className="w-full"
+                  variant="ghost"
+                  disabled
+                  style={{
+                    backgroundColor: "hsl(var(--muted))",
+                    color: "hsl(var(--muted-foreground))",
+                    cursor: "not-allowed",
+                  }}
+                >
+                  Plano Atual
+                </Button>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={() => onSelectPlan(plan.code)}
+                  disabled={loading}
+                  style={{
+                    backgroundColor: "black",
+                    color: "white",
+                  }}
+                >
+                  Quero este plano
+                </Button>
+              )}
             </CardFooter>
           </Card>
         );
