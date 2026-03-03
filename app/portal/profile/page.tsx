@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import featuresServicesConfig from "@/lib/config/features-services.json";
+import { brazilianCities } from "@/lib/data/brazilian-cities";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -25,7 +26,6 @@ export default function ProfileEditPage() {
   const [formData, setFormData] = useState({
     display_name: "",
     slug: "",
-    category: "",
     short_description: "",
     long_description: "",
     city: "",
@@ -55,17 +55,13 @@ export default function ProfileEditPage() {
     ] as any[],
   });
 
-  // Mock data for categories
-  const categories = [
-    "Fotografia",
-    "Design",
-    "Marketing",
-    "Tecnologia",
-    "Arquitetura",
-    "Consultoria",
-    "Educação",
-    "Saúde",
-  ];
+  // State for city search
+  const [citySearch, setCitySearch] = useState("");
+
+  // Filter cities based on search
+  const filteredCities = brazilianCities.filter(city =>
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  );
 
   // Generate age options (18-60)
   const ageOptions = Array.from({ length: 43 }, (_, i) => i + 18);
@@ -103,7 +99,6 @@ export default function ProfileEditPage() {
         setFormData({
           display_name: data.profile.display_name || "",
           slug: data.profile.slug || "",
-          category: data.profile.category || "",
           short_description: data.profile.short_description || "",
           long_description: data.profile.long_description || "",
           city: data.profile.city || "",
@@ -482,7 +477,7 @@ export default function ProfileEditPage() {
         return !!(
           formData.display_name &&
           formData.slug &&
-          formData.category &&
+          formData.city &&
           formData.age_attribute
         );
       case "description":
@@ -632,21 +627,41 @@ export default function ProfileEditPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                   <div>
-                    <Label htmlFor="category">Categoria *</Label>
-                    <select
-                      id="category"
-                      required
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      style={{ minWidth: "100%" }}
-                    >
-                      <option value="">Selecione uma categoria</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
+                    <Label htmlFor="city">Cidade *</Label>
+                    <div style={{ position: "relative" }}>
+                      <Input
+                        id="city-search"
+                        type="text"
+                        placeholder="Buscar cidade..."
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        onFocus={() => setCitySearch("")}
+                        style={{ marginBottom: "0.5rem" }}
+                      />
+                      <select
+                        id="city"
+                        required
+                        value={formData.city}
+                        onChange={(e) => {
+                          setFormData({ ...formData, city: e.target.value });
+                          setCitySearch("");
+                        }}
+                        style={{ minWidth: "100%", maxHeight: "200px" }}
+                        size={5}
+                      >
+                        <option value="">Selecione uma cidade</option>
+                        {filteredCities.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                      {formData.city && (
+                        <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginTop: "0.5rem" }}>
+                          Selecionado: {formData.city}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div>

@@ -22,7 +22,7 @@ export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [filters, setFilters] = useState({
     search: "",
-    category: "",
+    service: "",
     city: "",
     region: "",
   });
@@ -95,7 +95,7 @@ export default function Home() {
       setLoading(true);
       const params = new URLSearchParams();
       if (filters.search) params.append("search", filters.search);
-      if (filters.category) params.append("category", filters.category);
+      if (filters.service) params.append("service", filters.service);
       if (filters.city) params.append("city", filters.city);
       if (filters.region) params.append("region", filters.region);
 
@@ -116,6 +116,11 @@ export default function Home() {
     // Find cover photo or use first photo
     const coverPhoto = profile.media?.find((m: any) => m.is_cover && m.type === "photo");
     const displayPhoto = coverPhoto || profile.media?.find((m: any) => m.type === "photo");
+    
+    // Get services from selected_features
+    const services = profile.selected_features?.filter((f: string) => 
+      ["Massagem", "Acompanhante", "Chamada de vídeo"].includes(f)
+    ) || [];
     
     return (
       <div onClick={() => {
@@ -148,10 +153,16 @@ export default function Home() {
             </p>
             <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
               <span>{profile.city}</span>
-              <span>•</span>
-              <span>{profile.region}</span>
+              {profile.region && (
+                <>
+                  <span>•</span>
+                  <span>{profile.region}</span>
+                </>
+              )}
             </div>
-            <Badge variant="secondary">{profile.category}</Badge>
+            {services.length > 0 && (
+              <Badge variant="secondary">{services.join(", ")}</Badge>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -184,16 +195,14 @@ export default function Home() {
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
             {/* Tipo de Profissional */}
             <select
-              value={filters.category}
-              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+              value={filters.service}
+              onChange={(e) => setFilters({ ...filters, service: e.target.value })}
               style={{ minWidth: "180px" }}
             >
-              <option value="">Tipo de Profissional</option>
-              {availableFilters.categories.map((cat: string) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              <option value="">Todas as Profissionais</option>
+              <option value="Massagem">Massagem</option>
+              <option value="Acompanhante">Acompanhante</option>
+              <option value="Chamada de vídeo">Chamada de vídeo</option>
             </select>
 
             {/* Todas as cidades */}
@@ -344,9 +353,15 @@ export default function Home() {
                       {selectedProfile.short_description}
                     </p>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <Badge>{selectedProfile.category}</Badge>
+                      {selectedProfile.selected_features?.filter((f: string) => 
+                        ["Massagem", "Acompanhante", "Chamada de vídeo"].includes(f)
+                      ).map((service: string, i: number) => (
+                        <Badge key={i}>{service}</Badge>
+                      ))}
                       <Badge variant="secondary">{selectedProfile.city}</Badge>
-                      <Badge variant="secondary">{selectedProfile.region}</Badge>
+                      {selectedProfile.region && (
+                        <Badge variant="secondary">{selectedProfile.region}</Badge>
+                      )}
                     </div>
                   </div>
 

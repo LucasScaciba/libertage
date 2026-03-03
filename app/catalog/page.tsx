@@ -13,7 +13,7 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
-    category: "",
+    service: "",
     city: "",
     region: "",
   });
@@ -50,7 +50,7 @@ export default function CatalogPage() {
         page: page.toString(),
         pageSize: "20",
         ...(filters.search && { search: filters.search }),
-        ...(filters.category && { category: filters.category }),
+        ...(filters.service && { service: filters.service }),
         ...(filters.city && { city: filters.city }),
         ...(filters.region && { region: filters.region }),
       });
@@ -74,42 +74,55 @@ export default function CatalogPage() {
     fetchCatalog();
   };
 
-  const ProfileCard = ({ profile, isBoosted = false }: any) => (
-    <Link href={`/profiles/${profile.slug}`}>
-      <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
-        {profile.media?.[0]?.public_url && (
-          <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
-            <img
-              src={profile.media[0].public_url}
-              alt={profile.display_name}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
-        )}
-        <CardContent style={{ padding: "1rem" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
-              {profile.display_name}
-            </h3>
-            {isBoosted && (
-              <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
-                Destaque
-              </Badge>
+  const ProfileCard = ({ profile, isBoosted = false }: any) => {
+    // Get services from selected_features
+    const services = profile.selected_features?.filter((f: string) => 
+      ["Massagem", "Acompanhante", "Chamada de vídeo"].includes(f)
+    ) || [];
+    
+    return (
+      <Link href={`/profiles/${profile.slug}`}>
+        <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
+          {profile.media?.[0]?.public_url && (
+            <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
+              <img
+                src={profile.media[0].public_url}
+                alt={profile.display_name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          )}
+          <CardContent style={{ padding: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
+                {profile.display_name}
+              </h3>
+              {isBoosted && (
+                <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
+                  Destaque
+                </Badge>
+              )}
+            </div>
+            <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              {profile.short_description}
+            </p>
+            <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <span>{profile.city}</span>
+              {profile.region && (
+                <>
+                  <span>•</span>
+                  <span>{profile.region}</span>
+                </>
+              )}
+            </div>
+            {services.length > 0 && (
+              <Badge variant="secondary">{services.join(", ")}</Badge>
             )}
-          </div>
-          <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-            {profile.short_description}
-          </p>
-          <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <span>{profile.city}</span>
-            <span>•</span>
-            <span>{profile.region}</span>
-          </div>
-          <Badge variant="secondary">{profile.category}</Badge>
-        </CardContent>
-      </Card>
-    </Link>
-  );
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  };
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -148,15 +161,13 @@ export default function CatalogPage() {
                     padding: "0 0.75rem",
                     fontSize: "0.875rem"
                   }}
-                  value={filters.category}
-                  onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                  value={filters.service}
+                  onChange={(e) => setFilters({ ...filters, service: e.target.value })}
                 >
-                  <option value="">Todas as categorias</option>
-                  {availableFilters.categories.map((cat: string) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
+                  <option value="">Todas as Profissionais</option>
+                  <option value="Massagem">Massagem</option>
+                  <option value="Acompanhante">Acompanhante</option>
+                  <option value="Chamada de vídeo">Chamada de vídeo</option>
                 </select>
 
                 <select
