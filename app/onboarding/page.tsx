@@ -29,7 +29,8 @@ export default function OnboardingPage() {
         throw new Error(data.error || "Failed to complete onboarding");
       }
 
-      router.push("/portal");
+      // Redirect to plans page for new users
+      router.push("/portal/plans");
     } catch (err: any) {
       setError(err.message);
     } finally {

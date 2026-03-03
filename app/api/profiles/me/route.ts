@@ -17,7 +17,15 @@ export async function GET() {
       throw error;
     }
 
-    return NextResponse.json({ profile });
+    // Get subscription data
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("*, plans(*)")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+
+    return NextResponse.json({ profile, subscription });
   } catch (error: any) {
     console.error("Error fetching profile:", error);
     return NextResponse.json(

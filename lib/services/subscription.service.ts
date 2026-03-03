@@ -66,7 +66,7 @@ export class SubscriptionService {
             quantity: 1,
           },
         ],
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal?success=true`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal/plans?success=true`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal/plans?canceled=true`,
         metadata: {
           user_id: userId,

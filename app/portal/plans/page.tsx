@@ -1,18 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export default function PlansPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [plans, setPlans] = useState<any[]>([]);
-  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetchPlans();
-    fetchCurrentSubscription();
-  }, []);
+    
+    // Check if coming back from successful payment
+    const success = searchParams.get('success');
+    if (success === 'true') {
+      // Redirect to profile edit page
+      router.push('/portal/profile');
+    }
+  }, [searchParams, router]);
 
   const fetchPlans = async () => {
     try {
@@ -21,17 +29,6 @@ export default function PlansPage() {
       setPlans(data.plans || []);
     } catch (err) {
       console.error("Error fetching plans:", err);
-    }
-  };
-
-  const fetchCurrentSubscription = async () => {
-    try {
-      const res = await fetch("/api/profiles/me");
-      const data = await res.json();
-      // Get subscription info from user
-      // For now, we'll just show the plans
-    } catch (err) {
-      console.error("Error fetching subscription:", err);
     }
   };
 

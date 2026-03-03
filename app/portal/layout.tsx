@@ -20,10 +20,17 @@ export default function PortalLayout({
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   useEffect(() => {
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (!loading && user) {
+      checkSubscription();
+    }
+  }, [loading, user]);
 
   const fetchUser = async () => {
     try {
@@ -36,6 +43,34 @@ export default function PortalLayout({
       console.error("Error fetching user:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkSubscription = async () => {
+    // Skip subscription check for plans page (user needs to access it to subscribe)
+    if (window.location.pathname === '/portal/plans') {
+      setCheckingSubscription(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/profiles/me");
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Check if user has active subscription
+        const hasActiveSubscription = data.subscription?.status === 'active';
+        
+        if (!hasActiveSubscription) {
+          // Redirect to plans page if no active subscription
+          router.push('/portal/plans');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+    } finally {
+      setCheckingSubscription(false);
     }
   };
 
@@ -120,7 +155,24 @@ export default function PortalLayout({
 
       {/* Main Content */}
       <main style={{ flex: 1 }}>
-        {children}
+        {checkingSubscription ? (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ 
+                width: "3rem", 
+                height: "3rem", 
+                border: "3px solid hsl(var(--muted))",
+                borderTopColor: "hsl(var(--primary))",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+                margin: "0 auto"
+              }} />
+              <p style={{ marginTop: "1rem", color: "hsl(var(--muted-foreground))" }}>Verificando assinatura...</p>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </main>
     </div>
   );
