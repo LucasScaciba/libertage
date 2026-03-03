@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PricingCards } from "@/components/pricing-cards";
+import { Button } from "@/components/ui/button";
 
 export default function PlansPage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [currentPlan, setCurrentPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -134,6 +136,35 @@ export default function PlansPage() {
     }
   };
 
+  const handleSyncSubscription = async () => {
+    setSyncing(true);
+    setError("");
+
+    try {
+      console.log("Sincronizando assinatura com Stripe...");
+      const res = await fetch("/api/subscriptions/sync", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to sync subscription");
+      }
+
+      console.log("✅ Assinatura sincronizada:", data);
+      alert(`Assinatura sincronizada com sucesso! Plano: ${data.plan.name}`);
+      
+      // Reload plans
+      await fetchPlans();
+    } catch (err: any) {
+      console.error("Erro ao sincronizar:", err);
+      setError(err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -149,8 +180,16 @@ export default function PlansPage() {
               <strong>Plano atual no banco:</strong> {currentPlan.name} ({currentPlan.code})
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Se você acabou de fazer um pagamento e o plano não atualizou, recarregue a página ou entre em contato com o suporte.
+              Se você acabou de fazer um pagamento e o plano não atualizou, clique no botão abaixo para sincronizar.
             </p>
+            <Button
+              onClick={handleSyncSubscription}
+              disabled={syncing}
+              variant="outline"
+              className="mt-2"
+            >
+              {syncing ? "Sincronizando..." : "Sincronizar com Stripe"}
+            </Button>
           </div>
         )}
       </div>
