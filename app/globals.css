@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./legacy-themes.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -22,23 +22,23 @@ export function ThemeConfigProvider({
 
   React.useEffect(() => {
     const root = document.documentElement
+    
+    // Remove all theme classes
     root.classList.forEach((className) => {
-      if (
-        className.startsWith("theme-") ||
-        className.endsWith("-scaled") ||
-        className === "mono-scaled"
-      ) {
+      if (className.startsWith("theme-")) {
         root.classList.remove(className)
       }
     })
-    if (activeTheme !== "default") {
-      root.classList.add(`theme-${activeTheme}`)
-    }
+    
+    // Add new theme class
+    root.classList.add(`theme-${activeTheme}`)
   }, [activeTheme])
 
   return (
     <ThemeConfigContext.Provider value={{ activeTheme, setActiveTheme }}>
-      {children}
+      <div className="theme-container">
+        {children}
+      </div>
     </ThemeConfigContext.Provider>
   )
 }
