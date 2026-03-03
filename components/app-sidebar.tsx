@@ -2,12 +2,10 @@
 
 import * as React from "react"
 import {
-  IconChartBar,
   IconDashboard,
   IconRocket,
   IconSettings,
   IconUser,
-  IconHelp,
   IconLifebuoy,
   IconSend,
 } from "@tabler/icons-react"
@@ -33,19 +31,14 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
+      title: "Painel",
       url: "/portal",
       icon: IconDashboard,
     },
     {
-      title: "Profile",
+      title: "Meu Perfil",
       url: "/portal/profile",
       icon: IconUser,
-    },
-    {
-      title: "Analytics",
-      url: "/portal/analytics",
-      icon: IconChartBar,
     },
     {
       title: "Boosts",
@@ -53,14 +46,14 @@ const data = {
       icon: IconRocket,
     },
     {
-      title: "Plans",
+      title: "Planos",
       url: "/portal/plans",
       icon: IconSettings,
     },
   ],
   navSecondary: [
     {
-      title: "Support",
+      title: "Suporte",
       url: "#",
       icon: IconLifebuoy,
     },
@@ -85,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Portal</span>
-                  <span className="truncate text-xs">Dashboard</span>
+                  <span className="truncate text-xs">Painel</span>
                 </div>
               </a>
             </SidebarMenuButton>
