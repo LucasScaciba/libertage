@@ -62,6 +62,42 @@ export default function Home() {
     setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   };
 
+  // Track visit when modal opens with a profile
+  useEffect(() => {
+    if (isModalOpen && selectedProfile?.id) {
+      trackVisit(selectedProfile.id);
+    }
+  }, [isModalOpen, selectedProfile?.id]);
+
+  const trackVisit = async (profileId: string) => {
+    try {
+      await fetch("/api/analytics/visit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: profileId,
+        }),
+      });
+    } catch (err) {
+      console.error("Error tracking visit:", err);
+    }
+  };
+
+  const trackContactClick = async (profileId: string, method: string) => {
+    try {
+      await fetch("/api/analytics/contact-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: profileId,
+          contact_method: method,
+        }),
+      });
+    } catch (err) {
+      console.error("Error tracking contact click:", err);
+    }
+  };
+
   useEffect(() => {
     loadProfiles();
     
@@ -495,7 +531,10 @@ export default function Home() {
                   {/* Contact Buttons */}
                   {selectedProfile.whatsapp_enabled && selectedProfile.whatsapp_number && (
                     <Button
-                      onClick={() => window.open(`https://wa.me/55${selectedProfile.whatsapp_number}`, "_blank")}
+                      onClick={() => {
+                        trackContactClick(selectedProfile.id, "whatsapp");
+                        window.open(`https://wa.me/55${selectedProfile.whatsapp_number}`, "_blank");
+                      }}
                       style={{
                         backgroundColor: "#25D366",
                         color: "white"
@@ -508,7 +547,10 @@ export default function Home() {
                   
                   {selectedProfile.telegram_enabled && selectedProfile.telegram_username && (
                     <Button
-                      onClick={() => window.open(`https://t.me/${selectedProfile.telegram_username}`, "_blank")}
+                      onClick={() => {
+                        trackContactClick(selectedProfile.id, "telegram");
+                        window.open(`https://t.me/${selectedProfile.telegram_username}`, "_blank");
+                      }}
                       style={{
                         backgroundColor: "#0088cc",
                         color: "white"
@@ -560,7 +602,10 @@ export default function Home() {
                             >
                               <span style={{ color: "hsl(var(--muted-foreground))" }}>{link.label}</span>
                               <button
-                                onClick={() => window.open(link.url, "_blank")}
+                                onClick={() => {
+                                  trackContactClick(selectedProfile.id, link.label || "external_link");
+                                  window.open(link.url, "_blank");
+                                }}
                                 style={{
                                   backgroundColor: "transparent",
                                   border: "none",
