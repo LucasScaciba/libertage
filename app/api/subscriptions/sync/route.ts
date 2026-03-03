@@ -61,7 +61,7 @@ export async function POST() {
     }
 
     // Process the first active subscription
-    const stripeSubscription = subscriptions.data[0];
+    const stripeSubscription = subscriptions.data[0] as any;
     console.log("Processing subscription:", stripeSubscription.id);
 
     // Get the price ID from the subscription
