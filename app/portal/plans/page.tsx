@@ -38,7 +38,9 @@ export default function PlansPage() {
 
       if (res.ok) {
         console.log("Assinatura ativada com sucesso!");
-        // Wait a moment for the subscription to be fully processed
+        // Reload plans to show updated subscription
+        await fetchPlans();
+        // Wait a moment then redirect
         setTimeout(() => {
           router.push('/portal/profile');
         }, 1000);

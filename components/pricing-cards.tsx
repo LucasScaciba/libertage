@@ -115,7 +115,7 @@ export function PricingCards({ plans, currentPlanCode, onSelectPlan, loading }: 
             <CardFooter>
               <Button
                 className="w-full"
-                variant={isBlack ? "default" : "outline"}
+                variant={isCurrent ? "outline" : (plan.code === "free" ? "default" : "outline")}
                 onClick={() => onSelectPlan(plan.code)}
                 disabled={loading || isCurrent}
               >
