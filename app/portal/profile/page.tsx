@@ -137,7 +137,7 @@ export default function ProfileEditPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const currentCount = mediaFiles.filter(m => m.media_type === type).length;
+    const currentCount = mediaFiles.filter(m => m.type === type).length;
     const maxAllowed = type === "photo" ? limits.photos : limits.videos;
 
     if (currentCount >= maxAllowed) {
@@ -417,8 +417,8 @@ export default function ProfileEditPage() {
 
   const limits = getMediaLimits();
 
-  const photoCount = mediaFiles.filter(m => m.media_type === "photo").length;
-  const videoCount = mediaFiles.filter(m => m.media_type === "video").length;
+  const photoCount = mediaFiles.filter(m => m.type === "photo").length;
+  const videoCount = mediaFiles.filter(m => m.type === "video").length;
 
   // Validation functions for each section
   const validateSection = (sectionId: string): boolean => {
@@ -789,7 +789,7 @@ export default function ProfileEditPage() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
                     {mediaFiles
-                      .filter(m => m.media_type === "photo")
+                      .filter(m => m.type === "photo")
                       .map((media) => (
                         <div
                           key={media.id}
@@ -802,8 +802,8 @@ export default function ProfileEditPage() {
                           }}
                         >
                           <img
-                            src={media.url}
-                            alt={media.filename}
+                            src={media.public_url}
+                            alt={media.storage_path}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -926,7 +926,7 @@ export default function ProfileEditPage() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
                     {mediaFiles
-                      .filter(m => m.media_type === "video")
+                      .filter(m => m.type === "video")
                       .map((media) => (
                         <div
                           key={media.id}
@@ -940,7 +940,7 @@ export default function ProfileEditPage() {
                           }}
                         >
                           <video
-                            src={media.url}
+                            src={media.public_url}
                             controls
                             style={{
                               width: "100%",
