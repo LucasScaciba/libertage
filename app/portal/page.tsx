@@ -85,26 +85,29 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div className="space-y-2">
-            <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
-            <div className="h-4 w-96 animate-pulse rounded-lg bg-gray-200" />
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="mx-auto max-w-7xl space-y-4">
+          <div className="flex items-center justify-between space-y-2">
+            <div className="space-y-2">
+              <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
+              <div className="h-4 w-96 animate-pulse rounded-lg bg-gray-200" />
+            </div>
           </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl border bg-white" />
-          ))}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 animate-pulse rounded-xl border bg-white" />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between space-y-2">
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="mx-auto max-w-7xl space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground">
@@ -387,6 +390,7 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
