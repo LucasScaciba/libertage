@@ -64,10 +64,6 @@ export default function PlansPage() {
       const res = await fetch("/api/subscriptions/plans");
       const data = await res.json();
       
-      console.log("API Response:", data);
-      console.log("Current Plan:", data.subscription?.plan);
-      console.log("Current Plan Code:", data.subscription?.plan?.code);
-      
       // Transform plans to include features
       const transformedPlans = (data.plans || []).map((plan: any) => ({
         ...plan,

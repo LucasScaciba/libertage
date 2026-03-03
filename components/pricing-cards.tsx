@@ -27,17 +27,12 @@ interface PricingCardsProps {
 }
 
 export function PricingCards({ plans, currentPlanCode, onSelectPlan, loading }: PricingCardsProps) {
-  console.log("PricingCards - currentPlanCode:", currentPlanCode);
-  console.log("PricingCards - plans:", plans);
-  
   const getFeatureValue = (plan: PricingPlan, feature: keyof PricingPlan["features"]) => {
     return plan.features[feature];
   };
 
   const isCurrentPlan = (planCode: string) => {
-    const result = currentPlanCode === planCode;
-    console.log(`isCurrentPlan(${planCode}): ${result} (currentPlanCode: ${currentPlanCode})`);
-    return result;
+    return currentPlanCode === planCode;
   };
 
   return (

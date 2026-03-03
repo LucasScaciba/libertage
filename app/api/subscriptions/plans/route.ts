@@ -29,6 +29,24 @@ export async function GET() {
         .single();
       
       subscription = subData;
+      
+      // If no subscription found, default to free plan
+      if (!subscription) {
+        const { data: freePlan } = await supabase
+          .from("plans")
+          .select("*")
+          .eq("code", "free")
+          .single();
+        
+        if (freePlan) {
+          subscription = {
+            user_id: user.id,
+            plan_id: freePlan.id,
+            status: "active",
+            plan: freePlan,
+          };
+        }
+      }
     } catch (err) {
       // User not authenticated or no subscription - that's ok
     }
