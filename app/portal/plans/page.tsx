@@ -31,10 +31,6 @@ export default function PlansPage() {
 
   const verifyAndActivateSubscription = async (sessionId: string) => {
     try {
-      console.log("=== VERIFY SESSION START ===");
-      console.log("Verificando sessão do Stripe...");
-      console.log("Session ID:", sessionId);
-      
       const res = await fetch("/api/subscriptions/verify-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,41 +38,28 @@ export default function PlansPage() {
       });
 
       const data = await res.json();
-      console.log("Verify session response:", data);
-      console.log("Response status:", res.status);
 
       if (res.ok) {
-        console.log("✅ Assinatura ativada com sucesso!");
         // Reload plans to show updated subscription
-        console.log("Recarregando planos...");
         await fetchPlans();
-        console.log("Planos recarregados");
         // Wait a moment then redirect
         setTimeout(() => {
-          console.log("Redirecionando para perfil...");
           router.push('/portal/profile');
         }, 1000);
       } else {
-        console.error("❌ Erro ao verificar sessão:", data.error);
-        // Still redirect but show the error
+        console.error("Erro ao verificar sessão:", data.error);
         setError("Pagamento processado, mas houve um problema ao ativar a assinatura. Entre em contato com o suporte.");
       }
     } catch (err: any) {
-      console.error("❌ Erro ao verificar sessão:", err);
+      console.error("Erro ao verificar sessão:", err);
       setError("Erro ao verificar pagamento. Por favor, recarregue a página.");
     }
   };
 
   const fetchPlans = async () => {
     try {
-      console.log("=== FETCH PLANS START ===");
       const res = await fetch("/api/subscriptions/plans");
       const data = await res.json();
-      
-      console.log("Plans API response:", data);
-      console.log("Current subscription:", data.subscription);
-      console.log("Current plan:", data.subscription?.plan);
-      console.log("Current plan code:", data.subscription?.plan?.code);
       
       // Transform plans to include features
       const transformedPlans = (data.plans || []).map((plan: any) => ({
@@ -89,13 +72,8 @@ export default function PlansPage() {
         },
       }));
       
-      console.log("Transformed plans:", transformedPlans);
-      console.log("Setting currentPlan to:", data.subscription?.plan);
-      
       setPlans(transformedPlans);
       setCurrentPlan(data.subscription?.plan);
-      
-      console.log("=== FETCH PLANS END ===");
     } catch (err) {
       console.error("Error fetching plans:", err);
     }
