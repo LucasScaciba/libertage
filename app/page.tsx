@@ -393,6 +393,20 @@ export default function Home() {
                     ))}
                   </div>
 
+                  {/* Características e Serviços */}
+                  {selectedProfile.selected_features && selectedProfile.selected_features.length > 0 && (
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                        Características e Serviços
+                      </h3>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        {selectedProfile.selected_features.map((feature: string, i: number) => (
+                          <Badge key={i} variant="outline">{feature}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Descrição Longa */}
                   <div style={{ marginBottom: "1.5rem" }}>
                     <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
