@@ -155,7 +155,6 @@ export class AnalyticsService {
 
     // If device_type column doesn't exist, fetch without it
     if (error && error.message?.includes("device_type")) {
-      console.log("device_type column not found, fetching without it");
       const result = await supabase
         .from("analytics_events")
         .select("created_at")
@@ -173,10 +172,6 @@ export class AnalyticsService {
       console.error("Error fetching visits by date:", error);
       return [];
     }
-
-    console.log("Raw visits data:", data);
-    console.log("Profile ID:", profileId);
-    console.log("Start date:", startDate.toISOString());
 
     // Group by date and device type
     const visitsByDate: Record<string, { mobile: number; desktop: number; tablet: number }> = {};
@@ -198,8 +193,6 @@ export class AnalyticsService {
       }
     }
 
-    console.log("Grouped visits by date:", visitsByDate);
-
     // Convert to array and fill missing dates with zeros
     const result: VisitsByDate[] = [];
     for (let i = 0; i < days; i++) {
@@ -214,8 +207,6 @@ export class AnalyticsService {
         tablet: visitsByDate[dateStr]?.tablet || 0,
       });
     }
-
-    console.log("Final chart data:", result);
 
     return result;
   }
