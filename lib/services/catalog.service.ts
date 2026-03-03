@@ -154,8 +154,9 @@ export class CatalogService {
     }
 
     // Service filter (check if service is in selected_features array)
+    // Using cs (contains) operator for array containment
     if (filters.service) {
-      query = query.contains("selected_features", [filters.service]);
+      query = query.cs("selected_features", `{${filters.service}}`);
     }
 
     // City filter

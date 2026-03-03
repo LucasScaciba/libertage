@@ -72,6 +72,36 @@ export default function Home() {
     }
   }, []);
 
+  // Auto-apply filters when they change
+  useEffect(() => {
+    const applyFilters = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (filters.search) params.append("search", filters.search);
+        if (filters.service) params.append("service", filters.service);
+        if (filters.city) params.append("city", filters.city);
+        if (filters.region) params.append("region", filters.region);
+
+        const res = await fetch(`/api/catalog?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBoostedProfiles(data.boostedProfiles || []);
+          setRegularProfiles(data.regularProfiles || []);
+        }
+      } catch (error) {
+        console.error("Error applying filters:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Only apply if at least one filter is set (to avoid double loading on mount)
+    if (filters.service || filters.city || filters.region || filters.search) {
+      applyFilters();
+    }
+  }, [filters.service, filters.city, filters.region]); // Don't include search to avoid triggering on every keystroke
+
   const loadProfiles = async () => {
     try {
       setLoading(true);
