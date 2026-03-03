@@ -7,8 +7,15 @@ import "./components.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Premium Service Marketplace",
-  description: "Find and connect with premium service providers",
+  title: "Libertage — Plataforma de Serviços Premium",
+  description: "Encontre e conecte-se com profissionais premium de serviços. Catálogo completo com perfis verificados e avaliações.",
+  keywords: ["serviços premium", "profissionais", "catálogo", "libertage"],
+  openGraph: {
+    title: "Libertage — Plataforma de Serviços Premium",
+    description: "Encontre e conecte-se com profissionais premium de serviços",
+    type: "website",
+    locale: "pt_BR",
+  },
 };
 
 export default function RootLayout({

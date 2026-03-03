@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Head from "next/head";
 
 export default function CatalogPage() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
@@ -125,7 +126,13 @@ export default function CatalogPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh" }}>
+    <>
+      <Head>
+        <title>Catálogo — Libertage</title>
+        <meta name="description" content="Explore nosso catálogo completo de profissionais premium. Encontre os melhores serviços na sua região." />
+        <meta name="keywords" content="catálogo, profissionais, serviços premium, libertage" />
+      </Head>
+      <div style={{ minHeight: "100vh" }}>
       {/* Header */}
       <header style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="container-custom" style={{ padding: "1.5rem 1rem" }}>
@@ -269,6 +276,6 @@ export default function CatalogPage() {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }

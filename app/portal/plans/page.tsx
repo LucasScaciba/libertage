@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Head from "next/head";
 import { PricingCards } from "@/components/pricing-cards";
 
 export default function PlansPage() {
@@ -113,7 +114,11 @@ export default function PlansPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <>
+      <Head>
+        <title>Meu Plano — Libertage</title>
+      </Head>
+      <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Meu Plano</h1>
         <p className="mt-2 text-muted-foreground">
@@ -134,5 +139,6 @@ export default function PlansPage() {
         loading={loading}
       />
     </div>
+    </>
   );
 }

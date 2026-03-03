@@ -1,4 +1,5 @@
 import { cookies } from "next/headers"
+import type { Metadata } from "next"
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
@@ -6,6 +7,12 @@ import { ThemeConfigProvider } from "@/components/active-theme"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 import "./theme.css"
+
+export const metadata: Metadata = {
+  title: "Portal — Libertage",
+  description: "Gerencie seu perfil, visualize estatísticas e configure seus serviços na plataforma Libertage.",
+  robots: "noindex, nofollow",
+};
 
 export default async function PortalLayout({
   children,
