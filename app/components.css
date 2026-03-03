@@ -552,13 +552,6 @@ button[class*="text-sm"] {
   letter-spacing: 0.05em;
 }
 
-/* Container Query Support */
-@container (min-width: 640px) {
-  .@container\/main {
-    container-type: inline-size;
-  }
-}
-
 /* Responsive Sidebar */
 @media (max-width: 768px) {
   [data-sidebar="sidebar"] {
