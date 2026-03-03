@@ -77,7 +77,7 @@ export class CatalogService {
     // Get profiles
     let query = supabase
       .from("profiles")
-      .select("*")
+      .select("*, media(*)")
       .eq("status", "published")
       .in("id", profileIds);
 
@@ -119,7 +119,7 @@ export class CatalogService {
     // Get profiles
     let query = supabase
       .from("profiles")
-      .select("*")
+      .select("*, media(*)")
       .eq("status", "published");
 
     // Exclude boosted profiles
