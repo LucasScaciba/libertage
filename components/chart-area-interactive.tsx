@@ -50,8 +50,13 @@ export function ChartAreaInteractive() {
         const res = await fetch(`/api/analytics/chart?days=7`)
         const data = await res.json()
         
+        console.log("Chart API response:", data)
+        
         if (data.chartData) {
+          console.log("Setting chart data:", data.chartData)
           setChartData(data.chartData)
+        } else {
+          console.log("No chartData in response")
         }
       } catch (error) {
         console.error("Error fetching chart data:", error)
