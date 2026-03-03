@@ -22,23 +22,18 @@ export class AnalyticsService {
   static async trackVisit(profileId: string, fingerprint: string, deviceType?: string): Promise<void> {
     const supabase = await createClient();
 
-    console.log('[AnalyticsService] Tracking visit:', { profileId, deviceType, fingerprint: fingerprint.substring(0, 30) });
-
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("analytics_events")
       .insert({
         profile_id: profileId,
         event_type: "visit",
         visitor_fingerprint: fingerprint,
         device_type: deviceType || null,
-      })
-      .select();
+      });
 
     if (error) {
-      console.error("[AnalyticsService] Error tracking visit:", error);
+      console.error("Error tracking visit:", error);
       // Don't throw - analytics failures shouldn't break user experience
-    } else {
-      console.log('[AnalyticsService] Visit tracked successfully:', data);
     }
   }
 
@@ -78,11 +73,6 @@ export class AnalyticsService {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-
-    console.log('[Analytics] Calculating periods from:', now.toISOString());
-    console.log('[Analytics] 24h ago:', twentyFourHoursAgo.toISOString());
-    console.log('[Analytics] 7d ago:', sevenDaysAgo.toISOString());
-    console.log('[Analytics] 30d ago:', thirtyDaysAgo.toISOString());
 
     // Get visits for different time periods
     const [todayVisits, sevenDayVisits, thirtyDayVisits, twelveMonthVisits, clicks] =
@@ -126,13 +116,6 @@ export class AnalyticsService {
           .eq("profile_id", profileId)
           .eq("event_type", "contact_click"),
       ]);
-
-    console.log('[Analytics] Results:', {
-      visitsToday: todayVisits.count,
-      visits7Days: sevenDayVisits.count,
-      visits30Days: thirtyDayVisits.count,
-      visits12Months: twelveMonthVisits.count,
-    });
 
     // Group clicks by method
     const clicksByMethod: Record<string, number> = {};

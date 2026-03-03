@@ -6,10 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { profile_id, device_type } = body;
 
-    console.log('[Visit API] Received tracking request:', { profile_id, device_type });
-
     if (!profile_id) {
-      console.log('[Visit API] Missing profile_id');
       return NextResponse.json(
         { error: { code: "INVALID_INPUT", message: "Missing profile_id" } },
         { status: 400 }
@@ -22,11 +19,7 @@ export async function POST(request: NextRequest) {
       request.headers.get("user-agent") ||
       "anonymous";
 
-    console.log('[Visit API] Fingerprint:', fingerprint.substring(0, 50));
-
     await AnalyticsService.trackVisit(profile_id, fingerprint, device_type);
-
-    console.log('[Visit API] Visit tracked successfully');
 
     return NextResponse.json({ success: true });
   } catch (error) {
