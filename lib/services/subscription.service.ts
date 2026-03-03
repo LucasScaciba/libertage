@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe/client";
 import Stripe from "stripe";
 import { withRetry } from "@/lib/utils/retry";
@@ -137,7 +137,8 @@ export class SubscriptionService {
   }
 
   static async handleCheckoutCompleted(session: any): Promise<void> {
-    const supabase = await createClient();
+    // Use service client to bypass RLS for webhook/system operations
+    const supabase = createServiceClient();
     const userId = session.metadata.user_id;
     const planCode = session.metadata.plan_code;
 
@@ -206,7 +207,7 @@ export class SubscriptionService {
   }
 
   static async handleSubscriptionUpdated(subscription: any): Promise<void> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     // Find user by customer ID
     const { data: existingSubscription } = await supabase
@@ -234,7 +235,7 @@ export class SubscriptionService {
   }
 
   static async handleSubscriptionDeleted(subscription: any): Promise<void> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     // Find user by subscription ID
     const { data: existingSubscription } = await supabase
@@ -256,7 +257,7 @@ export class SubscriptionService {
   }
 
   static async handleInvoicePaymentFailed(invoice: any): Promise<void> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     if (!invoice.subscription) return;
 
@@ -279,7 +280,7 @@ export class SubscriptionService {
   }
 
   private static async checkAndPublishProfile(userId: string): Promise<void> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     // Check if user has completed onboarding
     const { data: user } = await supabase
@@ -308,7 +309,7 @@ export class SubscriptionService {
   }
 
   private static async unpublishProfile(userId: string): Promise<void> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     await supabase
       .from("profiles")
