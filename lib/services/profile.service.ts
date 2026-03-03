@@ -14,6 +14,7 @@ interface CreateProfileInput {
   age_attribute?: number;
   external_links?: any[];
   pricing_packages?: any[];
+  selected_features?: string[];
 }
 
 interface UpdateProfileInput {
@@ -29,6 +30,7 @@ interface UpdateProfileInput {
   age_attribute?: number;
   external_links?: any[];
   pricing_packages?: any[];
+  selected_features?: string[];
 }
 
 export class ProfileService {
@@ -60,6 +62,7 @@ export class ProfileService {
         age_attribute: data.age_attribute,
         external_links: data.external_links || [],
         pricing_packages: data.pricing_packages || [],
+        selected_features: data.selected_features || [],
         status: "draft",
       })
       .select()
