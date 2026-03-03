@@ -11,6 +11,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [currentPlan, setCurrentPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -113,6 +114,33 @@ export default function PlansPage() {
     }
   };
 
+  const handleRefreshPlan = async () => {
+    setSyncing(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/subscriptions/sync", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to sync subscription");
+      }
+
+      // Reload plans
+      await fetchPlans();
+      
+      // Reload page to update sidebar
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -120,6 +148,21 @@ export default function PlansPage() {
         <p className="mt-2 text-muted-foreground">
           Escolha o plano ideal para o seu negócio
         </p>
+        
+        {currentPlan && currentPlan.code === "free" && (
+          <div className="mt-4">
+            <Button
+              onClick={handleRefreshPlan}
+              disabled={syncing}
+              variant="outline"
+            >
+              {syncing ? "Atualizando..." : "Atualizar Plano do Stripe"}
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Se você acabou de fazer um pagamento, clique aqui para sincronizar com o Stripe
+            </p>
+          </div>
+        )}
       </div>
 
       {error && (
