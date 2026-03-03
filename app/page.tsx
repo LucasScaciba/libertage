@@ -105,45 +105,51 @@ export default function Home() {
     }
   };
 
-  const ProfileCard = ({ profile, isBoosted = false }: any) => (
-    <div onClick={() => {
-      setSelectedProfile(profile);
-      setIsModalOpen(true);
-    }}>
-      <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
-        {profile.media?.[0]?.public_url && (
-          <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
-            <img
-              src={profile.media[0].public_url}
-              alt={profile.display_name}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
-        )}
-        <CardContent style={{ padding: "1rem" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
-              {profile.display_name}
-            </h3>
-            {isBoosted && (
-              <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
-                Destaque
-              </Badge>
-            )}
-          </div>
-          <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-            {profile.short_description}
-          </p>
-          <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <span>{profile.city}</span>
-            <span>•</span>
-            <span>{profile.region}</span>
-          </div>
-          <Badge variant="secondary">{profile.category}</Badge>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const ProfileCard = ({ profile, isBoosted = false }: any) => {
+    // Find cover photo or use first photo
+    const coverPhoto = profile.media?.find((m: any) => m.is_cover && m.type === "photo");
+    const displayPhoto = coverPhoto || profile.media?.find((m: any) => m.type === "photo");
+    
+    return (
+      <div onClick={() => {
+        setSelectedProfile(profile);
+        setIsModalOpen(true);
+      }}>
+        <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
+          {displayPhoto?.public_url && (
+            <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
+              <img
+                src={displayPhoto.public_url}
+                alt={profile.display_name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          )}
+          <CardContent style={{ padding: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
+                {profile.display_name}
+              </h3>
+              {isBoosted && (
+                <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
+                  Destaque
+                </Badge>
+              )}
+            </div>
+            <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              {profile.short_description}
+            </p>
+            <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <span>{profile.city}</span>
+              <span>•</span>
+              <span>{profile.region}</span>
+            </div>
+            <Badge variant="secondary">{profile.category}</Badge>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -438,24 +444,31 @@ export default function Home() {
                 {/* Right Column - Sidebar (will be below on mobile) */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                   {/* Contact Buttons */}
-                  {selectedProfile.external_links?.map((link: any, i: number) => {
-                    const isWhatsApp = link.label?.toLowerCase().includes("whatsapp") || link.url?.includes("wa.me");
-                    const isTelegram = link.label?.toLowerCase().includes("telegram") || link.url?.includes("t.me");
-                    
-                    return (
-                      <Button
-                        key={i}
-                        onClick={() => window.open(link.url, "_blank")}
-                        style={{
-                          backgroundColor: isWhatsApp ? "#25D366" : isTelegram ? "#0088cc" : "hsl(var(--primary))",
-                          color: "white"
-                        }}
-                        size="lg"
-                      >
-                        {link.label?.toUpperCase() || "LINK"}
-                      </Button>
-                    );
-                  })}
+                  {selectedProfile.whatsapp_enabled && selectedProfile.whatsapp_number && (
+                    <Button
+                      onClick={() => window.open(`https://wa.me/55${selectedProfile.whatsapp_number}`, "_blank")}
+                      style={{
+                        backgroundColor: "#25D366",
+                        color: "white"
+                      }}
+                      size="lg"
+                    >
+                      WHATSAPP
+                    </Button>
+                  )}
+                  
+                  {selectedProfile.telegram_enabled && selectedProfile.telegram_username && (
+                    <Button
+                      onClick={() => window.open(`https://t.me/${selectedProfile.telegram_username}`, "_blank")}
+                      style={{
+                        backgroundColor: "#0088cc",
+                        color: "white"
+                      }}
+                      size="lg"
+                    >
+                      TELEGRAM
+                    </Button>
+                  )}
 
                   {/* Valores */}
                   {selectedProfile.pricing_packages && selectedProfile.pricing_packages.length > 0 && (

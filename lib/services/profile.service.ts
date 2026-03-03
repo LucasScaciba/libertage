@@ -12,6 +12,10 @@ interface CreateProfileInput {
   latitude?: number;
   longitude?: number;
   age_attribute?: number;
+  whatsapp_number?: string;
+  whatsapp_enabled?: boolean;
+  telegram_username?: string;
+  telegram_enabled?: boolean;
   external_links?: any[];
   pricing_packages?: any[];
   selected_features?: string[];
@@ -28,6 +32,10 @@ interface UpdateProfileInput {
   latitude?: number;
   longitude?: number;
   age_attribute?: number;
+  whatsapp_number?: string;
+  whatsapp_enabled?: boolean;
+  telegram_username?: string;
+  telegram_enabled?: boolean;
   external_links?: any[];
   pricing_packages?: any[];
   selected_features?: string[];
@@ -60,6 +68,10 @@ export class ProfileService {
         longitude,
         geohash: geoHash,
         age_attribute: data.age_attribute,
+        whatsapp_number: data.whatsapp_number || "",
+        whatsapp_enabled: data.whatsapp_enabled || false,
+        telegram_username: data.telegram_username || "",
+        telegram_enabled: data.telegram_enabled || false,
         external_links: data.external_links || [],
         pricing_packages: data.pricing_packages || [],
         selected_features: data.selected_features || [],

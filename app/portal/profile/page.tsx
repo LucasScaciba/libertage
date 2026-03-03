@@ -34,6 +34,10 @@ export default function ProfileEditPage() {
     weight: 60,
     height: 165,
     shoe_size: 37,
+    whatsapp_number: "",
+    whatsapp_enabled: false,
+    telegram_username: "",
+    telegram_enabled: false,
     pricing_packages: [] as any[],
     external_links: [] as any[],
     selected_features: [] as string[],
@@ -102,6 +106,10 @@ export default function ProfileEditPage() {
           weight: data.profile.weight || 60,
           height: data.profile.height || 165,
           shoe_size: data.profile.shoe_size || 37,
+          whatsapp_number: data.profile.whatsapp_number || "",
+          whatsapp_enabled: data.profile.whatsapp_enabled || false,
+          telegram_username: data.profile.telegram_username || "",
+          telegram_enabled: data.profile.telegram_enabled || false,
           pricing_packages: data.profile.pricing_packages || [],
           external_links: data.profile.external_links || [],
           selected_features: data.profile.selected_features || [],
@@ -726,6 +734,79 @@ export default function ProfileEditPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Contact Information */}
+                <div style={{ 
+                  padding: "1.5rem", 
+                  backgroundColor: "hsl(var(--muted))", 
+                  borderRadius: "var(--radius)",
+                  marginTop: "1rem"
+                }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1.5rem" }}>
+                    Informações de Contato
+                  </h3>
+                  
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+                    {/* WhatsApp */}
+                    <div>
+                      <Label htmlFor="whatsapp_number">WhatsApp (+55)</Label>
+                      <Input
+                        id="whatsapp_number"
+                        type="tel"
+                        value={formData.whatsapp_number}
+                        onChange={(e) => {
+                          // Filter to only numeric characters
+                          const numericValue = e.target.value.replace(/\D/g, '');
+                          setFormData({ ...formData, whatsapp_number: numericValue });
+                        }}
+                        placeholder="11987654321"
+                      />
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+                        <input
+                          type="checkbox"
+                          id="whatsapp_enabled"
+                          checked={formData.whatsapp_enabled}
+                          onChange={(e) => setFormData({ ...formData, whatsapp_enabled: e.target.checked })}
+                          style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                        />
+                        <Label htmlFor="whatsapp_enabled" style={{ cursor: "pointer", fontWeight: "normal" }}>
+                          Exibir botão de WhatsApp no perfil
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* Telegram */}
+                    <div>
+                      <Label htmlFor="telegram_username">Telegram</Label>
+                      <Input
+                        id="telegram_username"
+                        type="text"
+                        value={formData.telegram_username}
+                        onChange={(e) => {
+                          // Remove @ symbol
+                          const cleanValue = e.target.value.replace(/@/g, '');
+                          setFormData({ ...formData, telegram_username: cleanValue });
+                        }}
+                        placeholder="username"
+                      />
+                      <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
+                        Sem o símbolo @
+                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+                        <input
+                          type="checkbox"
+                          id="telegram_enabled"
+                          checked={formData.telegram_enabled}
+                          onChange={(e) => setFormData({ ...formData, telegram_enabled: e.target.checked })}
+                          style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                        />
+                        <Label htmlFor="telegram_enabled" style={{ cursor: "pointer", fontWeight: "normal" }}>
+                          Exibir botão de Telegram no perfil
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -912,9 +993,27 @@ export default function ProfileEditPage() {
                             aspectRatio: "9/16",
                             borderRadius: "var(--radius)",
                             overflow: "hidden",
-                            border: "1px solid hsl(var(--border))",
+                            border: media.is_cover ? "3px solid #10b981" : "1px solid hsl(var(--border))",
                           }}
                         >
+                          {/* Cover Badge */}
+                          {media.is_cover && (
+                            <div style={{
+                              position: "absolute",
+                              top: "0.5rem",
+                              left: "0.5rem",
+                              backgroundColor: "#10b981",
+                              color: "white",
+                              padding: "0.25rem 0.5rem",
+                              borderRadius: "0.25rem",
+                              fontSize: "0.75rem",
+                              fontWeight: "600",
+                              zIndex: 10,
+                            }}>
+                              CAPA
+                            </div>
+                          )}
+                          
                           <img
                             src={media.public_url}
                             alt={media.storage_path}
@@ -965,6 +1064,56 @@ export default function ProfileEditPage() {
                               </div>
                             ))}
                           </div>
+                          
+                          {/* Action Buttons */}
+                          <div style={{
+                            position: "absolute",
+                            bottom: "0.5rem",
+                            left: "0.5rem",
+                            right: "0.5rem",
+                            display: "flex",
+                            gap: "0.5rem",
+                            zIndex: 10,
+                          }}>
+                            {!media.is_cover && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/media/${media.id}`, {
+                                      method: "PATCH",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ is_cover: true }),
+                                    });
+                                    
+                                    if (!res.ok) {
+                                      throw new Error("Failed to set cover");
+                                    }
+                                    
+                                    setSuccess("Foto de capa definida!");
+                                    await fetchMedia();
+                                    setTimeout(() => setSuccess(""), 3000);
+                                  } catch (err: any) {
+                                    setError(err.message || "Erro ao definir capa");
+                                  }
+                                }}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: "rgba(16, 185, 129, 0.9)",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "0.25rem",
+                                  padding: "0.5rem",
+                                  cursor: "pointer",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Definir como Capa
+                              </button>
+                            )}
+                          </div>
+                          
                           <button
                             type="button"
                             onClick={() => handleDeleteMedia(media.id)}
