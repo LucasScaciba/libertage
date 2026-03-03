@@ -151,3 +151,15 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+
+@layer base {
+  .group\/sidebar-wrapper {
+    display: flex;
+    min-height: 100svh;
+    width: 100%;
+  }
+  
+  .group\/sidebar-wrapper.has-\[data-variant\=inset\]\:bg-sidebar:has([data-variant="inset"]) {
+    background-color: hsl(var(--sidebar));
+  }
+}
