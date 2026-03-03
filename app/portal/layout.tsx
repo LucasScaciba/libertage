@@ -98,7 +98,6 @@ export default function PortalLayout({
   const navigation = [
     { name: "Dashboard", href: "/portal", icon: "📊" },
     { name: "Perfil", href: "/portal/profile", icon: "👤" },
-    { name: "Mídia", href: "/portal/media", icon: "🖼️" },
     { name: "Analytics", href: "/portal/analytics", icon: "📈" },
     { name: "Boosts", href: "/portal/boosts", icon: "🚀" },
     { name: "Planos", href: "/portal/plans", icon: "💎" },

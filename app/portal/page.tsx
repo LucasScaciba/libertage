@@ -328,7 +328,7 @@ export default function DashboardPage() {
               </Link>
 
               <Link
-                href="/portal/media"
+                href="/portal/profile#media"
                 style={{
                   display: "flex",
                   flexDirection: "column",
