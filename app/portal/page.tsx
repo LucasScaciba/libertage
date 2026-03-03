@@ -1,23 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { 
-  TrendingUp, 
-  Eye, 
-  Calendar, 
-  Rocket, 
-  Edit, 
-  Image as ImageIcon, 
-  Zap, 
-  ExternalLink,
-  ArrowUpRight,
-  ArrowDownRight,
-  Users,
-  Activity
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { TrendingUpIcon, TrendingDownIcon, Eye, Calendar, Rocket, Activity } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { SiteHeader } from "@/components/site-header";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -77,26 +71,19 @@ export default function DashboardPage() {
   };
 
   const activeBoosts = boosts.filter((b) => b.status === "active");
-  const planName = subscription?.plans?.name || "Free";
-
-  // Calculate percentage change (mock data for now)
   const todayChange = analytics?.visitsToday > 0 ? "+12.5%" : "0%";
   const weekChange = "+8.2%";
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="mx-auto max-w-7xl space-y-4">
-          <div className="flex items-center justify-between space-y-2">
-            <div className="space-y-2">
-              <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
-              <div className="h-4 w-96 animate-pulse rounded-lg bg-gray-200" />
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 px-4 lg:px-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-40 animate-pulse rounded-xl border bg-white" />
+              ))}
             </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 animate-pulse rounded-xl border bg-white" />
-            ))}
           </div>
         </div>
       </div>
@@ -104,292 +91,150 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="mx-auto max-w-7xl space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
-            Visão geral do seu perfil e desempenho
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          {profile && (
-            <Button asChild>
-              <Link href={`/profiles/${profile.slug}`} target="_blank">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Ver Perfil Público
-              </Link>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Visits Today */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Visitas Hoje
-            </CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics?.visitsToday || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className={`inline-flex items-center ${analytics?.visitsToday > 0 ? 'text-green-600' : 'text-gray-500'}`}>
-                {analytics?.visitsToday > 0 ? (
-                  <>
-                    <ArrowUpRight className="mr-1 h-3 w-3" />
-                    {todayChange}
-                  </>
-                ) : (
-                  "Sem mudanças"
-                )}
-              </span>
-              {" "}vs. ontem
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Visits 7 Days */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Últimos 7 Dias
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics?.visits7Days || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="inline-flex items-center text-green-600">
-                <ArrowUpRight className="mr-1 h-3 w-3" />
-                {weekChange}
-              </span>
-              {" "}vs. semana anterior
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Visits 30 Days */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Últimos 30 Dias
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics?.visits30Days || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Total de visitas no mês
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Active Boosts */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Boosts Ativos
-            </CardTitle>
-            <Rocket className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeBoosts.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {activeBoosts.length > 0 ? (
-                <span className="text-green-600">🚀 Promovendo seu perfil</span>
-              ) : (
-                "Nenhum boost ativo"
-              )}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Contact Clicks */}
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Cliques por Método de Contato</CardTitle>
-            <CardDescription>
-              Como os visitantes estão entrando em contato com você
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {analytics && Object.keys(analytics.clicksByMethod || {}).length > 0 ? (
-              <div className="space-y-8">
-                {Object.entries(analytics.clicksByMethod).map(([method, count]: [string, any]) => {
-                  const total = Object.values(analytics.clicksByMethod).reduce((a: any, b: any) => a + b, 0) as number;
-                  const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-                  
-                  return (
-                    <div key={method} className="flex items-center">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-lg">
-                        {method === "whatsapp" ? "💬" : method === "telegram" ? "✈️" : "📧"}
-                      </div>
-                      <div className="ml-4 space-y-1 flex-1">
-                        <p className="text-sm font-medium leading-none capitalize">
-                          {method}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
-                            <div 
-                              className="h-full bg-primary transition-all"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {percentage}%
-                          </p>
-                        </div>
-                      </div>
-                      <div className="ml-auto font-medium">
-                        {count}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
-                Nenhum clique registrado ainda
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Plan & Limits */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Plano Atual</CardTitle>
-            <CardDescription>
-              {planName}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {/* Photos */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Fotos</span>
-                  </div>
-                  <span className="text-muted-foreground">
-                    {mediaCount.photos} / {mediaLimits.maxPhotos}
-                  </span>
+    <div className="flex flex-1 flex-col">
+      <SiteHeader />
+      <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+          {/* Stats Cards */}
+          <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card lg:px-6">
+            {/* Visits Today */}
+            <Card className="@container/card" data-slot="card">
+              <CardHeader className="relative">
+                <CardDescription className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  Visitas Hoje
+                </CardDescription>
+                <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+                  {analytics?.visitsToday || 0}
+                </CardTitle>
+                <div className="absolute right-4 top-4">
+                  <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
+                    {analytics?.visitsToday > 0 ? (
+                      <>
+                        <TrendingUpIcon className="size-3" />
+                        {todayChange}
+                      </>
+                    ) : (
+                      "0%"
+                    )}
+                  </Badge>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full transition-all ${
-                      mediaCount.photos >= mediaLimits.maxPhotos 
-                        ? "bg-destructive" 
-                        : "bg-primary"
-                    }`}
-                    style={{ width: `${Math.min((mediaCount.photos / mediaLimits.maxPhotos) * 100, 100)}%` }}
-                  />
+              </CardHeader>
+              <CardFooter className="flex-col items-start gap-1 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium">
+                  {analytics?.visitsToday > 0 ? (
+                    <>
+                      Crescendo este mês <TrendingUpIcon className="size-4" />
+                    </>
+                  ) : (
+                    "Sem visitas hoje"
+                  )}
                 </div>
-              </div>
+                <div className="text-muted-foreground">
+                  Comparado com ontem
+                </div>
+              </CardFooter>
+            </Card>
 
-              {/* Videos */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Vídeos</span>
-                  </div>
-                  <span className="text-muted-foreground">
-                    {mediaCount.videos} / {mediaLimits.maxVideos}
-                  </span>
+            {/* Visits 7 Days */}
+            <Card className="@container/card" data-slot="card">
+              <CardHeader className="relative">
+                <CardDescription className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Últimos 7 Dias
+                </CardDescription>
+                <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+                  {analytics?.visits7Days || 0}
+                </CardTitle>
+                <div className="absolute right-4 top-4">
+                  <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
+                    <TrendingUpIcon className="size-3" />
+                    {weekChange}
+                  </Badge>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full transition-all ${
-                      mediaCount.videos >= mediaLimits.maxVideos 
-                        ? "bg-destructive" 
-                        : "bg-primary"
-                    }`}
-                    style={{ width: `${Math.min((mediaCount.videos / mediaLimits.maxVideos) * 100, 100)}%` }}
-                  />
+              </CardHeader>
+              <CardFooter className="flex-col items-start gap-1 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium">
+                  Crescimento semanal <TrendingUpIcon className="size-4" />
                 </div>
-              </div>
+                <div className="text-muted-foreground">
+                  vs. semana anterior
+                </div>
+              </CardFooter>
+            </Card>
 
-              <Button asChild className="w-full" variant="outline">
-                <Link href="/portal/plans">
-                  Gerenciar Plano
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ações Rápidas</CardTitle>
-          <CardDescription>
-            Acesso rápido às funcionalidades principais
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-              <Link href="/portal/profile">
-                <Edit className="mb-2 h-5 w-5" />
-                <div className="space-y-1 text-left">
-                  <p className="font-medium">Editar Perfil</p>
-                  <p className="text-xs text-muted-foreground">
-                    Atualize suas informações
-                  </p>
+            {/* Visits 30 Days */}
+            <Card className="@container/card" data-slot="card">
+              <CardHeader className="relative">
+                <CardDescription className="flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Últimos 30 Dias
+                </CardDescription>
+                <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+                  {analytics?.visits30Days || 0}
+                </CardTitle>
+                <div className="absolute right-4 top-4">
+                  <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
+                    <TrendingUpIcon className="size-3" />
+                    +5.2%
+                  </Badge>
                 </div>
-              </Link>
-            </Button>
-
-            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-              <Link href="/portal/profile#media">
-                <ImageIcon className="mb-2 h-5 w-5" />
-                <div className="space-y-1 text-left">
-                  <p className="font-medium">Gerenciar Mídia</p>
-                  <p className="text-xs text-muted-foreground">
-                    Adicione fotos e vídeos
-                  </p>
+              </CardHeader>
+              <CardFooter className="flex-col items-start gap-1 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium">
+                  Desempenho estável <TrendingUpIcon className="size-4" />
                 </div>
-              </Link>
-            </Button>
-
-            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-              <Link href="/portal/boosts">
-                <Zap className="mb-2 h-5 w-5" />
-                <div className="space-y-1 text-left">
-                  <p className="font-medium">Comprar Boost</p>
-                  <p className="text-xs text-muted-foreground">
-                    Destaque seu perfil
-                  </p>
+                <div className="text-muted-foreground">
+                  Total de visitas no mês
                 </div>
-              </Link>
-            </Button>
+              </CardFooter>
+            </Card>
 
-            <Button asChild variant="outline" className="h-auto flex-col items-start p-4">
-              <Link href="/portal/analytics">
-                <Activity className="mb-2 h-5 w-5" />
-                <div className="space-y-1 text-left">
-                  <p className="font-medium">Ver Analytics</p>
-                  <p className="text-xs text-muted-foreground">
-                    Análise detalhada
-                  </p>
+            {/* Active Boosts */}
+            <Card className="@container/card" data-slot="card">
+              <CardHeader className="relative">
+                <CardDescription className="flex items-center gap-2">
+                  <Rocket className="h-4 w-4" />
+                  Boosts Ativos
+                </CardDescription>
+                <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+                  {activeBoosts.length}
+                </CardTitle>
+                <div className="absolute right-4 top-4">
+                  <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
+                    {activeBoosts.length > 0 ? (
+                      <>
+                        <TrendingUpIcon className="size-3" />
+                        Ativo
+                      </>
+                    ) : (
+                      "Inativo"
+                    )}
+                  </Badge>
                 </div>
-              </Link>
-            </Button>
+              </CardHeader>
+              <CardFooter className="flex-col items-start gap-1 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium">
+                  {activeBoosts.length > 0 ? (
+                    <>
+                      Promovendo seu perfil <Rocket className="size-4" />
+                    </>
+                  ) : (
+                    "Nenhum boost ativo"
+                  )}
+                </div>
+                <div className="text-muted-foreground">
+                  {activeBoosts.length > 0 ? "Destaque garantido" : "Ative para mais visibilidade"}
+                </div>
+              </CardFooter>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Chart */}
+          <div className="px-4 lg:px-6">
+            <ChartAreaInteractive />
+          </div>
+        </div>
       </div>
     </div>
   );
