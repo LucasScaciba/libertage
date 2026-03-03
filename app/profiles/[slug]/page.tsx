@@ -41,12 +41,16 @@ export default function PublicProfilePage() {
 
   const trackVisit = async () => {
     try {
+      console.log('[Tracking] Starting visit tracking for profile:', data?.profile?.id);
+      
       // Detect device type
       const deviceType = typeof window !== "undefined" 
         ? (window.innerWidth < 768 ? "mobile" : window.innerWidth < 1024 ? "tablet" : "desktop")
         : "desktop";
 
-      await fetch("/api/analytics/visit", {
+      console.log('[Tracking] Device type:', deviceType);
+
+      const response = await fetch("/api/analytics/visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,6 +58,9 @@ export default function PublicProfilePage() {
           device_type: deviceType,
         }),
       });
+
+      const result = await response.json();
+      console.log('[Tracking] Visit tracked successfully:', result);
     } catch (err) {
       console.error("Error tracking visit:", err);
     }

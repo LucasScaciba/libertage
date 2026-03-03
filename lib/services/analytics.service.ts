@@ -22,18 +22,23 @@ export class AnalyticsService {
   static async trackVisit(profileId: string, fingerprint: string, deviceType?: string): Promise<void> {
     const supabase = await createClient();
 
-    const { error } = await supabase
+    console.log('[AnalyticsService] Tracking visit:', { profileId, deviceType, fingerprint: fingerprint.substring(0, 30) });
+
+    const { data, error } = await supabase
       .from("analytics_events")
       .insert({
         profile_id: profileId,
         event_type: "visit",
         visitor_fingerprint: fingerprint,
         device_type: deviceType || null,
-      });
+      })
+      .select();
 
     if (error) {
-      console.error("Error tracking visit:", error);
+      console.error("[AnalyticsService] Error tracking visit:", error);
       // Don't throw - analytics failures shouldn't break user experience
+    } else {
+      console.log('[AnalyticsService] Visit tracked successfully:', data);
     }
   }
 
