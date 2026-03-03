@@ -7,7 +7,7 @@ export class MediaService {
     fileType: string,
     fileSize: number
   ): Promise<{ uploadUrl: string; path: string }> {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     // Validate file type
     const allowedTypes = [
