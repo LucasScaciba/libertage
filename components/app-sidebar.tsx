@@ -72,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconRocket,
     },
     {
-      title: "Planos",
+      title: "Meu Plano",
       url: "/portal/plans",
       icon: IconSettings,
     },
