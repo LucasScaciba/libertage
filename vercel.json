@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/expire-stories",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/expire-verifications",
-      "schedule": "0 0 * * *"
+      "schedule": "0 1 * * *"
     }
   ]
 }
