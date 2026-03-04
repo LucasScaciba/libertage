@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-gray-500">Carregando analytics...</p>
       </div>
     );
@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-900 text-xl mb-4">{error}</p>
           <Link href="/portal">
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
   const totalClicks = Object.values(data.clicksByMethod).reduce((sum, count) => sum + count, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}

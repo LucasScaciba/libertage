@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "stripe": {
+      "url": "https://mcp.stripe.com",
+      "disabled": false,
+      "autoApprove": [
+        "list_products",
+        "retrieve_customer",
+        "list_subscriptions"
+      ]
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?read_only=false",
+      "disabled": false,
+      "autoApprove": [
+        "list_tables",
+        "list_columns",
+        "list_projects",
+        "execute_sql",
+        "apply_migration"
+      ]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "get_project_registries",
+        "list_items_in_registries",
+        "view_items_in_registries",
+        "get_item_examples_from_registries",
+        "search_items_in_registries",
+        "get_add_command_for_items"
+      ]
+    }
+  }
+}

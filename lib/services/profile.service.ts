@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types";
+import { SlugGenerator } from "./slug-generator";
 
 interface CreateProfileInput {
   display_name: string;
@@ -45,6 +46,12 @@ export class ProfileService {
   static async createProfile(userId: string, data: CreateProfileInput): Promise<Profile> {
     const supabase = await createClient();
 
+    // Auto-generate slug if not provided
+    let slug = data.slug;
+    if (!slug || slug.trim() === "") {
+      slug = await SlugGenerator.generateUnique(data.display_name);
+    }
+
     // Use default coordinates (center of Brazil) if not provided
     const latitude = data.latitude || -14.235;
     const longitude = data.longitude || -51.9253;
@@ -65,7 +72,7 @@ export class ProfileService {
       .insert({
         user_id: userId,
         display_name: data.display_name,
-        slug: data.slug,
+        slug: slug,
         category: data.category || "general",
         short_description: data.short_description,
         long_description: data.long_description,
@@ -82,13 +89,47 @@ export class ProfileService {
         external_links: data.external_links || [],
         pricing_packages: data.pricing_packages || [],
         selected_features: data.selected_features || [],
-        status: "draft",
+        status: "published", // All new profiles are published by default
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    // Create default availability schedule (Monday to Saturday, 10:00 - 21:00)
+    await this.createDefaultAvailability(profile.id);
+
     return profile;
+  }
+
+  /**
+   * Create default availability schedule for a new profile
+   * Monday to Saturday: 10:00 - 21:00
+   */
+  private static async createDefaultAvailability(profileId: string): Promise<void> {
+    const supabase = await createClient();
+
+    const defaultSlots = [];
+    
+    // Monday (1) to Saturday (6): 10:00 - 21:00
+    for (let weekday = 1; weekday <= 6; weekday++) {
+      defaultSlots.push({
+        profile_id: profileId,
+        weekday: weekday,
+        start_time: "10:00",
+        end_time: "21:00",
+        is_available: true,
+      });
+    }
+
+    const { error } = await supabase
+      .from("availability")
+      .insert(defaultSlots);
+
+    if (error) {
+      console.error("Error creating default availability:", error);
+      // Don't throw error - availability is optional
+    }
   }
 
   static async updateProfile(profileId: string, data: UpdateProfileInput): Promise<Profile> {
@@ -152,7 +193,7 @@ export class ProfileService {
       .from("profiles")
       .select("*")
       .eq("slug", slug)
-      .eq("status", "published")
+      .neq("status", "unpublished") // Show all profiles except unpublished
       .single();
 
     if (error) return null;

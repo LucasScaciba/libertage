@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
+import { VerificationBadge } from "@/app/components/verification/VerificationBadge";
 
 export default function CatalogPage() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
   const [regularProfiles, setRegularProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [storiesByUser, setStoriesByUser] = useState<any[]>([]);
   const [filters, setFilters] = useState({
     search: "",
     service: "",
@@ -27,6 +30,7 @@ export default function CatalogPage() {
 
   useEffect(() => {
     document.title = "Catálogo — Libertage";
+    fetchStories();
   }, []);
 
   useEffect(() => {
@@ -44,6 +48,18 @@ export default function CatalogPage() {
       setAvailableFilters(data);
     } catch (err) {
       console.error("Error fetching filters:", err);
+    }
+  };
+
+  const fetchStories = async () => {
+    try {
+      const res = await fetch("/api/stories/catalog");
+      const data = await res.json();
+      if (data.success) {
+        setStoriesByUser(data.stories_by_user || []);
+      }
+    } catch (err) {
+      console.error("Error fetching stories:", err);
     }
   };
 
@@ -88,19 +104,37 @@ export default function CatalogPage() {
       <Link href={`/profiles/${profile.slug}`}>
         <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
           {profile.media?.[0]?.public_url && (
-            <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
+            <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)", position: "relative" }}>
               <img
                 src={profile.media[0].public_url}
                 alt={profile.display_name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
+              {profile.is_verified && (
+                <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", backgroundColor: "white", borderRadius: "50%", padding: "0.25rem" }}>
+                  <VerificationBadge 
+                    isVerified={profile.is_verified} 
+                    verifiedAt={profile.verified_at}
+                    size="sm"
+                  />
+                </div>
+              )}
             </div>
           )}
           <CardContent style={{ padding: "1rem" }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-              <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
-                {profile.display_name}
-              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
+                  {profile.display_name}
+                </h3>
+                {profile.is_verified && (
+                  <VerificationBadge 
+                    isVerified={profile.is_verified} 
+                    verifiedAt={profile.verified_at}
+                    size="sm"
+                  />
+                )}
+              </div>
               {isBoosted && (
                 <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
                   Destaque
@@ -143,6 +177,16 @@ export default function CatalogPage() {
       </header>
 
       <div className="container-custom" style={{ padding: "2rem 1rem" }}>
+        {/* Stories Carousel */}
+        {storiesByUser.length > 0 && (
+          <div style={{ marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "1rem" }}>
+              Stories
+            </h2>
+            <StoriesCarousel storiesByUser={storiesByUser} />
+          </div>
+        )}
+
         {/* Search and Filters */}
         <Card style={{ marginBottom: "2rem" }}>
           <CardContent style={{ padding: "1.5rem" }}>

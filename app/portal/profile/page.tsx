@@ -300,7 +300,7 @@ export default function ProfileEditPage() {
   const isLastSection = currentSectionIndex === sections.length - 1;
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "hsl(var(--muted))" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "white" }}>
       <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "2rem 1rem" }}>
         {/* Header */}
         <div style={{ marginBottom: "2rem" }}>
@@ -348,7 +348,7 @@ export default function ProfileEditPage() {
         {/* Profile Completeness Alert */}
         <ProfileCompletenessAlert profileId={profile?.id || null} />
         {/* Navigation Tabs */}
-        <div style={{ marginBottom: "2rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", backgroundColor: "white", padding: "1rem", borderRadius: "var(--radius)" }}>
+        <div style={{ marginBottom: "2rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", backgroundColor: "hsl(var(--muted))", padding: "1rem", borderRadius: "var(--radius)" }}>
           {sections.map((section) => {
             const isValid = validateSection(section.id);
             const isActive = activeSection === section.id;

@@ -35,6 +35,35 @@ export async function PATCH(
       );
     }
 
+    // Validate service_categories if provided (at least one required)
+    if (data.service_categories !== undefined) {
+      if (!Array.isArray(data.service_categories) || data.service_categories.length === 0) {
+        return NextResponse.json(
+          { error: "At least one service category is required" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate birthdate age range if provided (18-60 years)
+    if (data.birthdate) {
+      const birthDate = new Date(data.birthdate);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      if (age < 18 || age > 60) {
+        return NextResponse.json(
+          { error: "Age must be between 18 and 60 years" },
+          { status: 400 }
+        );
+      }
+    }
+
     const updatedProfile = await ProfileService.updateProfile(profileId, data);
 
     return NextResponse.json({ profile: updatedProfile });

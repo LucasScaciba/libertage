@@ -12,7 +12,10 @@ export async function GET(
     // Fetch profile with published status only
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")
+      .select(`
+        *,
+        profile_verifications(status, verified_at, expires_at)
+      `)
       .eq("slug", slug)
       .eq("status", "published")
       .single();
@@ -23,6 +26,14 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    // Add verification status
+    const verification = profile.profile_verifications?.[0];
+    const isVerified = verification?.status === 'verified' && 
+                      new Date(verification.expires_at) > new Date();
+    profile.is_verified = isVerified;
+    profile.verified_at = isVerified ? verification.verified_at : null;
+    delete profile.profile_verifications;
 
     // Fetch media
     const { data: media } = await supabase

@@ -13,6 +13,7 @@ import { calculateAge } from "@/lib/utils/age-calculator";
 import { formatBRL } from "@/lib/utils/currency-formatter";
 import { Calendar, Weight, Ruler, Footprints, MessageCircle, Send } from "lucide-react";
 import { IconMapper } from "@/lib/utils/icon-mapper";
+import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
 
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
@@ -324,6 +325,11 @@ export default function Home() {
 
       {/* Catalog Content */}
       <div className="container-custom" style={{ padding: "2rem 1rem" }}>
+        {/* Stories Carousel */}
+        <div style={{ marginBottom: "2rem" }}>
+          <StoriesCarousel />
+        </div>
+
         {loading ? (
           <div style={{ textAlign: "center", padding: "3rem 0" }}>
             <p style={{ color: "hsl(var(--muted-foreground))" }}>Carregando...</p>
@@ -346,9 +352,6 @@ export default function Home() {
 
             {/* Regular Profiles Section */}
             <div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" }}>
-                {boostedProfiles.length > 0 ? "Todos os Perfis" : "Perfis"}
-              </h2>
               {regularProfiles.length > 0 ? (
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
@@ -695,9 +698,42 @@ export default function Home() {
                     </div>
                   )}
 
+                  {/* Horários de Disponibilidade */}
+                  {selectedProfile.availability && selectedProfile.availability.length > 0 && (
+                    <Card>
+                      <CardContent style={{ padding: "1rem" }}>
+                        <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                          Horários
+                        </h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"].map((dayName, dayIndex) => {
+                            const daySlots = selectedProfile.availability.filter((slot: any) => slot.weekday === dayIndex && slot.is_available);
+                            
+                            if (daySlots.length === 0) return null;
+                            
+                            return (
+                              <div key={dayIndex} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", paddingBottom: "0.5rem", borderBottom: dayIndex < 6 ? "1px solid hsl(var(--border))" : "none" }}>
+                                <span style={{ fontWeight: "500", color: "hsl(var(--muted-foreground))" }}>
+                                  {dayName.substring(0, 3)}
+                                </span>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem" }}>
+                                  {daySlots.map((slot: any) => (
+                                    <span key={slot.id} style={{ fontWeight: "600" }}>
+                                      {slot.start_time} - {slot.end_time}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Denunciar Perfil */}
                   <Button variant="ghost" style={{ color: "hsl(var(--muted-foreground))", fontSize: "0.875rem" }}>
-                    ⚠️ Denunciar Perfil
+                    Denunciar Perfil
                   </Button>
                 </div>
               </div>

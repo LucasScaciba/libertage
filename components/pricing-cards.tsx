@@ -115,26 +115,17 @@ export function PricingCards({ plans, currentPlanCode, onSelectPlan, loading }: 
             <CardFooter>
               {isCurrent ? (
                 <Button
-                  className="w-full"
+                  className="w-full bg-muted text-muted-foreground cursor-not-allowed"
                   variant="ghost"
                   disabled
-                  style={{
-                    backgroundColor: "hsl(var(--muted))",
-                    color: "hsl(var(--muted-foreground))",
-                    cursor: "not-allowed",
-                  }}
                 >
                   Plano Atual
                 </Button>
               ) : (
                 <Button
-                  className="w-full"
+                  className="w-full bg-black text-white hover:bg-black/90"
                   onClick={() => onSelectPlan(plan.code)}
                   disabled={loading}
-                  style={{
-                    backgroundColor: "black",
-                    color: "white",
-                  }}
                 >
                   Quero este plano
                 </Button>

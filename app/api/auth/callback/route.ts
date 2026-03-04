@@ -33,18 +33,19 @@ export async function GET(request: Request) {
         console.error("Error upserting user:", upsertError);
       }
 
-      // For new users: onboarding → plans → profile
-      if (isNewUser) {
-        return NextResponse.redirect(`${origin}/onboarding`);
-      }
-
-      // For existing users: check if they have completed onboarding
+      // Get user data to check phone validation and onboarding status
       const { data: userData } = await supabase
         .from("users")
-        .select("onboarding_completed")
+        .select("phone_verified_at, onboarding_completed")
         .eq("id", data.user.id)
         .single();
 
+      // Priority 1: Phone validation (must come first)
+      if (userData?.phone_verified_at === null) {
+        return NextResponse.redirect(`${origin}/phone-validation`);
+      }
+
+      // Priority 2: Onboarding (after phone validation)
       if (!userData?.onboarding_completed) {
         return NextResponse.redirect(`${origin}/onboarding`);
       }

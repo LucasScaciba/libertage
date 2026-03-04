@@ -10,16 +10,43 @@ export async function POST(request: Request) {
     // Validate required fields
     const requiredFields = [
       "display_name",
-      "slug",
       "short_description",
       "long_description",
       "city",
+      "birthdate",
     ];
 
     for (const field of requiredFields) {
       if (!data[field]) {
         return NextResponse.json(
           { error: `${field} is required` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate service_categories (at least one required)
+    if (!data.service_categories || !Array.isArray(data.service_categories) || data.service_categories.length === 0) {
+      return NextResponse.json(
+        { error: "At least one service category is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate birthdate age range (18-60 years)
+    if (data.birthdate) {
+      const birthDate = new Date(data.birthdate);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      if (age < 18 || age > 60) {
+        return NextResponse.json(
+          { error: "Age must be between 18 and 60 years" },
           { status: 400 }
         );
       }

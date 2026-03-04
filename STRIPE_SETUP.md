@@ -47,6 +47,42 @@ WHERE code = 'black';
 
 ## Passo 4: Configurar Webhook
 
+### Para Desenvolvimento Local (Recomendado)
+
+Use o Stripe CLI para criar um túnel temporário:
+
+```bash
+# 1. Instalar Stripe CLI
+brew install stripe/stripe-cli/stripe
+
+# 2. Fazer login
+stripe login
+
+# 3. Iniciar túnel de webhooks
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+O comando vai retornar:
+```
+> Ready! Your webhook signing secret is whsec_xxxxxxxxxxxxx
+```
+
+Copie o secret e adicione ao `.env.local`:
+```env
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+```
+
+Reinicie o servidor:
+```bash
+npm run dev
+```
+
+**Vantagens**:
+- ✅ Configuração rápida (2 minutos)
+- ✅ Webhooks em tempo real
+- ✅ Logs detalhados no terminal
+- ✅ Não precisa expor servidor publicamente
+
 ### Para Produção (Obrigatório)
 
 1. Vá em [Webhooks](https://dashboard.stripe.com/webhooks)

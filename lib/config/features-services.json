@@ -1,17 +1,6 @@
 {
   "categories": [
     {
-      "id": "services",
-      "name": "Serviços",
-      "description": "Tipos de serviços oferecidos",
-      "multiSelect": true,
-      "options": [
-        "Massagem",
-        "Acompanhante",
-        "Chamada de vídeo"
-      ]
-    },
-    {
       "id": "payment",
       "name": "Formas de Pagamento",
       "description": "Métodos de pagamento aceitos",
@@ -87,6 +76,27 @@
       "options": [
         "Naturais",
         "Com Silicone"
+      ]
+    },
+    {
+      "id": "buttocks_type",
+      "name": "Bumbum",
+      "description": "Tipo de bumbum",
+      "multiSelect": false,
+      "options": [
+        "Natural",
+        "Com Silicone"
+      ]
+    },
+    {
+      "id": "buttocks_size",
+      "name": "Tamanho do Bumbum",
+      "description": "Tamanho do bumbum",
+      "multiSelect": false,
+      "options": [
+        "Pequeno",
+        "Médio",
+        "Grande"
       ]
     },
     {

@@ -8,6 +8,10 @@ import {
   IconRocket,
   IconSettings,
   IconUser,
+  IconLink,
+  IconPhoto,
+  IconClock,
+  IconList,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -65,6 +69,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Meu Perfil",
       url: "/portal/profile",
       icon: IconUser,
+    },
+    {
+      title: "Características e Serviços",
+      url: "/portal/characteristics",
+      icon: IconList,
+    },
+    {
+      title: "Minha Mídia",
+      url: "/portal/media",
+      icon: IconPhoto,
+    },
+    {
+      title: "Meus Links",
+      url: "/portal/links",
+      icon: IconLink,
+    },
+    {
+      title: "Meus Horários",
+      url: "/portal/availability",
+      icon: IconClock,
     },
     {
       title: "Boosts",

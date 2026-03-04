@@ -23,16 +23,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Check onboarding status for portal and admin paths
-  if (path.startsWith("/portal") || path.startsWith("/admin")) {
+  // Check phone validation and onboarding status for protected paths
+  if (path.startsWith("/portal") || path.startsWith("/admin") || path.startsWith("/onboarding")) {
     const supabase = await createClient();
     const { data: userData } = await supabase
       .from("users")
-      .select("onboarding_completed, role")
+      .select("phone_verified_at, onboarding_completed, role")
       .eq("id", user.id)
       .single();
 
-    // Redirect to onboarding if not completed
+    // Priority 1: Phone validation (must come before onboarding)
+    if (userData?.phone_verified_at === null) {
+      return NextResponse.redirect(new URL("/phone-validation", request.url));
+    }
+
+    // Priority 2: Onboarding (after phone validation)
     if (!userData?.onboarding_completed && !path.startsWith("/onboarding")) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
     }
@@ -48,6 +53,11 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/portal", request.url));
       }
     }
+  }
+
+  // Allow access to phone validation page for authenticated users
+  if (path.startsWith("/phone-validation")) {
+    return supabaseResponse;
   }
 
   return supabaseResponse;

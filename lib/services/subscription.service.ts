@@ -183,49 +183,28 @@ export class SubscriptionService {
 
     console.log("Period dates:", { periodStart, periodEnd });
 
-    // Check if subscription already exists
-    const { data: existingSub } = await supabase
+    // Delete any existing subscriptions for this user to avoid duplicates
+    await supabase
       .from("subscriptions")
-      .select("id")
-      .eq("user_id", userId)
-      .single();
+      .delete()
+      .eq("user_id", userId);
 
-    if (existingSub) {
-      // Update existing subscription
-      const { error: updateError } = await supabase
-        .from("subscriptions")
-        .update({
-          plan_id: plan.id,
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          status: "active",
-          current_period_start: periodStart,
-          current_period_end: periodEnd,
-        })
-        .eq("user_id", userId);
+    // Insert new subscription
+    const { error: insertError } = await supabase
+      .from("subscriptions")
+      .insert({
+        user_id: userId,
+        plan_id: plan.id,
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: session.subscription as string,
+        status: "active",
+        current_period_start: periodStart,
+        current_period_end: periodEnd,
+      });
 
-      if (updateError) {
-        console.error("Error updating subscription:", updateError);
-        throw updateError;
-      }
-    } else {
-      // Insert new subscription
-      const { error: insertError } = await supabase
-        .from("subscriptions")
-        .insert({
-          user_id: userId,
-          plan_id: plan.id,
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          status: "active",
-          current_period_start: periodStart,
-          current_period_end: periodEnd,
-        });
-
-      if (insertError) {
-        console.error("Error inserting subscription:", insertError);
-        throw insertError;
-      }
+    if (insertError) {
+      console.error("Error inserting subscription:", insertError);
+      throw insertError;
     }
 
     console.log("Subscription saved successfully");

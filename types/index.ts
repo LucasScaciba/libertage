@@ -139,3 +139,144 @@ export interface AuditLog {
   metadata: Record<string, any>;
   created_at: Date;
 }
+
+// Story types
+export type StoryStatus = 'active' | 'expired' | 'deleted';
+
+export interface Story {
+  id: string;
+  user_id: string;
+  video_url: string;
+  thumbnail_url: string | null;
+  duration_seconds: number;
+  file_size_bytes: number;
+  status: StoryStatus;
+  created_at: Date;
+  expires_at: Date;
+  deleted_at: Date | null;
+}
+
+export interface StoryWithUser extends Story {
+  user: {
+    id: string;
+    name: string;
+    slug: string;
+    profile_photo_url: string | null;
+  };
+}
+
+export interface StoryView {
+  id: string;
+  story_id: string;
+  viewer_id: string | null;
+  viewer_ip: string | null;
+  viewed_at: Date;
+}
+
+export interface StoryReport {
+  id: string;
+  story_id: string;
+  reporter_id: string | null;
+  reporter_ip: string | null;
+  reason: string;
+  status: 'pending' | 'reviewed' | 'dismissed';
+  created_at: Date;
+  reviewed_at: Date | null;
+  reviewed_by: string | null;
+}
+
+export interface StoryAnalytics {
+  story_id: string;
+  view_count: number;
+  unique_viewers: number;
+  views_by_day: Array<{
+    date: string;
+    count: number;
+  }>;
+}
+
+// Verification types
+export type VerificationStatus = 'not_verified' | 'pending' | 'verified' | 'rejected' | 'expired';
+export type DocumentType = 'RG' | 'CNH';
+
+export interface ProfileVerification {
+  id: string;
+  profile_id: string;
+  status: VerificationStatus;
+  document_type: DocumentType;
+  selfie_image_path: string;
+  submitted_at: Date;
+  reviewed_at: Date | null;
+  reviewed_by: string | null;
+  verified_at: Date | null;
+  expires_at: Date | null;
+  rejection_reason: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface VerificationAuditLog {
+  id: string;
+  verification_id: string;
+  action: string;
+  actor_id: string | null;
+  metadata: Record<string, any> | null;
+  created_at: Date;
+}
+
+export interface VerificationStatusResponse {
+  status: VerificationStatus;
+  verifiedAt?: Date;
+  expiresAt?: Date;
+  rejectionReason?: string;
+  submittedAt?: Date;
+}
+
+export interface VerificationBadgeData {
+  isVerified: boolean;
+  verifiedAt?: Date;
+}
+
+// External Links types (Linktree-style)
+export type IconKey = 
+  | 'instagram'
+  | 'whatsapp'
+  | 'linkedin'
+  | 'facebook'
+  | 'twitter'
+  | 'youtube'
+  | 'tiktok'
+  | 'github'
+  | 'link';
+
+export interface ExternalLinkRecord {
+  id: string;
+  profile_id: string;
+  title: string;
+  url: string;
+  display_order: number;
+  icon_key: IconKey;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateExternalLinkInput {
+  profile_id: string;
+  title: string;
+  url: string;
+}
+
+export interface UpdateExternalLinkInput {
+  id: string;
+  title?: string;
+  url?: string;
+}
+
+export interface ReorderExternalLinkInput {
+  id: string;
+  direction: 'up' | 'down';
+}
+
+export interface ExternalLinkWithIcon extends ExternalLinkRecord {
+  iconComponent: React.ComponentType;
+}

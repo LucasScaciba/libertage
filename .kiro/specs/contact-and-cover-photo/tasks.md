@@ -89,15 +89,15 @@ This implementation plan breaks down the contact and cover photo features into d
 - [ ] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement MediaService.setCoverImage logic
-  - [ ] 5.1 Create or update setCoverImage method in MediaService
+- [x] 5. Implement MediaService.setCoverImage logic
+  - [x] 5.1 Create or update setCoverImage method in MediaService
     - Accept profileId and mediaId as parameters
     - Set is_cover=false for all photos in the profile
     - Set is_cover=true for the selected mediaId
     - Ensure atomic transaction (rollback if any step fails)
     - _Requirements: 5.1, 5.2_
   
-  - [ ] 5.2 Implement cover deletion behavior
+  - [x] 5.2 Implement cover deletion behavior
     - When cover photo is deleted, do not auto-assign new cover
     - Ensure all remaining photos have is_cover=false
     - _Requirements: 5.4_

@@ -29,12 +29,19 @@ export class CatalogService {
     const boostedProfiles = await this.getBoostedProfiles(filters);
     const regularProfiles = await this.getRegularProfiles(filters, page, pageSize);
     
-    // Get total count for pagination
+    // Get total count for pagination (only complete profiles)
     const supabase = await createClient();
     let countQuery = supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .eq("status", "published");
+      .neq("status", "unpublished")
+      // Check required fields for catalog visibility
+      .not("display_name", "is", null)
+      .not("slug", "is", null)
+      .not("city", "is", null)
+      .not("birthdate", "is", null)
+      .not("short_description", "is", null)
+      .not("service_categories", "eq", "[]"); // Has at least one service category
 
     // Apply filters to count query
     countQuery = this.applyFilters(countQuery, filters);
@@ -53,6 +60,7 @@ export class CatalogService {
 
   /**
    * Get boosted profiles (up to 15, ordered by expiration)
+   * Only shows profiles that are complete (have all required fields)
    */
   static async getBoostedProfiles(filters: CatalogFilters): Promise<Profile[]> {
     const supabase = await createClient();
@@ -74,12 +82,24 @@ export class CatalogService {
 
     const profileIds = boosts.map((b) => b.profile_id);
 
-    // Get profiles
+    // Get profiles with completeness check
     let query = supabase
       .from("profiles")
-      .select("*, media(*)")
-      .eq("status", "published")
-      .in("id", profileIds);
+      .select(`
+        *, 
+        media(*),
+        external_links(*),
+        availability(*)
+      `)
+      .neq("status", "unpublished") // Exclude unpublished profiles
+      .in("id", profileIds)
+      // Check required fields for catalog visibility
+      .not("display_name", "is", null)
+      .not("slug", "is", null)
+      .not("city", "is", null)
+      .not("birthdate", "is", null)
+      .not("short_description", "is", null)
+      .not("service_categories", "eq", "[]"); // Has at least one service category
 
     // Apply filters
     query = this.applyFilters(query, filters);
@@ -88,8 +108,20 @@ export class CatalogService {
 
     if (!profiles) return [];
 
+    // Filter profiles that have at least one photo
+    const profilesWithPhotos = profiles.filter(p => 
+      p.media && p.media.some((m: any) => m.type === "photo")
+    ).map(p => {
+      // Verification will be added later when the verification system is implemented
+      return {
+        ...p,
+        is_verified: false,
+        verified_at: null,
+      };
+    });
+
     // Sort by boost expiration order
-    const profileMap = new Map(profiles.map((p) => [p.id, p]));
+    const profileMap = new Map(profilesWithPhotos.map((p) => [p.id, p]));
     return boosts
       .map((b) => profileMap.get(b.profile_id))
       .filter((p) => p !== undefined) as Profile[];
@@ -97,6 +129,7 @@ export class CatalogService {
 
   /**
    * Get regular (non-boosted) profiles
+   * Only shows profiles that are complete (have all required fields)
    */
   static async getRegularProfiles(
     filters: CatalogFilters,
@@ -116,11 +149,23 @@ export class CatalogService {
 
     const boostedIds = boosts?.map((b) => b.profile_id) || [];
 
-    // Get profiles
+    // Get profiles with completeness check
     let query = supabase
       .from("profiles")
-      .select("*, media(*)")
-      .eq("status", "published");
+      .select(`
+        *, 
+        media(*),
+        external_links(*),
+        availability(*)
+      `)
+      .neq("status", "unpublished") // Exclude unpublished profiles
+      // Check required fields for catalog visibility
+      .not("display_name", "is", null)
+      .not("slug", "is", null)
+      .not("city", "is", null)
+      .not("birthdate", "is", null)
+      .not("short_description", "is", null)
+      .not("service_categories", "eq", "[]"); // Has at least one service category
 
     // Exclude boosted profiles
     if (boostedIds.length > 0) {
@@ -139,7 +184,19 @@ export class CatalogService {
 
     const { data: profiles } = await query;
 
-    return profiles || [];
+    if (!profiles) return [];
+
+    // Filter profiles that have at least one photo
+    return profiles.filter(p => 
+      p.media && p.media.some((m: any) => m.type === "photo")
+    ).map(p => {
+      // Verification will be added later when the verification system is implemented
+      return {
+        ...p,
+        is_verified: false,
+        verified_at: null,
+      };
+    });
   }
 
   /**
@@ -153,10 +210,10 @@ export class CatalogService {
       );
     }
 
-    // Service filter (check if service is in selected_features array)
+    // Service filter (check if service is in service_categories array)
     // Using cs (contains) operator for array containment
     if (filters.service) {
-      query = query.cs("selected_features", `{${filters.service}}`);
+      query = query.cs("service_categories", `{${filters.service}}`);
     }
 
     // City filter
@@ -177,7 +234,7 @@ export class CatalogService {
   }
 
   /**
-   * Get unique categories from published profiles (cached for 5 minutes)
+   * Get unique categories from complete profiles (cached for 5 minutes)
    */
   static async getCategories(): Promise<string[]> {
     return withCache(
@@ -188,7 +245,13 @@ export class CatalogService {
         const { data } = await supabase
           .from("profiles")
           .select("category")
-          .eq("status", "published");
+          .neq("status", "unpublished")
+          .not("display_name", "is", null)
+          .not("slug", "is", null)
+          .not("city", "is", null)
+          .not("birthdate", "is", null)
+          .not("short_description", "is", null)
+          .not("service_categories", "eq", "[]");
 
         if (!data) return [];
 
@@ -200,7 +263,7 @@ export class CatalogService {
   }
 
   /**
-   * Get unique cities from published profiles (cached for 5 minutes)
+   * Get unique cities from complete profiles (cached for 5 minutes)
    */
   static async getCities(): Promise<string[]> {
     return withCache(
@@ -211,7 +274,13 @@ export class CatalogService {
         const { data } = await supabase
           .from("profiles")
           .select("city")
-          .eq("status", "published");
+          .neq("status", "unpublished")
+          .not("display_name", "is", null)
+          .not("slug", "is", null)
+          .not("city", "is", null)
+          .not("birthdate", "is", null)
+          .not("short_description", "is", null)
+          .not("service_categories", "eq", "[]");
 
         if (!data) return [];
 
@@ -223,7 +292,7 @@ export class CatalogService {
   }
 
   /**
-   * Get unique regions from published profiles (cached for 5 minutes)
+   * Get unique regions from complete profiles (cached for 5 minutes)
    */
   static async getRegions(): Promise<string[]> {
     return withCache(
@@ -234,7 +303,13 @@ export class CatalogService {
         const { data } = await supabase
           .from("profiles")
           .select("region")
-          .eq("status", "published");
+          .neq("status", "unpublished")
+          .not("display_name", "is", null)
+          .not("slug", "is", null)
+          .not("city", "is", null)
+          .not("birthdate", "is", null)
+          .not("short_description", "is", null)
+          .not("service_categories", "eq", "[]");
 
         if (!data) return [];
 

@@ -28,9 +28,16 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   )
 }
 
-export function DialogContent({ children }: { children: React.ReactNode }) {
+export interface DialogContentProps {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+}
+
+export function DialogContent({ children, className, style }: DialogContentProps) {
   return (
     <div
+      className={className}
       style={{
         backgroundColor: "hsl(var(--background))",
         borderRadius: "var(--radius)",
@@ -39,6 +46,7 @@ export function DialogContent({ children }: { children: React.ReactNode }) {
         maxHeight: "95vh",
         overflow: "hidden",
         position: "relative",
+        ...style,
       }}
       onClick={(e) => e.stopPropagation()}
     >
