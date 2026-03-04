@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,31 +13,30 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import featuresServicesConfig from "@/lib/config/features-services.json";
 import { brazilianStates } from "@/lib/data/brazilian-states";
+import { SlugEditor } from "./components/SlugEditorComponent";
+import { ProfileCompletenessAlert } from "./components/ProfileCompletenessAlert";
+import { BirthdatePicker } from "./components/BirthdatePicker";
+import { CurrencyInput } from "./components/CurrencyInput";
+import { ServiceCategoriesSelector } from "./components/ServiceCategoriesSelector";
 
 export default function ProfileEditPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [profile, setProfile] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [activeSection, setActiveSection] = useState("basic");
-  const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<any[]>([]);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     display_name: "",
     slug: "",
+    service_categories: [] as string[], // NEW
     short_description: "",
     long_description: "",
     city: "",
     region: "",
     latitude: 0,
     longitude: 0,
-    age_attribute: "",
-    weight: 60,
-    height: 165,
-    shoe_size: 37,
+    birthdate: "", // NEW: replaces age_attribute
     whatsapp_number: "",
     whatsapp_enabled: false,
     telegram_username: "",
@@ -43,20 +44,7 @@ export default function ProfileEditPage() {
     pricing_packages: [] as any[],
     external_links: [] as any[],
     selected_features: [] as string[],
-    availability: [
-      { day: "Segunda-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-      { day: "Terça-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-      { day: "Quarta-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-      { day: "Quinta-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-      { day: "Sexta-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-      { day: "Sábado", enabled: false, start_time: "09:00", end_time: "18:00" },
-      { day: "Domingo", enabled: false, start_time: "09:00", end_time: "18:00" },
-      { day: "Feriados", enabled: false, start_time: "09:00", end_time: "18:00" },
-    ] as any[],
   });
-
-  // Generate age options (18-60)
-  const ageOptions = Array.from({ length: 43 }, (_, i) => i + 18);
 
   // Load features and services from config
   const featuresAndServices = featuresServicesConfig.categories.reduce((acc, category) => {
@@ -75,12 +63,6 @@ export default function ProfileEditPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (profile?.id) {
-      fetchMedia();
-    }
-  }, [profile?.id]);
-
   const fetchProfile = async () => {
     try {
       const res = await fetch("/api/profiles/me");
@@ -91,16 +73,14 @@ export default function ProfileEditPage() {
         setFormData({
           display_name: data.profile.display_name || "",
           slug: data.profile.slug || "",
+          service_categories: data.profile.service_categories || [],
           short_description: data.profile.short_description || "",
           long_description: data.profile.long_description || "",
           city: data.profile.city || "",
           region: data.profile.region || "",
           latitude: data.profile.latitude || 0,
           longitude: data.profile.longitude || 0,
-          age_attribute: data.profile.age_attribute || "",
-          weight: data.profile.weight || 60,
-          height: data.profile.height || 165,
-          shoe_size: data.profile.shoe_size || 37,
+          birthdate: data.profile.birthdate || "",
           whatsapp_number: data.profile.whatsapp_number || "",
           whatsapp_enabled: data.profile.whatsapp_enabled || false,
           telegram_username: data.profile.telegram_username || "",
@@ -108,16 +88,6 @@ export default function ProfileEditPage() {
           pricing_packages: data.profile.pricing_packages || [],
           external_links: data.profile.external_links || [],
           selected_features: data.profile.selected_features || [],
-          availability: data.profile.availability || [
-            { day: "Segunda-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-            { day: "Terça-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-            { day: "Quarta-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-            { day: "Quinta-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-            { day: "Sexta-feira", enabled: true, start_time: "09:00", end_time: "18:00" },
-            { day: "Sábado", enabled: false, start_time: "09:00", end_time: "18:00" },
-            { day: "Domingo", enabled: false, start_time: "09:00", end_time: "18:00" },
-            { day: "Feriados", enabled: false, start_time: "09:00", end_time: "18:00" },
-          ],
         });
       }
     } catch (err) {
@@ -137,138 +107,9 @@ export default function ProfileEditPage() {
     }
   };
 
-  const fetchMedia = async () => {
-    if (!profile?.id) return;
-    
-    try {
-      const res = await fetch(`/api/media?profileId=${profile.id}`);
-      const data = await res.json();
-      if (data.media) {
-        setMediaFiles(data.media);
-      }
-    } catch (err) {
-      console.error("Error fetching media:", err);
-    }
-  };
-
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "photo" | "video") => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const currentCount = mediaFiles.filter(m => m.type === type).length;
-    const maxAllowed = type === "photo" ? limits.photos : limits.videos;
-
-    if (currentCount >= maxAllowed) {
-      setError(`Você atingiu o limite de ${maxAllowed} ${type === "photo" ? "fotos" : "vídeos"} do seu plano.`);
-      return;
-    }
-
-    if (!profile?.id) {
-      setError("Salve o perfil antes de adicionar mídias");
-      return;
-    }
-
-    setUploadingMedia(true);
-    setError("");
-
-    try {
-      const file = files[0];
-      
-      // Step 1: Get upload URL
-      const uploadUrlRes = await fetch("/api/media/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileId: profile.id,
-          fileType: file.type,
-          fileSize: file.size,
-        }),
-      });
-
-      if (!uploadUrlRes.ok) {
-        const data = await uploadUrlRes.json();
-        throw new Error(data.error || "Failed to get upload URL");
-      }
-
-      const { uploadUrl, path } = await uploadUrlRes.json();
-
-      // Step 2: Upload file to storage
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("Failed to upload file");
-      }
-
-      // Step 3: Create media record
-      const mediaRes = await fetch("/api/media", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileId: profile.id,
-          type,
-          storage_path: path,
-          file_size: file.size,
-          is_cover: mediaFiles.length === 0, // First media is cover
-          sort_order: mediaFiles.length,
-        }),
-      });
-
-      if (!mediaRes.ok) {
-        const data = await mediaRes.json();
-        throw new Error(data.error || "Failed to create media record");
-      }
-
-      setSuccess(`${type === "photo" ? "Foto" : "Vídeo"} adicionado com sucesso!`);
-      
-      // Refresh media list
-      await fetchMedia();
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      console.error("Error uploading media:", err);
-      setError(err.message || "Erro ao fazer upload");
-    } finally {
-      setUploadingMedia(false);
-      // Reset file input
-      e.target.value = "";
-    }
-  };
-
-  const handleDeleteMedia = async (mediaId: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta mídia?")) return;
-
-    try {
-      const res = await fetch(`/api/media/${mediaId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to delete media");
-      }
-
-      setSuccess("Mídia excluída com sucesso!");
-      await fetchMedia();
-      
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      console.error("Error deleting media:", err);
-      setError(err.message || "Erro ao excluir mídia");
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       const url = profile
@@ -277,16 +118,10 @@ export default function ProfileEditPage() {
       
       const method = profile ? "PATCH" : "POST";
 
-      // Remove availability from the data being sent (it's stored in a separate table)
-      const { availability, ...profileData } = formData;
-
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...profileData,
-          age_attribute: profileData.age_attribute ? parseInt(profileData.age_attribute) : null,
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
@@ -295,7 +130,7 @@ export default function ProfileEditPage() {
         throw new Error(data.error || "Failed to save profile");
       }
 
-      setSuccess("Perfil salvo com sucesso!");
+      toast.success("Perfil salvo com sucesso!");
       if (!profile) {
         setProfile(data.profile);
       }
@@ -303,62 +138,7 @@ export default function ProfileEditPage() {
       // Refresh profile data
       await fetchProfile();
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePublish = async () => {
-    if (!profile) {
-      setError("Salve o perfil antes de publicar");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const res = await fetch(`/api/profiles/${profile.id}/publish`, {
-        method: "POST",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to publish profile");
-      }
-
-      setSuccess("Perfil publicado com sucesso! Agora ele está visível no catálogo.");
-      await fetchProfile();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUnpublish = async () => {
-    if (!profile) return;
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const res = await fetch(`/api/profiles/${profile.id}/unpublish`, {
-        method: "POST",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to unpublish profile");
-      }
-
-      setSuccess("Perfil despublicado. Ele não está mais visível no catálogo.");
-      await fetchProfile();
-    } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -381,33 +161,10 @@ export default function ProfileEditPage() {
     });
   };
 
-  const updatePricingPackage = (index: number, field: string, value: string) => {
+  const updatePricingPackage = (index: number, field: string, value: string | number) => {
     const updated = [...formData.pricing_packages];
     updated[index] = { ...updated[index], [field]: value };
     setFormData({ ...formData, pricing_packages: updated });
-  };
-
-  const addExternalLink = () => {
-    setFormData({
-      ...formData,
-      external_links: [
-        ...formData.external_links,
-        { label: "", url: "" }
-      ]
-    });
-  };
-
-  const removeExternalLink = (index: number) => {
-    setFormData({
-      ...formData,
-      external_links: formData.external_links.filter((_, i) => i !== index)
-    });
-  };
-
-  const updateExternalLink = (index: number, field: string, value: string) => {
-    const updated = [...formData.external_links];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormData({ ...formData, external_links: updated });
   };
 
   const toggleFeature = (feature: string) => {
@@ -433,34 +190,68 @@ export default function ProfileEditPage() {
     setFormData({ ...formData, selected_features: updated });
   };
 
-  const updateAvailability = (index: number, field: string, value: any) => {
-    const updated = [...formData.availability];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormData({ ...formData, availability: updated });
+  const handleSlugUpdate = async (newSlug: string) => {
+    // If profile doesn't exist yet, just update the form data
+    if (!profile) {
+      setFormData({ ...formData, slug: newSlug });
+      toast.success("Slug será salvo junto com o perfil");
+      return;
+    }
+
+    try {
+      console.log('Sending slug update request:', newSlug);
+      const response = await fetch("/api/profiles/update-slug", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: newSlug }),
+      });
+
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      let data;
+      try {
+        data = await response.json();
+        console.log('Response data:', data);
+      } catch (jsonError) {
+        console.error("Failed to parse JSON response:", jsonError);
+        console.error("Response status:", response.status);
+        console.error("Response statusText:", response.statusText);
+        throw new Error(`Erro ao processar resposta do servidor (${response.status})`);
+      }
+
+      if (!response.ok) {
+        // More detailed error message
+        const errorMessage = data.error?.message || data.error || data.message || "Erro ao atualizar slug";
+        console.error("Slug update error:", {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+        });
+        throw new Error(errorMessage);
+      }
+
+      // Update local state
+      setFormData({ ...formData, slug: data.slug });
+      toast.success("Slug atualizado com sucesso!");
+      
+      // Refresh profile to get updated slug_last_changed_at
+      await fetchProfile();
+    } catch (err: any) {
+      console.error("handleSlugUpdate error:", err);
+      toast.error(err.message);
+      throw err;
+    }
   };
 
   const sections = [
     { id: "basic", label: "Informações Básicas" },
-    { id: "description", label: "Descrições" },
+    { id: "contact-description", label: "Contato e Descrição" },
     { id: "pricing", label: "Valores" },
-    { id: "links", label: "Links Externos" },
-    { id: "media", label: "Fotos e Vídeos" },
-    { id: "features", label: "Características e Serviços" },
-    { id: "availability", label: "Horários" },
   ];
-
-  const getMediaLimits = () => {
-    if (!subscription?.plan) return { photos: 6, videos: 1 }; // Free plan defaults
-    return {
-      photos: subscription.plan.max_photos || 6,
-      videos: subscription.plan.max_videos || 1,
-    };
-  };
-
-  const limits = getMediaLimits();
-
-  const photoCount = mediaFiles.filter(m => m.type === "photo").length;
-  const videoCount = mediaFiles.filter(m => m.type === "video").length;
 
   // Validation functions for each section
   const validateSection = (sectionId: string): boolean => {
@@ -469,20 +260,17 @@ export default function ProfileEditPage() {
         return !!(
           formData.display_name &&
           formData.slug &&
+          formData.service_categories.length > 0 &&
           formData.city &&
-          formData.age_attribute
+          formData.birthdate
         );
-      case "description":
+      case "contact-description":
         return !!(
           formData.short_description &&
           formData.long_description
         );
       case "pricing":
-      case "links":
-      case "media":
-      case "features":
-      case "availability":
-        return true; // Optional sections
+        return true; // Optional section
       default:
         return true;
     }
@@ -490,7 +278,7 @@ export default function ProfileEditPage() {
 
   const isFormValid = (): boolean => {
     return validateSection("basic") && 
-           validateSection("description");
+           validateSection("contact-description");
   };
 
   const goToNextSection = () => {
@@ -516,33 +304,49 @@ export default function ProfileEditPage() {
       <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "2rem 1rem" }}>
         {/* Header */}
         <div style={{ marginBottom: "2rem" }}>
-          <h1 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: "0.5rem" }}>
-            {profile ? "Editar Perfil" : "Criar Perfil"}
-          </h1>
-          <p style={{ color: "hsl(var(--muted-foreground))" }}>
-            Preencha as informações do seu perfil profissional
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "0.5rem" }}>
+            <div>
+              <h1 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: "0.5rem" }}>
+                {profile ? "Editar Perfil" : "Criar Perfil"}
+              </h1>
+              <p style={{ color: "hsl(var(--muted-foreground))" }}>
+                Preencha as informações do seu perfil profissional
+              </p>
+            </div>
+            {profile?.slug && (
+              <Link href={`/perfil/@${profile.slug}`} target="_blank">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Ver meu perfil público
+                </Button>
+              </Link>
+            )}
+          </div>
           {subscription && (
             <div style={{ marginTop: "1rem" }}>
               <Badge>
-                Plano {subscription.plan?.name} - {limits.photos} fotos e {limits.videos} vídeos
+                Plano {subscription.plan?.name}
               </Badge>
             </div>
           )}
         </div>
 
-        {error && (
-          <div style={{ marginBottom: "1rem", backgroundColor: "hsl(var(--destructive))", color: "white", padding: "1rem", borderRadius: "var(--radius)" }}>
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div style={{ marginBottom: "1rem", backgroundColor: "#10b981", color: "white", padding: "1rem", borderRadius: "var(--radius)" }}>
-            {success}
-          </div>
-        )}
-
+        {/* Profile Completeness Alert */}
+        <ProfileCompletenessAlert profileId={profile?.id || null} />
         {/* Navigation Tabs */}
         <div style={{ marginBottom: "2rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", backgroundColor: "white", padding: "1rem", borderRadius: "var(--radius)" }}>
           {sections.map((section) => {
@@ -597,25 +401,21 @@ export default function ProfileEditPage() {
                       placeholder="Seu nome profissional"
                     />
                   </div>
-
-                  <div>
-                    <Label htmlFor="slug">
-                      URL Personalizada *
-                      {profile?.slug_last_changed_at && (
-                        <span style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginLeft: "0.5rem" }}>
-                          (pode mudar a cada 90 dias)
-                        </span>
-                      )}
-                    </Label>
-                    <Input
-                      id="slug"
-                      required
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                      placeholder="seu-nome"
-                    />
-                  </div>
                 </div>
+
+                {/* Slug Editor Component */}
+                <SlugEditor
+                  currentSlug={formData.slug}
+                  onChange={(newSlug) => setFormData({ ...formData, slug: newSlug })}
+                  lastChangedAt={profile?.slug_last_changed_at || null}
+                  profileExists={!!profile}
+                />
+
+                <ServiceCategoriesSelector
+                  value={formData.service_categories}
+                  onChange={(categories) => setFormData({ ...formData, service_categories: categories })}
+                  required
+                />
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                   <div>
@@ -643,113 +443,29 @@ export default function ProfileEditPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <Label htmlFor="age_attribute">Idade *</Label>
-                    <select
-                      id="age_attribute"
-                      required
-                      value={formData.age_attribute}
-                      onChange={(e) => setFormData({ ...formData, age_attribute: e.target.value })}
-                      style={{ 
-                        width: "100%",
-                        padding: "0.5rem",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid hsl(var(--input))",
-                        backgroundColor: "hsl(var(--background))",
-                        fontSize: "0.875rem"
-                      }}
-                    >
-                      <option value="">Selecione sua idade</option>
-                      {ageOptions.map((age) => (
-                        <option key={age} value={age}>
-                          {age} anos
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <BirthdatePicker
+                    value={formData.birthdate}
+                    onChange={(date) => setFormData({ ...formData, birthdate: date })}
+                    required
+                  />
                 </div>
 
-                {/* Physical Measurements */}
-                <div style={{ 
-                  padding: "1.5rem", 
-                  backgroundColor: "hsl(var(--muted))", 
-                  borderRadius: "var(--radius)",
-                  marginTop: "1rem"
-                }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1.5rem" }}>
-                    Medidas Físicas
-                  </h3>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
-                    {/* Weight */}
-                    <div>
-                      <Label htmlFor="weight">Peso: {formData.weight} kg</Label>
-                      <input
-                        id="weight"
-                        type="range"
-                        min="40"
-                        max="150"
-                        value={formData.weight}
-                        onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) })}
-                        style={{ 
-                          width: "100%", 
-                          marginTop: "0.5rem",
-                          accentColor: "hsl(var(--primary))"
-                        }}
-                      />
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        <span>40kg</span>
-                        <span>150kg</span>
-                      </div>
-                    </div>
+              </CardContent>
+            </Card>
+          )}
 
-                    {/* Height */}
-                    <div>
-                      <Label htmlFor="height">Altura: {formData.height} cm</Label>
-                      <input
-                        id="height"
-                        type="range"
-                        min="140"
-                        max="200"
-                        value={formData.height}
-                        onChange={(e) => setFormData({ ...formData, height: parseInt(e.target.value) })}
-                        style={{ 
-                          width: "100%", 
-                          marginTop: "0.5rem",
-                          accentColor: "hsl(var(--primary))"
-                        }}
-                      />
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        <span>1.40m</span>
-                        <span>2.00m</span>
-                      </div>
-                    </div>
-
-                    {/* Shoe Size */}
-                    <div>
-                      <Label htmlFor="shoe_size">Tamanho do Pé</Label>
-                      <Input
-                        id="shoe_size"
-                        type="number"
-                        min="33"
-                        max="44"
-                        value={formData.shoe_size}
-                        onChange={(e) => setFormData({ ...formData, shoe_size: parseInt(e.target.value) || 33 })}
-                        placeholder="37"
-                      />
-                      <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        Tamanho entre 33 e 44
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
+          {/* Contact and Description */}
+          {activeSection === "contact-description" && (
+            <Card style={{ marginBottom: "1.5rem" }}>
+              <CardHeader>
+                <CardTitle>Contato e Descrição</CardTitle>
+              </CardHeader>
+              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 {/* Contact Information */}
                 <div style={{ 
                   padding: "1.5rem", 
                   backgroundColor: "hsl(var(--muted))", 
-                  borderRadius: "var(--radius)",
-                  marginTop: "1rem"
+                  borderRadius: "var(--radius)"
                 }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1.5rem" }}>
                     Informações de Contato
@@ -764,7 +480,6 @@ export default function ProfileEditPage() {
                         type="tel"
                         value={formData.whatsapp_number}
                         onChange={(e) => {
-                          // Filter to only numeric characters
                           const numericValue = e.target.value.replace(/\D/g, '');
                           setFormData({ ...formData, whatsapp_number: numericValue });
                         }}
@@ -792,7 +507,6 @@ export default function ProfileEditPage() {
                         type="text"
                         value={formData.telegram_username}
                         onChange={(e) => {
-                          // Remove @ symbol
                           const cleanValue = e.target.value.replace(/@/g, '');
                           setFormData({ ...formData, telegram_username: cleanValue });
                         }}
@@ -816,17 +530,8 @@ export default function ProfileEditPage() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
 
-          {/* Descriptions */}
-          {activeSection === "description" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Descrições</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                {/* Descriptions */}
                 <div>
                   <Label htmlFor="short_description">
                     Descrição Curta * (máx. 160 caracteres)
@@ -879,10 +584,10 @@ export default function ProfileEditPage() {
                       </div>
                       <div>
                         <Label>Valor</Label>
-                        <Input
+                        <CurrencyInput
                           value={pkg.price}
-                          onChange={(e) => updatePricingPackage(index, "price", e.target.value)}
-                          placeholder="R$ 300,00"
+                          onChange={(value) => updatePricingPackage(index, "price", value)}
+                          placeholder="300"
                         />
                       </div>
                       <Button
@@ -894,14 +599,6 @@ export default function ProfileEditPage() {
                         Remover
                       </Button>
                     </div>
-                    <div>
-                      <Label>Descrição (opcional)</Label>
-                      <Input
-                        value={pkg.description || ""}
-                        onChange={(e) => updatePricingPackage(index, "description", e.target.value)}
-                        placeholder="Detalhes adicionais sobre este serviço"
-                      />
-                    </div>
                   </div>
                 ))}
                 <Button type="button" variant="outline" onClick={addPricingPackage}>
@@ -911,654 +608,9 @@ export default function ProfileEditPage() {
             </Card>
           )}
 
-          {/* External Links */}
-          {activeSection === "links" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Links Externos</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                {formData.external_links.map((link, index) => (
-                  <div key={index} style={{ padding: "1rem", border: "1px solid hsl(var(--border))", borderRadius: "var(--radius)", display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: "1rem", alignItems: "end" }}>
-                    <div>
-                      <Label>Nome do Link</Label>
-                      <Input
-                        value={link.label}
-                        onChange={(e) => updateExternalLink(index, "label", e.target.value)}
-                        placeholder="Ex: Instagram, Site"
-                      />
-                    </div>
-                    <div>
-                      <Label>URL</Label>
-                      <Input
-                        value={link.url}
-                        onChange={(e) => updateExternalLink(index, "url", e.target.value)}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => removeExternalLink(index)}
-                      style={{ color: "hsl(var(--destructive))" }}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" onClick={addExternalLink}>
-                  + Adicionar Link
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
-          {/* Media */}
-          {activeSection === "media" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Fotos e Vídeos</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                {/* Photos Section */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                    <h3 style={{ fontSize: "1rem", fontWeight: "600" }}>
-                      Fotos ({photoCount}/{limits.photos})
-                    </h3>
-                    {photoCount < limits.photos && (
-                      <label style={{ cursor: "pointer" }}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleMediaUpload(e, "photo")}
-                          style={{ display: "none" }}
-                          disabled={uploadingMedia}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={uploadingMedia}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            (e.currentTarget.previousElementSibling as HTMLInputElement)?.click();
-                          }}
-                        >
-                          + Adicionar Foto
-                        </Button>
-                      </label>
-                    )}
-                  </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
-                    {mediaFiles
-                      .filter(m => m.type === "photo")
-                      .map((media) => (
-                        <div
-                          key={media.id}
-                          style={{
-                            position: "relative",
-                            aspectRatio: "9/16",
-                            borderRadius: "var(--radius)",
-                            overflow: "hidden",
-                            border: media.is_cover ? "3px solid #10b981" : "1px solid hsl(var(--border))",
-                          }}
-                        >
-                          {/* Cover Badge */}
-                          {media.is_cover && (
-                            <div style={{
-                              position: "absolute",
-                              top: "0.5rem",
-                              left: "0.5rem",
-                              backgroundColor: "#10b981",
-                              color: "white",
-                              padding: "0.25rem 0.5rem",
-                              borderRadius: "0.25rem",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                              zIndex: 10,
-                            }}>
-                              CAPA
-                            </div>
-                          )}
-                          
-                          <img
-                            src={media.public_url}
-                            alt={media.storage_path}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                          {/* Watermark Pattern */}
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              display: "grid",
-                              gridTemplateColumns: "repeat(2, 1fr)",
-                              gridTemplateRows: "repeat(4, 1fr)",
-                              gap: "1rem",
-                              padding: "1rem",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            {Array.from({ length: 8 }).map((_, i) => (
-                              <div
-                                key={i}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    fontSize: "0.75rem",
-                                    fontWeight: "600",
-                                    color: "rgba(255, 255, 255, 0.25)",
-                                    textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)",
-                                    transform: "rotate(-45deg)",
-                                    userSelect: "none",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  Libertage
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* Action Buttons */}
-                          <div style={{
-                            position: "absolute",
-                            bottom: "0.5rem",
-                            left: "0.5rem",
-                            right: "0.5rem",
-                            display: "flex",
-                            gap: "0.5rem",
-                            zIndex: 10,
-                          }}>
-                            {!media.is_cover && (
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  try {
-                                    const res = await fetch(`/api/media/${media.id}`, {
-                                      method: "PATCH",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ is_cover: true }),
-                                    });
-                                    
-                                    if (!res.ok) {
-                                      throw new Error("Failed to set cover");
-                                    }
-                                    
-                                    setSuccess("Foto de capa definida!");
-                                    await fetchMedia();
-                                    setTimeout(() => setSuccess(""), 3000);
-                                  } catch (err: any) {
-                                    setError(err.message || "Erro ao definir capa");
-                                  }
-                                }}
-                                style={{
-                                  flex: 1,
-                                  backgroundColor: "rgba(16, 185, 129, 0.9)",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "0.25rem",
-                                  padding: "0.5rem",
-                                  cursor: "pointer",
-                                  fontSize: "0.75rem",
-                                  fontWeight: "600",
-                                }}
-                              >
-                                Definir como Capa
-                              </button>
-                            )}
-                          </div>
-                          
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMedia(media.id)}
-                            style={{
-                              position: "absolute",
-                              top: "0.5rem",
-                              right: "0.5rem",
-                              backgroundColor: "rgba(0, 0, 0, 0.7)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "50%",
-                              width: "2rem",
-                              height: "2rem",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                              fontSize: "1.25rem",
-                              zIndex: 10,
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                  </div>
 
-                  {photoCount === 0 && (
-                    <div style={{ 
-                      padding: "2rem", 
-                      textAlign: "center", 
-                      backgroundColor: "hsl(var(--muted))", 
-                      borderRadius: "var(--radius)",
-                      border: "2px dashed hsl(var(--border))"
-                    }}>
-                      <p style={{ color: "hsl(var(--muted-foreground))" }}>
-                        Nenhuma foto adicionada ainda
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Videos Section */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                    <h3 style={{ fontSize: "1rem", fontWeight: "600" }}>
-                      Vídeos ({videoCount}/{limits.videos})
-                    </h3>
-                    {videoCount < limits.videos && (
-                      <label style={{ cursor: "pointer" }}>
-                        <input
-                          type="file"
-                          accept="video/*"
-                          onChange={(e) => handleMediaUpload(e, "video")}
-                          style={{ display: "none" }}
-                          disabled={uploadingMedia}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={uploadingMedia}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            (e.currentTarget.previousElementSibling as HTMLInputElement)?.click();
-                          }}
-                        >
-                          + Adicionar Vídeo
-                        </Button>
-                      </label>
-                    )}
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
-                    {mediaFiles
-                      .filter(m => m.type === "video")
-                      .map((media) => (
-                        <div
-                          key={media.id}
-                          style={{
-                            position: "relative",
-                            aspectRatio: "9/16",
-                            borderRadius: "var(--radius)",
-                            overflow: "hidden",
-                            border: "1px solid hsl(var(--border))",
-                            backgroundColor: "#000",
-                          }}
-                        >
-                          <video
-                            src={media.public_url}
-                            controls
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "contain",
-                            }}
-                          />
-                          {/* Watermark Pattern */}
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              display: "grid",
-                              gridTemplateColumns: "repeat(2, 1fr)",
-                              gridTemplateRows: "repeat(4, 1fr)",
-                              gap: "1rem",
-                              padding: "1rem",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            {Array.from({ length: 8 }).map((_, i) => (
-                              <div
-                                key={i}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    fontSize: "0.75rem",
-                                    fontWeight: "600",
-                                    color: "rgba(255, 255, 255, 0.25)",
-                                    textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)",
-                                    transform: "rotate(-45deg)",
-                                    userSelect: "none",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  Libertage
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMedia(media.id)}
-                            style={{
-                              position: "absolute",
-                              top: "0.5rem",
-                              right: "0.5rem",
-                              backgroundColor: "rgba(0, 0, 0, 0.7)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "50%",
-                              width: "2rem",
-                              height: "2rem",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                              fontSize: "1.25rem",
-                              zIndex: 10,
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-
-                  {videoCount === 0 && (
-                    <div style={{ 
-                      padding: "2rem", 
-                      textAlign: "center", 
-                      backgroundColor: "hsl(var(--muted))", 
-                      borderRadius: "var(--radius)",
-                      border: "2px dashed hsl(var(--border))"
-                    }}>
-                      <p style={{ color: "hsl(var(--muted-foreground))" }}>
-                        Nenhum vídeo adicionado ainda
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Upgrade CTA */}
-                <div style={{ 
-                  padding: "1rem 1.5rem", 
-                  backgroundColor: "#fef3c7", 
-                  borderLeft: "4px solid #f59e0b",
-                  borderRadius: "var(--radius)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "1rem",
-                  flexWrap: "wrap"
-                }}>
-                  <div>
-                    <p style={{ fontSize: "0.875rem", color: "#92400e", margin: 0, fontWeight: "600" }}>
-                      Deseja ter mais fotos e vídeos no seu perfil?
-                    </p>
-                    <p style={{ fontSize: "0.875rem", color: "#92400e", margin: "0.25rem 0 0 0" }}>
-                      Faça um upgrade de plano e destaque ainda mais seu trabalho!
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={() => router.push("/portal/plans")}
-                    style={{ backgroundColor: "#f59e0b", color: "white" }}
-                  >
-                    Ver Planos
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Features */}
-          {activeSection === "features" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Características e Serviços</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                {featuresServicesConfig.categories.map((category) => (
-                  <div key={category.id}>
-                    <div style={{ marginBottom: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", fontWeight: "600" }}>
-                        {category.name}
-                      </h3>
-                      {!category.multiSelect && (
-                        <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                          Selecione apenas uma opção
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
-                      {category.options.map((option) => {
-                        const isSelected = formData.selected_features.includes(option);
-                        return (
-                          <label
-                            key={option}
-                            style={{
-                              position: "relative",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "0.625rem",
-                              padding: "0.75rem 1.25rem",
-                              border: "2px solid #e5e7eb",
-                              borderRadius: "9999px",
-                              cursor: "pointer",
-                              backgroundColor: isSelected ? "#f3f4f6" : "white",
-                              transition: "all 0.2s ease",
-                              fontSize: "0.9375rem",
-                              fontWeight: "500",
-                              color: "#1f2937",
-                              userSelect: "none",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f9fafb";
-                              e.currentTarget.style.borderColor = "#d1d5db";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = isSelected ? "#f3f4f6" : "white";
-                              e.currentTarget.style.borderColor = "#e5e7eb";
-                            }}
-                          >
-                            <input
-                              type={category.multiSelect ? "checkbox" : "radio"}
-                              name={category.multiSelect ? undefined : `category-${category.id}`}
-                              checked={isSelected}
-                              onChange={() => {
-                                if (category.multiSelect) {
-                                  toggleFeature(option);
-                                } else {
-                                  toggleFeatureSingleSelect(category.id, option);
-                                }
-                              }}
-                              style={{ 
-                                position: "absolute",
-                                opacity: 0,
-                                width: 0,
-                                height: 0,
-                                cursor: "pointer"
-                              }}
-                            />
-                            {/* Check icon circle */}
-                            <div
-                              style={{
-                                width: "1.5rem",
-                                height: "1.5rem",
-                                borderRadius: "50%",
-                                backgroundColor: isSelected ? "#1f2937" : "transparent",
-                                border: isSelected ? "none" : "2px solid #d1d5db",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                                transition: "all 0.2s ease",
-                              }}
-                            >
-                              {isSelected && (
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 14 14"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
-                                    stroke="white"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-                            <span>{option}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                
-                <div style={{ 
-                  padding: "1rem 1.5rem", 
-                  backgroundColor: "#dbeafe", 
-                  borderLeft: "4px solid #3b82f6",
-                  borderRadius: "var(--radius)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "0.75rem"
-                }}>
-                  <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>💡</span>
-                  <p style={{ fontSize: "0.875rem", color: "#1e40af", margin: 0, lineHeight: "1.5" }}>
-                    <strong>Dica:</strong> Algumas categorias permitem múltiplas seleções, outras apenas uma opção. Clique nas opções para selecioná-las.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Availability */}
-          {activeSection === "availability" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Horários de Atendimento</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {formData.availability.map((schedule, index) => (
-                  <div
-                    key={schedule.day}
-                    style={{
-                      padding: "1rem",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                      backgroundColor: schedule.enabled ? "transparent" : "hsl(var(--muted))",
-                      opacity: schedule.enabled ? 1 : 0.6,
-                    }}
-                  >
-                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr auto", gap: "1rem", alignItems: "center" }}>
-                      {/* Checkbox */}
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", minWidth: "150px" }}>
-                        <input
-                          type="checkbox"
-                          checked={schedule.enabled}
-                          onChange={(e) => updateAvailability(index, "enabled", e.target.checked)}
-                          style={{ cursor: "pointer", width: "1.25rem", height: "1.25rem" }}
-                        />
-                        <span style={{ fontWeight: "600", fontSize: "0.875rem" }}>
-                          {schedule.day}
-                        </span>
-                      </label>
-
-                      {/* Start Time */}
-                      <div>
-                        <Label htmlFor={`start-${index}`} style={{ fontSize: "0.75rem", marginBottom: "0.25rem" }}>
-                          Início
-                        </Label>
-                        <Input
-                          id={`start-${index}`}
-                          type="time"
-                          value={schedule.start_time}
-                          onChange={(e) => updateAvailability(index, "start_time", e.target.value)}
-                          disabled={!schedule.enabled}
-                          style={{ fontSize: "0.875rem" }}
-                        />
-                      </div>
-
-                      {/* End Time */}
-                      <div>
-                        <Label htmlFor={`end-${index}`} style={{ fontSize: "0.75rem", marginBottom: "0.25rem" }}>
-                          Término
-                        </Label>
-                        <Input
-                          id={`end-${index}`}
-                          type="time"
-                          value={schedule.end_time}
-                          onChange={(e) => updateAvailability(index, "end_time", e.target.value)}
-                          disabled={!schedule.enabled}
-                          style={{ fontSize: "0.875rem" }}
-                        />
-                      </div>
-
-                      {/* Status Badge */}
-                      <div style={{ minWidth: "100px", textAlign: "right" }}>
-                        {schedule.enabled ? (
-                          <Badge style={{ backgroundColor: "#10b981", color: "white" }}>
-                            Disponível
-                          </Badge>
-                        ) : (
-                          <Badge style={{ backgroundColor: "hsl(var(--muted-foreground))", color: "white" }}>
-                            Indisponível
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <div style={{ 
-                  padding: "1rem 1.5rem", 
-                  backgroundColor: "#dbeafe", 
-                  borderLeft: "4px solid #3b82f6",
-                  borderRadius: "var(--radius)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "0.75rem",
-                  marginTop: "1rem"
-                }}>
-                  <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>💡</span>
-                  <p style={{ fontSize: "0.875rem", color: "#1e40af", margin: 0, lineHeight: "1.5" }}>
-                    <strong>Dica:</strong> Desmarque os dias em que você não trabalha. Os horários só serão exibidos para os dias marcados.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Action Buttons */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginTop: "2rem" }}>
@@ -1599,24 +651,6 @@ export default function ProfileEditPage() {
             >
               {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
-
-            {/* Publish/Unpublish Button */}
-            {profile && (
-              <Button
-                type="button"
-                variant={profile.status === "published" ? "outline" : "default"}
-                onClick={profile.status === "published" ? handleUnpublish : handlePublish}
-                disabled={loading || !isFormValid()}
-                style={{
-                  backgroundColor: profile.status === "published" ? undefined : "hsl(142 76% 36%)",
-                  color: profile.status === "published" ? undefined : "white",
-                  opacity: !isFormValid() ? 0.5 : 1,
-                  cursor: !isFormValid() ? "not-allowed" : "pointer",
-                }}
-              >
-                {loading ? "Processando..." : profile.status === "published" ? "Despublicar Perfil" : "Publicar Perfil"}
-              </Button>
-            )}
           </div>
         </form>
 

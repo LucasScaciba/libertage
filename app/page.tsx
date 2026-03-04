@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { calculateAge } from "@/lib/utils/age-calculator";
+import { formatBRL } from "@/lib/utils/currency-formatter";
 import { Calendar, Weight, Ruler, Footprints, MessageCircle, Send } from "lucide-react";
 import { IconMapper } from "@/lib/utils/icon-mapper";
 
@@ -598,7 +599,9 @@ export default function Home() {
                           {selectedProfile.pricing_packages.map((pkg: any, i: number) => (
                             <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
                               <span>{pkg.label}</span>
-                              <span style={{ fontWeight: "600" }}>{pkg.price}</span>
+                              <span style={{ fontWeight: "600" }}>
+                                {typeof pkg.price === 'number' ? formatBRL(pkg.price) : pkg.price}
+                              </span>
                             </div>
                           ))}
                         </div>
