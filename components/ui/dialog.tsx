@@ -78,3 +78,11 @@ export function DialogDescription({ children }: { children: React.ReactNode }) {
     </p>
   )
 }
+
+export function DialogFooter({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ padding: "1.5rem", borderTop: "1px solid hsl(var(--border))", display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+      {children}
+    </div>
+  )
+}

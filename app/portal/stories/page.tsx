@@ -8,7 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trash2, Eye, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { StoryExpirationService } from '@/lib/services/story-expiration.service';
+
+// Helper function to format time remaining
+function formatTimeRemaining(expiresAt: Date): string {
+  const now = new Date();
+  const diff = expiresAt.getTime() - now.getTime();
+  
+  if (diff <= 0) return 'Expirado';
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+}
 
 export default function StoriesPage() {
   const [user, setUser] = useState<any>(null);
@@ -153,9 +168,6 @@ export default function StoriesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {stories.map((story) => {
             const isExpired = story.status !== 'active';
-            const timeRemaining = StoryExpirationService.formatTimeRemaining(
-              new Date(story.expires_at)
-            );
 
             return (
               <Card key={story.id}>
@@ -170,7 +182,7 @@ export default function StoriesPage() {
                         {isExpired ? (
                           <span className="text-red-600">Expirado</span>
                         ) : (
-                          <span>Expira em {timeRemaining}</span>
+                          <span>Expira em {formatTimeRemaining(new Date(story.expires_at))}</span>
                         )}
                       </div>
                     </div>
