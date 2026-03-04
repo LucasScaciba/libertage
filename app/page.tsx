@@ -9,6 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { calculateAge } from "@/lib/utils/age-calculator";
+import { Calendar, Weight, Ruler, Footprints, MessageCircle, Send } from "lucide-react";
+import { IconMapper } from "@/lib/utils/icon-mapper";
 
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
@@ -421,13 +424,42 @@ export default function Home() {
                     <h2 style={{ fontSize: "1.875rem", fontWeight: "700", marginBottom: "0.5rem" }}>
                       {selectedProfile.display_name}
                     </h2>
+                    
+                    {/* Informações Físicas com Ícones */}
+                    {(selectedProfile.birthdate || selectedProfile.weight || selectedProfile.height || selectedProfile.shoe_size) && (
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+                        {selectedProfile.birthdate && (
+                          <Badge variant="outline" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                            <Calendar size={14} />
+                            {calculateAge(selectedProfile.birthdate)} anos
+                          </Badge>
+                        )}
+                        {selectedProfile.weight && (
+                          <Badge variant="outline" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                            <Weight size={14} />
+                            {selectedProfile.weight}kg
+                          </Badge>
+                        )}
+                        {selectedProfile.height && (
+                          <Badge variant="outline" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                            <Ruler size={14} />
+                            {selectedProfile.height}cm
+                          </Badge>
+                        )}
+                        {selectedProfile.shoe_size && (
+                          <Badge variant="outline" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                            <Footprints size={14} />
+                            {selectedProfile.shoe_size}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    
                     <p style={{ color: "hsl(var(--muted-foreground))", marginBottom: "1rem" }}>
                       {selectedProfile.short_description}
                     </p>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      {selectedProfile.selected_features?.filter((f: string) => 
-                        ["Massagem", "Acompanhante", "Chamada de vídeo"].includes(f)
-                      ).map((service: string, i: number) => (
+                      {selectedProfile.service_categories?.map((service: string, i: number) => (
                         <Badge key={i}>{service}</Badge>
                       ))}
                       <Badge variant="secondary">{selectedProfile.city}</Badge>
@@ -490,26 +522,6 @@ export default function Home() {
                     ))}
                   </div>
 
-                  {/* Medidas Físicas */}
-                  {(selectedProfile.weight || selectedProfile.height || selectedProfile.shoe_size) && (
-                    <div style={{ marginBottom: "1.5rem" }}>
-                      <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Medidas Físicas
-                      </h3>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        {selectedProfile.weight && (
-                          <Badge variant="outline">Peso: {selectedProfile.weight}kg</Badge>
-                        )}
-                        {selectedProfile.height && (
-                          <Badge variant="outline">Altura: {selectedProfile.height}cm</Badge>
-                        )}
-                        {selectedProfile.shoe_size && (
-                          <Badge variant="outline">Calçado: {selectedProfile.shoe_size}</Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Descrição Longa */}
                   <div style={{ marginBottom: "1.5rem" }}>
                     <p style={{ color: "hsl(var(--muted-foreground))", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
@@ -543,10 +555,14 @@ export default function Home() {
                       }}
                       style={{
                         backgroundColor: "#25D366",
-                        color: "white"
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem"
                       }}
                       size="lg"
                     >
+                      <MessageCircle size={20} />
                       WHATSAPP
                     </Button>
                   )}
@@ -559,10 +575,14 @@ export default function Home() {
                       }}
                       style={{
                         backgroundColor: "#0088cc",
-                        color: "white"
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem"
                       }}
                       size="lg"
                     >
+                      <Send size={20} />
                       TELEGRAM
                     </Button>
                   )}
@@ -588,47 +608,88 @@ export default function Home() {
 
                   {/* Outros Links */}
                   {selectedProfile.external_links && selectedProfile.external_links.length > 0 && (
-                    <Card>
-                      <CardContent style={{ padding: "1rem" }}>
-                        <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                          Outros Links
-                        </h3>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                          {selectedProfile.external_links.map((link: any, i: number) => (
-                            <div 
-                              key={i} 
-                              style={{ 
-                                display: "flex", 
-                                justifyContent: "space-between", 
-                                alignItems: "center",
-                                fontSize: "0.875rem",
-                                padding: "0.5rem 0",
-                                borderBottom: i < selectedProfile.external_links.length - 1 ? "1px solid hsl(var(--border))" : "none"
-                              }}
-                            >
-                              <span style={{ color: "hsl(var(--muted-foreground))" }}>{link.label}</span>
-                              <button
-                                onClick={() => {
-                                  trackContactClick(selectedProfile.id, link.label || "external_link");
-                                  window.open(link.url, "_blank");
-                                }}
-                                style={{
-                                  backgroundColor: "transparent",
-                                  border: "none",
-                                  color: "hsl(var(--primary))",
-                                  cursor: "pointer",
-                                  fontSize: "0.875rem",
-                                  fontWeight: "500",
-                                  textDecoration: "underline"
-                                }}
-                              >
-                                Acessar
-                              </button>
+                    <div>
+                      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                        Outros Links
+                      </h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        {selectedProfile.external_links.map((link: any) => (
+                          <button
+                            key={link.id}
+                            onClick={() => {
+                              trackContactClick(selectedProfile.id, link.title || "external_link");
+                              window.open(link.url, "_blank");
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "1rem",
+                              padding: "1rem",
+                              backgroundColor: "white",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "0.5rem",
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                              width: "100%",
+                              textAlign: "left"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = "hsl(var(--primary))";
+                              e.currentTarget.style.backgroundColor = "hsl(var(--accent))";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = "hsl(var(--border))";
+                              e.currentTarget.style.backgroundColor = "white";
+                            }}
+                          >
+                            {/* Icon */}
+                            <div style={{
+                              flexShrink: 0,
+                              width: "2.5rem",
+                              height: "2.5rem",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "hsl(var(--accent))",
+                              borderRadius: "50%"
+                            }}>
+                              <IconMapper iconKey={link.icon_key} size={20} />
                             </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                            
+                            {/* Title */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{
+                                fontSize: "0.9375rem",
+                                fontWeight: "500",
+                                color: "hsl(var(--foreground))",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap"
+                              }}>
+                                {link.title}
+                              </p>
+                            </div>
+                            
+                            {/* Arrow */}
+                            <div style={{ flexShrink: 0 }}>
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                style={{ color: "hsl(var(--muted-foreground))" }}
+                              >
+                                <path d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
 
                   {/* Denunciar Perfil */}
