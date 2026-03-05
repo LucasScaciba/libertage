@@ -6,7 +6,8 @@
       "autoApprove": [
         "list_products",
         "retrieve_customer",
-        "list_subscriptions"
+        "list_subscriptions",
+        "list_invoices"
       ]
     },
     "supabase": {

@@ -18,6 +18,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { PricingCards } from "@/components/pricing-cards";
+import { BillingHistory } from "@/components/billing-history";
 import { Button } from "@/components/ui/button";
 
 function PlansContent() {
@@ -206,6 +207,11 @@ function PlansContent() {
               onSelectPlan={handleSubscribe}
               loading={loading}
             />
+
+            {/* Billing History Section */}
+            <div className="mt-12">
+              <BillingHistory />
+            </div>
           </div>
         </div>
       </SidebarInset>
