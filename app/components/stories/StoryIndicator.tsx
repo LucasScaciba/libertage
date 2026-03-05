@@ -12,13 +12,15 @@ interface StoryIndicatorProps {
   hasActiveStory: boolean;
   onClick: () => void;
   className?: string;
+  showName?: boolean;
 }
 
 export function StoryIndicator({
   user,
   hasActiveStory,
   onClick,
-  className
+  className,
+  showName = true
 }: StoryIndicatorProps) {
   return (
     <button
@@ -54,9 +56,11 @@ export function StoryIndicator({
           )}
         </div>
       </div>
-      <span className="text-xs text-gray-700 max-w-[64px] truncate">
-        {user.name}
-      </span>
+      {showName && (
+        <span className="text-xs text-gray-700 max-w-[64px] truncate">
+          {user.name}
+        </span>
+      )}
     </button>
   );
 }

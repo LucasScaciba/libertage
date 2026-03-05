@@ -195,6 +195,10 @@ export default function Home() {
     const coverPhoto = profile.media?.find((m: any) => m.is_cover && m.type === "photo");
     const displayPhoto = coverPhoto || profile.media?.find((m: any) => m.type === "photo");
     
+    // Count photos and videos
+    const photoCount = profile.media?.filter((m: any) => m.type === "photo").length || 0;
+    const videoCount = profile.media?.filter((m: any) => m.type === "video").length || 0;
+    
     // Get services from selected_features
     const services = profile.selected_features?.filter((f: string) => 
       ["Massagem", "Acompanhante", "Chamada de vídeo"].includes(f)
@@ -207,19 +211,66 @@ export default function Home() {
       }}>
         <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
           {displayPhoto?.public_url && (
-            <div style={{ width: "100%", height: "12rem", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)" }}>
+            <div style={{ width: "100%", aspectRatio: "3/4", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)", position: "relative" }}>
               <img
                 src={displayPhoto.public_url}
                 alt={profile.display_name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
+              {/* Media Counter Overlay */}
+              <div style={{ position: "absolute", bottom: "0.5rem", left: "0.5rem", display: "flex", gap: "0.5rem" }}>
+                {photoCount > 0 && (
+                  <div style={{ 
+                    backgroundColor: "rgba(0, 0, 0, 0.7)", 
+                    color: "white", 
+                    padding: "0.25rem 0.5rem", 
+                    borderRadius: "0.375rem",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem"
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                      <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    {photoCount}
+                  </div>
+                )}
+                {videoCount > 0 && (
+                  <div style={{ 
+                    backgroundColor: "rgba(0, 0, 0, 0.7)", 
+                    color: "white", 
+                    padding: "0.25rem 0.5rem", 
+                    borderRadius: "0.375rem",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem"
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    {videoCount}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <CardContent style={{ padding: "1rem" }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-              <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
-                {profile.display_name}
-              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
+                  {profile.display_name}
+                </h3>
+                {/* Verification Badge */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#10b981" stroke="white" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               {isBoosted && (
                 <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
                   Destaque
@@ -312,14 +363,14 @@ export default function Home() {
             </Button>
 
             {/* Filtros Avançados Button */}
-            <Button
+            {/* <Button
               variant="outline"
               onClick={() => setIsAdvancedFiltersOpen(true)}
               style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
             >
               <span style={{ fontSize: "1.2rem" }}>⚙</span>
               FILTROS AVANÇADOS
-            </Button>
+            </Button> */}
           </div>
         </div>
       </header>
@@ -418,6 +469,7 @@ export default function Home() {
                   gridTemplateColumns: "1fr",
                   gap: "1.5rem",
                   padding: "1.5rem",
+                  paddingBottom: "10rem",
                   overflowY: "auto",
                   maxHeight: "90vh"
                 }}
@@ -482,7 +534,7 @@ export default function Home() {
                           key={media.id}
                           onClick={() => openGallery(i)}
                           style={{
-                            aspectRatio: "1",
+                            aspectRatio: "3/4",
                             borderRadius: "var(--radius)",
                             overflow: "hidden",
                             cursor: "pointer",
@@ -504,11 +556,11 @@ export default function Home() {
                       <div 
                         key={media.id}
                         onClick={() => openGallery(selectedProfile.media.filter((m: any) => m.type === "photo").length + i)}
-                        style={{ marginTop: "0.5rem", position: "relative", borderRadius: "var(--radius)", overflow: "hidden", cursor: "pointer" }}
+                        style={{ marginTop: "0.5rem", position: "relative", borderRadius: "var(--radius)", overflow: "hidden", cursor: "pointer", aspectRatio: "3/4" }}
                       >
                         <video
                           src={media.public_url}
-                          style={{ width: "100%", height: "8rem", objectFit: "cover", filter: "brightness(0.7)" }}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.7)" }}
                         />
                         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
                           <div style={{ 
@@ -580,44 +632,53 @@ export default function Home() {
                 {/* Right Column - Sidebar (will be below on mobile) */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                   {/* Contact Buttons */}
-                  {selectedProfile.whatsapp_enabled && selectedProfile.whatsapp_number && (
-                    <Button
-                      onClick={() => {
-                        trackContactClick(selectedProfile.id, "whatsapp");
-                        window.open(`https://wa.me/55${selectedProfile.whatsapp_number}`, "_blank");
-                      }}
-                      style={{
-                        backgroundColor: "#25D366",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem"
-                      }}
-                      size="lg"
+                  {(selectedProfile.whatsapp_enabled || selectedProfile.telegram_enabled) && (
+                    <div 
+                      className="lg:relative fixed bottom-0 left-0 right-0 z-40 lg:z-auto bg-white p-4 lg:p-0 shadow-lg lg:shadow-none"
+                      style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
                     >
-                      <IconBrandWhatsapp size={20} />
-                      WHATSAPP
-                    </Button>
-                  )}
-                  
-                  {selectedProfile.telegram_enabled && selectedProfile.telegram_username && (
-                    <Button
-                      onClick={() => {
-                        trackContactClick(selectedProfile.id, "telegram");
-                        window.open(`https://t.me/${selectedProfile.telegram_username}`, "_blank");
-                      }}
-                      style={{
-                        backgroundColor: "#0088cc",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem"
-                      }}
-                      size="lg"
-                    >
-                      <IconBrandTelegram size={20} />
-                      TELEGRAM
-                    </Button>
+                      {selectedProfile.whatsapp_enabled && selectedProfile.whatsapp_number && (
+                        <Button
+                          onClick={() => {
+                            trackContactClick(selectedProfile.id, "whatsapp");
+                            const message = `Olá ${selectedProfile.display_name}, encontrei seu perfil no site da Libertage e gostaria de obter mais informações sobre seus serviços`;
+                            const encodedMessage = encodeURIComponent(message);
+                            window.open(`https://wa.me/55${selectedProfile.whatsapp_number}?text=${encodedMessage}`, "_blank");
+                          }}
+                          style={{
+                            backgroundColor: "#25D366",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem"
+                          }}
+                          size="lg"
+                        >
+                          <IconBrandWhatsapp size={20} />
+                          WHATSAPP
+                        </Button>
+                      )}
+                      
+                      {selectedProfile.telegram_enabled && selectedProfile.telegram_username && (
+                        <Button
+                          onClick={() => {
+                            trackContactClick(selectedProfile.id, "telegram");
+                            window.open(`https://t.me/${selectedProfile.telegram_username}`, "_blank");
+                          }}
+                          style={{
+                            backgroundColor: "#0088cc",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem"
+                          }}
+                          size="lg"
+                        >
+                          <IconBrandTelegram size={20} />
+                          TELEGRAM
+                        </Button>
+                      )}
+                    </div>
                   )}
 
                   {/* Valores */}
@@ -645,7 +706,7 @@ export default function Home() {
                   {selectedProfile.external_links && selectedProfile.external_links.length > 0 && (
                     <div>
                       <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Outros Links
+                        Minhas redes
                       </h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                         {selectedProfile.external_links.map((link: any) => (

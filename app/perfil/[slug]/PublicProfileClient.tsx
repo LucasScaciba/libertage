@@ -3,12 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Weight, Ruler, Footprints } from "lucide-react";
+import { IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react";
 import Link from "next/link";
 import { StoryIndicator } from "@/app/components/stories/StoryIndicator";
 import { StoryViewer } from "@/app/components/stories/StoryViewer";
 import { VerificationBadge } from "@/app/components/verification/VerificationBadge";
 import { ExternalLinksDisplay } from "@/app/components/external-links/ExternalLinksDisplay";
 import { calculateAge } from "@/lib/utils/age-calculator";
+import { formatBRL } from "@/lib/utils/currency-formatter";
 
 interface ProfileData {
   profile: any;
@@ -29,6 +33,7 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [stories, setStories] = useState<any[]>([]);
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
 
@@ -111,7 +116,7 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-900 text-xl mb-4">{error}</p>
-          <Link href="/catalog">
+          <Link href="/">
             <Button>Voltar ao Catálogo</Button>
           </Link>
         </div>
@@ -159,242 +164,225 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
     }
   };
 
+  const openGallery = (index: number) => {
+    setSelectedMediaIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  const nextImage = () => {
+    setSelectedMediaIndex((prev) => (prev + 1) % displayMedia.length);
+  };
+
+  const prevImage = () => {
+    setSelectedMediaIndex((prev) => (prev - 1 + displayMedia.length) % displayMedia.length);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <Link href="/catalog" className="text-blue-600 hover:text-blue-800">
+          <Link href="/" className="text-blue-600 hover:text-blue-800">
             ← Voltar ao Catálogo
           </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Stories Section */}
-        {stories.length > 0 && (
-          <div className="mb-6">
-            <div className="bg-white rounded-lg shadow p-4">
-              <h2 className="text-lg font-semibold mb-3">Stories</h2>
-              <div className="flex gap-4">
-                <StoryIndicator
-                  user={{
-                    name: profile.display_name,
-                    profile_photo_url: coverMedia?.public_url || null,
-                    slug: profile.slug
-                  }}
-                  hasActiveStory={true}
-                  onClick={() => setStoryViewerOpen(true)}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 pb-32 lg:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+          {/* Main Content - Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Header */}
             <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                      {profile.display_name}
-                    </h1>
-                    {profile.is_verified && (
-                      <VerificationBadge 
-                        isVerified={profile.is_verified} 
-                        verifiedAt={profile.verified_at}
-                        size="lg"
-                      />
-                    )}
-                  </div>
-                  <div className="flex items-center text-gray-600 space-x-2">
-                    <span>{profile.city}</span>
-                    <span>•</span>
-                    <span>{profile.region}</span>
-                  </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                {profile.display_name}
+              </h2>
+              
+              {/* Informações Físicas com Ícones */}
+              {(profile.birthdate || profile.weight || profile.height || profile.shoe_size) && (
+                <div className="flex gap-2 flex-wrap mb-4">
+                  {profile.birthdate && (
+                    <Badge variant="outline" className="flex items-center gap-1.5">
+                      <Calendar size={14} />
+                      {calculateAge(profile.birthdate)} anos
+                    </Badge>
+                  )}
+                  {profile.weight && (
+                    <Badge variant="outline" className="flex items-center gap-1.5">
+                      <Weight size={14} />
+                      {profile.weight}kg
+                    </Badge>
+                  )}
+                  {profile.height && (
+                    <Badge variant="outline" className="flex items-center gap-1.5">
+                      <Ruler size={14} />
+                      {profile.height}cm
+                    </Badge>
+                  )}
+                  {profile.shoe_size && (
+                    <Badge variant="outline" className="flex items-center gap-1.5">
+                      <Footprints size={14} />
+                      {profile.shoe_size}
+                    </Badge>
+                  )}
                 </div>
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                  {profile.category}
-                </span>
-              </div>
-              
-              {profile.birthdate && (
-                <p className="text-gray-600 mb-4">Idade: {calculateAge(profile.birthdate)} anos</p>
               )}
-
-              <p className="text-gray-700 mb-4">{profile.short_description}</p>
               
-              <div className="prose max-w-none">
-                <p className="text-gray-700 whitespace-pre-wrap">{profile.long_description}</p>
+              <p className="text-gray-600 mb-4">{profile.short_description}</p>
+              
+              <div className="flex gap-2 flex-wrap">
+                {profile.service_categories?.map((service: string, i: number) => (
+                  <Badge key={i}>{service}</Badge>
+                ))}
+                <Badge variant="secondary">{profile.city}</Badge>
+                {profile.region && (
+                  <Badge variant="secondary">{profile.region}</Badge>
+                )}
               </div>
             </div>
 
-            {/* Media Gallery */}
+            {/* Photo Gallery */}
             {displayMedia.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Galeria</h2>
-                
-                {/* Main Image */}
-                <div className="mb-4">
-                  <img
-                    src={displayMedia[selectedMediaIndex]?.public_url}
-                    alt={`Mídia ${selectedMediaIndex + 1}`}
-                    className="w-full h-96 object-cover rounded-lg"
-                  />
-                </div>
-
-                {/* Thumbnails */}
-                {displayMedia.length > 1 && (
-                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
-                    {displayMedia.map((item, index) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setSelectedMediaIndex(index)}
-                        className={`relative aspect-square rounded overflow-hidden ${
-                          selectedMediaIndex === index
-                            ? "ring-2 ring-blue-500"
-                            : "hover:opacity-75"
-                        }`}
-                      >
+                <div className="grid grid-cols-4 gap-2">
+                  {displayMedia.slice(0, 8).map((media, index) => (
+                    <div
+                      key={media.id}
+                      onClick={() => openGallery(index)}
+                      className="rounded overflow-hidden cursor-pointer hover:opacity-80 transition-opacity relative"
+                      style={{ aspectRatio: "3/4" }}
+                    >
+                      {media.type === 'video' ? (
+                        <>
+                          <video
+                            src={media.public_url}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Play icon overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                            <div className="w-12 h-12 rounded-full bg-white bg-opacity-90 flex items-center justify-center">
+                              <svg className="w-6 h-6 text-gray-900 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
                         <img
-                          src={item.public_url}
-                          alt={`Thumbnail ${index + 1}`}
+                          src={media.public_url}
+                          alt={`Foto ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
-                        {item.is_cover && (
-                          <span className="absolute top-1 right-1 bg-yellow-400 text-xs px-1 rounded">
-                            Capa
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Features */}
-            {Object.keys(groupedFeatures).length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Características</h2>
-                {Object.entries(groupedFeatures).map(([groupName, featureList]: [string, any]) => (
-                  <div key={groupName} className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{groupName}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {featureList.map((feature: any) => (
-                        <span
-                          key={feature.id}
-                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                        >
-                          {feature.feature_name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Display buttocks characteristics if present */}
-                {(profile.buttocks_type || profile.buttocks_size) && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Bumbum</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.buttocks_type && (
-                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                          {profile.buttocks_type}
-                        </span>
                       )}
-                      {profile.buttocks_size && (
-                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                          {profile.buttocks_size}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Pricing Packages */}
-            {pricing_packages.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Pacotes e Preços</h2>
-                <div className="space-y-4">
-                  {pricing_packages.map((pkg: any, index: number) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{pkg.name}</h3>
-                        <span className="text-xl font-bold text-blue-600">
-                          {pkg.currency} {pkg.price.toFixed(2)}
-                        </span>
-                      </div>
-                      <p className="text-gray-600">{pkg.description}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* External Links */}
-            <ExternalLinksDisplay profileId={profile.id} />
-
-            {/* Availability Schedule */}
-            {availability.length > 0 && (
+            {/* Descrição Longa */}
+            {profile.long_description && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Disponibilidade</h2>
-                <div className="space-y-2">
-                  {weekdayNames.map((dayName, dayIndex) => {
-                    const slots = availabilityByDay[dayIndex] || [];
-                    const availableSlots = slots.filter((s: any) => s.is_available);
-                    
-                    return (
-                      <div key={dayIndex} className="flex items-start py-2 border-b border-gray-100">
-                        <span className="font-medium text-gray-900 w-24">{dayName}</span>
-                        <div className="flex-1">
-                          {availableSlots.length > 0 ? (
-                            <div className="space-y-1">
-                              {availableSlots.map((slot: any) => (
-                                <span key={slot.id} className="text-gray-700 block">
-                                  {slot.start_time} - {slot.end_time}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">Indisponível</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                  {profile.long_description}
+                </p>
+              </div>
+            )}
+
+            {/* Serviços */}
+            {profile.selected_features && profile.selected_features.length > 0 && (() => {
+              const serviceKeywords = ['dinheiro', 'pix', 'cartão', 'débito', 'crédito', 'local', 'hotel', 'motel', 'residência', 'homens', 'mulheres', 'casais', 'português', 'inglês', 'espanhol', 'francês'];
+              const services = profile.selected_features.filter((f: string) => 
+                serviceKeywords.some(keyword => f.toLowerCase().includes(keyword.toLowerCase()))
+              );
+              
+              return services.length > 0 ? (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">
+                    Serviços
+                  </h3>
+                  <div className="flex gap-2 flex-wrap">
+                    {services.map((feature: string, i: number) => (
+                      <Badge key={i} variant="outline">{feature}</Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Características */}
+            {profile.selected_features && profile.selected_features.length > 0 && (() => {
+              const serviceKeywords = ['dinheiro', 'pix', 'cartão', 'débito', 'crédito', 'local', 'hotel', 'motel', 'residência', 'homens', 'mulheres', 'casais', 'português', 'inglês', 'espanhol', 'francês'];
+              const characteristics = profile.selected_features.filter((f: string) => 
+                !serviceKeywords.some(keyword => f.toLowerCase().includes(keyword.toLowerCase()))
+              );
+              
+              return characteristics.length > 0 ? (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">
+                    Características
+                  </h3>
+                  <div className="flex gap-2 flex-wrap">
+                    {characteristics.map((feature: string, i: number) => (
+                      <Badge key={i} variant="outline">{feature}</Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+          </div>
+
+          {/* Sidebar - Right Column */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* WhatsApp and Telegram Buttons */}
+            {(profile.whatsapp_enabled || profile.telegram_enabled) && (
+              <div className="bg-white rounded-lg shadow p-6 lg:sticky lg:top-4 fixed bottom-0 left-0 right-0 lg:relative z-40 lg:z-auto">
+                <div className="space-y-3">
+                  {profile.whatsapp_enabled && profile.whatsapp_number && (
+                    <Button
+                      onClick={() => {
+                        handleContactClick("whatsapp");
+                        const message = `Olá ${profile.display_name}, encontrei seu perfil no site da Libertage e gostaria de obter mais informações sobre seus serviços`;
+                        const encodedMessage = encodeURIComponent(message);
+                        window.open(`https://wa.me/55${profile.whatsapp_number}?text=${encodedMessage}`, "_blank");
+                      }}
+                      className="w-full"
+                      style={{
+                        backgroundColor: "#25D366",
+                        color: "white",
+                      }}
+                      size="lg"
+                    >
+                      <IconBrandWhatsapp size={20} className="mr-2" />
+                      WHATSAPP
+                    </Button>
+                  )}
+                  
+                  {profile.telegram_enabled && profile.telegram_username && (
+                    <Button
+                      onClick={() => {
+                        handleContactClick("telegram");
+                        window.open(`https://t.me/${profile.telegram_username}`, "_blank");
+                      }}
+                      className="w-full"
+                      style={{
+                        backgroundColor: "#0088cc",
+                        color: "white",
+                      }}
+                      size="lg"
+                    >
+                      <IconBrandTelegram size={20} className="mr-2" />
+                      TELEGRAM
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Approximate Location Map */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Localização Aproximada</h2>
-              <div className="bg-gray-100 rounded-lg p-4">
-                <p className="text-gray-700 mb-2">
-                  <strong>Região:</strong> {profile.city}, {profile.region}
-                </p>
-                <p className="text-sm text-gray-500">
-                  A localização exata é mantida privada. Esta é uma área aproximada de atendimento.
-                </p>
-                <div className="mt-4 bg-gray-200 rounded h-64 flex items-center justify-center">
-                  <p className="text-gray-500">Mapa da região (área aproximada)</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
             {/* Contact Buttons */}
             {external_links.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6 sticky top-4">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Contato</h2>
+                <h3 className="text-base font-semibold text-gray-900 mb-3">Contato</h3>
                 <div className="space-y-3">
                   {external_links.map((link: any, index: number) => (
                     <a
@@ -411,23 +399,199 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
                     </a>
                   ))}
                 </div>
+              </div>
+            )}
 
-                {/* Report Button */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      alert("Funcionalidade de denúncia será implementada em breve");
+            {/* Stories Section */}
+            {stories.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">Stories</h3>
+                <div className="flex justify-center">
+                  <StoryIndicator
+                    user={{
+                      name: profile.display_name,
+                      profile_photo_url: coverMedia?.public_url || null,
+                      slug: profile.slug
                     }}
-                    className="text-sm text-red-600 hover:text-red-800"
-                  >
-                    Denunciar este perfil
-                  </button>
+                    hasActiveStory={true}
+                    onClick={() => setStoryViewerOpen(true)}
+                    showName={false}
+                  />
                 </div>
               </div>
             )}
+
+            {/* External Links */}
+            <ExternalLinksDisplay profileId={profile.id} />
+
+            {/* Pricing Packages */}
+            {pricing_packages.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">Valores</h3>
+                <div className="flex flex-col gap-2">
+                  {pricing_packages.map((pkg: any, index: number) => (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span className="text-gray-700">{pkg.label}</span>
+                      <span className="font-semibold text-gray-900">
+                        {typeof pkg.price === 'number' ? formatBRL(pkg.price) : pkg.price}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Availability Schedule */}
+            {availability.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">Disponibilidade</h3>
+                <div className="space-y-2">
+                  {weekdayNames.map((dayName, dayIndex) => {
+                    const slots = availabilityByDay[dayIndex] || [];
+                    const availableSlots = slots.filter((s: any) => s.is_available);
+                    
+                    return (
+                      <div key={dayIndex} className="flex items-start justify-between py-2 border-b border-gray-100 last:border-0">
+                        <span className="font-medium text-gray-900 text-sm">{dayName}</span>
+                        <div className="text-right">
+                          {availableSlots.length > 0 ? (
+                            <div className="space-y-1">
+                              {availableSlots.map((slot: any) => (
+                                <span key={slot.id} className="text-sm text-gray-700 block">
+                                  {slot.start_time} - {slot.end_time}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">Indisponível</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Approximate Location */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-3">Localização</h3>
+              <div className="space-y-2">
+                <p className="text-gray-700">
+                  <strong>Região:</strong> {profile.city}, {profile.region}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Localização aproximada de atendimento
+                </p>
+              </div>
+            </div>
+
+            {/* Report Button */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <button
+                onClick={() => {
+                  alert("Funcionalidade de denúncia será implementada em breve");
+                }}
+                className="text-sm text-red-600 hover:text-red-800 w-full text-center"
+              >
+                Denunciar este perfil
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Gallery Lightbox */}
+      {isGalleryOpen && displayMedia.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-95 flex flex-col items-center justify-center p-4"
+          onClick={() => setIsGalleryOpen(false)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setIsGalleryOpen(false)}
+            className="absolute right-8 top-8 text-white text-4xl w-12 h-12 flex items-center justify-center rounded hover:bg-white hover:bg-opacity-10 transition-colors z-10"
+          >
+            ×
+          </button>
+
+          {/* Main Image/Video Container */}
+          <div
+            className="relative max-w-5xl max-h-[70vh] w-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Previous Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                prevImage();
+              }}
+              className="absolute left-[-4rem] top-1/2 -translate-y-1/2 text-white text-5xl w-12 h-12 flex items-center justify-center rounded hover:bg-white hover:bg-opacity-10 transition-colors"
+            >
+              ‹
+            </button>
+
+            {/* Media Display */}
+            {displayMedia[selectedMediaIndex]?.type === 'video' ? (
+              <video
+                src={displayMedia[selectedMediaIndex].public_url}
+                autoPlay
+                loop
+                muted
+                className="max-w-full max-h-[70vh] rounded"
+              />
+            ) : (
+              <img
+                src={displayMedia[selectedMediaIndex]?.public_url}
+                alt={`Imagem ${selectedMediaIndex + 1}`}
+                className="max-w-full max-h-[70vh] object-contain rounded"
+              />
+            )}
+
+            {/* Next Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                nextImage();
+              }}
+              className="absolute right-[-4rem] top-1/2 -translate-y-1/2 text-white text-5xl w-12 h-12 flex items-center justify-center rounded hover:bg-white hover:bg-opacity-10 transition-colors"
+            >
+              ›
+            </button>
+          </div>
+
+          {/* Thumbnails */}
+          <div
+            className="mt-8 flex gap-2 max-w-5xl overflow-x-auto p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {displayMedia.map((media, index) => (
+              <div
+                key={media.id}
+                onClick={() => setSelectedMediaIndex(index)}
+                className={`w-20 h-20 flex-shrink-0 rounded overflow-hidden cursor-pointer transition-all ${
+                  selectedMediaIndex === index
+                    ? 'border-3 border-white opacity-100'
+                    : 'border-3 border-transparent opacity-60 hover:opacity-80'
+                }`}
+              >
+                {media.type === 'video' ? (
+                  <video
+                    src={media.public_url}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={media.public_url}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Story Viewer */}
       {storyViewerOpen && stories.length > 0 && (

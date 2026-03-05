@@ -55,7 +55,7 @@ export function ExternalLinksDisplay({ profileId }: ExternalLinksDisplayProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Links</h2>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">Minhas Redes</h3>
         <p className="text-gray-500">Carregando...</p>
       </div>
     );
@@ -63,7 +63,7 @@ export function ExternalLinksDisplay({ profileId }: ExternalLinksDisplayProps) {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Links</h2>
+      <h3 className="text-base font-semibold text-gray-900 mb-3">Minhas Redes</h3>
       <div className="space-y-3">
         {links.map((link) => (
           <a

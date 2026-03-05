@@ -14,6 +14,7 @@ import {
   IconClock,
   IconList,
   IconChartBar,
+  IconExternalLink,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -27,14 +28,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = useState<any>(null)
   const [subscription, setSubscription] = useState<any>(null)
+  const [profileSlug, setProfileSlug] = useState<string>("")
 
   useEffect(() => {
     fetchUserData()
     fetchSubscription()
+    fetchProfileSlug()
   }, [])
 
   const fetchUserData = async () => {
@@ -58,6 +62,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }
     } catch (error) {
       console.error("Error fetching subscription:", error)
+    }
+  }
+
+  const fetchProfileSlug = async () => {
+    try {
+      const res = await fetch("/api/profiles/me")
+      if (res.ok) {
+        const data = await res.json()
+        setProfileSlug(data.profile?.slug || "")
+      }
+    } catch (error) {
+      console.error("Error fetching profile slug:", error)
     }
   }
 
@@ -133,6 +149,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
+        
+        {/* Public Profile Button */}
+        {profileSlug && (
+          <div className="px-3 py-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-2"
+              asChild
+            >
+              <a
+                href={`/perfil/${profileSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconExternalLink className="h-4 w-4" />
+                <span className="group-data-[collapsible=icon]:hidden">Ver perfil público</span>
+              </a>
+            </Button>
+          </div>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} subscription={subscription} />

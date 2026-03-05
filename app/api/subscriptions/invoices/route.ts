@@ -16,24 +16,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
     
-    // Get user's profile with stripe_customer_id
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
+    // Get user's subscription with stripe_customer_id
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .single();
       
-    if (profileError || !profile) {
-      return NextResponse.json({ error: "Perfil não encontrado" }, { status: 404 });
+    if (subscriptionError || !subscription) {
+      return NextResponse.json({ invoices: [] });
     }
     
-    if (!profile.stripe_customer_id) {
+    if (!subscription.stripe_customer_id) {
       return NextResponse.json({ invoices: [] });
     }
     
     // Fetch invoices from Stripe
     const invoices = await stripe.invoices.list({
-      customer: profile.stripe_customer_id,
+      customer: subscription.stripe_customer_id,
       limit: 20,
     });
     
