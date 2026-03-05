@@ -4,8 +4,10 @@ import { StoryPermissionService } from '@/lib/services/story-permission.service'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { storyId: string } }
+  context: { params: Promise<{ storyId: string }> }
 ) {
+  const params = await context.params;
+  
   try {
     const supabase = await createClient();
     const { storyId } = params;

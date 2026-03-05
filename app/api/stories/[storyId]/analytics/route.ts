@@ -5,8 +5,10 @@ import { StoryAnalyticsService } from '@/lib/services/story-analytics.service';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { storyId: string } }
+  context: { params: Promise<{ storyId: string }> }
 ) {
+  const params = await context.params;
+  
   try {
     const supabase = await createClient();
     const { storyId } = params;

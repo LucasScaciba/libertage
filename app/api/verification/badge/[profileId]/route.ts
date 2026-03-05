@@ -4,8 +4,10 @@ import { VerificationService } from '@/lib/services/verification.service';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { profileId: string } }
+  context: { params: Promise<{ profileId: string }> }
 ) {
+  const params = await context.params;
+  
   try {
     const { profileId } = params;
 
