@@ -11,6 +11,7 @@ import VisitsByDayIndicator from "./components/VisitsByDayIndicator";
 import VisitsByStateIndicator from "./components/VisitsByStateIndicator";
 import VisibilityRankIndicator from "./components/VisibilityRankIndicator";
 import ContactChannelsIndicator from "./components/ContactChannelsIndicator";
+import type { MediaView, SocialClick, StoryView, VisitByDay, VisitByState, VisibilityRank, ContactChannel } from "@/lib/services/analytics.service";
 
 interface DashboardData {
   mediaViews: MediaView[];
@@ -20,47 +21,6 @@ interface DashboardData {
   visitsByState: VisitByState[];
   visibilityRank: VisibilityRank;
   contactChannels: ContactChannel[];
-}
-
-interface MediaView {
-  media_id: string;
-  thumbnail_url: string;
-  filename: string;
-  media_type: "photo" | "video";
-  view_count: number;
-}
-
-interface SocialClick {
-  social_network: string;
-  click_count: number;
-}
-
-interface StoryView {
-  story_id: string;
-  thumbnail_url: string;
-  filename: string;
-  view_count: number;
-}
-
-interface VisitByDay {
-  day_of_week: number;
-  visit_count: number;
-}
-
-interface VisitByState {
-  state: string;
-  visit_count: number;
-}
-
-interface VisibilityRank {
-  percentile: number;
-  category: "top_10" | "top_20" | "top_30" | "below_30";
-  message: string;
-}
-
-interface ContactChannel {
-  channel: "whatsapp" | "telegram";
-  contact_count: number;
 }
 
 export default function DashboardPage() {

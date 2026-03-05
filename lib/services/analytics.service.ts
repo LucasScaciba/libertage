@@ -48,6 +48,7 @@ export interface VisitByState {
 export interface VisibilityRank {
   percentile: number; // 0-100
   category: 'top_10' | 'top_20' | 'top_30' | 'below_30';
+  message: string;
 }
 
 export interface ContactChannel {
