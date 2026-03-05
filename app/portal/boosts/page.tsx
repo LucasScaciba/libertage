@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -33,6 +34,7 @@ interface Boost {
 }
 
 export default function BoostsPage() {
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<any>(null);
   const [boosts, setBoosts] = useState<Boost[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
@@ -41,10 +43,31 @@ export default function BoostsPage() {
   const [loading, setLoading] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     document.title = "Boosts — Libertage";
   }, []);
+
+  useEffect(() => {
+    // Check for success/cancel parameters
+    const boostSuccess = searchParams.get("boost_success");
+    const boostCanceled = searchParams.get("boost_canceled");
+
+    if (boostSuccess === "true") {
+      setSuccessMessage("Boost adquirido com sucesso! Seu perfil será promovido no horário agendado.");
+      // Clean URL
+      window.history.replaceState({}, "", "/portal/boosts");
+      // Clear message after 5 seconds
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } else if (boostCanceled === "true") {
+      setError("A compra do boost foi cancelada.");
+      // Clean URL
+      window.history.replaceState({}, "", "/portal/boosts");
+      // Clear message after 5 seconds
+      setTimeout(() => setError(""), 5000);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchProfile();
@@ -203,6 +226,12 @@ export default function BoostsPage() {
                   Promova seu perfil no topo dos resultados por 2 horas
                 </p>
               </div>
+
+              {successMessage && (
+                <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+                  {successMessage}
+                </div>
+              )}
 
               {error && (
                 <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">

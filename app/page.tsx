@@ -15,6 +15,7 @@ import { Calendar, Weight, Ruler, Footprints } from "lucide-react";
 import { IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react";
 import { IconMapper } from "@/lib/utils/icon-mapper";
 import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
+import { BoostedProfilesCarousel } from "@/app/components/boosted-profiles/BoostedProfilesCarousel";
 
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
@@ -381,6 +382,14 @@ export default function Home() {
         <div style={{ marginBottom: "2rem" }}>
           <StoriesCarousel />
         </div>
+
+        {/* Boosted Profiles Carousel */}
+        <BoostedProfilesCarousel 
+          onProfileClick={(profile) => {
+            setSelectedProfile(profile);
+            setIsModalOpen(true);
+          }}
+        />
 
         {loading ? (
           <div style={{ textAlign: "center", padding: "3rem 0" }}>

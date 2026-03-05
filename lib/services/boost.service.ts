@@ -105,7 +105,7 @@ export class BoostService {
     }
 
     // Create pending boost record
-    const { data: boost } = await supabase
+    const { data: boost, error: boostError } = await supabase
       .from("boosts")
       .insert({
         profile_id: profileId,
@@ -118,8 +118,13 @@ export class BoostService {
       .select()
       .single();
 
+    if (boostError) {
+      console.error('[BoostService] Error creating boost record:', boostError);
+      throw new Error(`Failed to create boost record: ${boostError.message}`);
+    }
+
     if (!boost) {
-      throw new Error("Failed to create boost record");
+      throw new Error("Failed to create boost record: No data returned");
     }
 
     // Get or create Stripe customer
@@ -164,8 +169,8 @@ export class BoostService {
             quantity: 1,
           },
         ],
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal?boost_success=true`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal?boost_canceled=true`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal/boosts?boost_success=true`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal/boosts?boost_canceled=true`,
         metadata: {
           boost_id: boost.id,
           profile_id: profileId,
