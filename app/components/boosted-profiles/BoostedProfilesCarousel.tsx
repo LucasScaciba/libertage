@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { calculateAge } from "@/lib/utils/age-calculator";
 import { formatBRL } from "@/lib/utils/currency-formatter";
 
 interface BoostedProfilesCarouselProps {
@@ -38,6 +37,7 @@ export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarou
       const res = await fetch("/api/boosts/active");
       if (res.ok) {
         const data = await res.json();
+        console.log("Boosted profiles loaded:", data.profiles);
         setProfiles(data.profiles || []);
       }
     } catch (error) {
@@ -63,7 +63,17 @@ export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarou
     }
   };
 
-  if (loading || profiles.length === 0) {
+  if (loading) {
+    return (
+      <div className="w-full bg-gradient-to-r from-purple-50 to-pink-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-gray-600">Carregando perfis em destaque...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profiles.length === 0) {
     return null;
   }
 
@@ -77,12 +87,8 @@ export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarou
   return (
     <div className="w-full bg-gradient-to-r from-purple-50 to-pink-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            ⭐ Perfis em Destaque
-          </h2>
-          
-          {profiles.length > (isMobile ? 1 : 4) && (
+        {profiles.length > (isMobile ? 1 : 4) && (
+          <div className="flex items-center justify-end mb-6">
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -103,18 +109,21 @@ export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarou
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {visibleProfiles.map((profile) => {
             const coverPhoto = profile.media?.find((m: any) => m.is_cover && m.type === "photo");
             const displayPhoto = coverPhoto || profile.media?.find((m: any) => m.type === "photo");
-            const age = calculateAge(profile.age);
+            
+            // Count photos and videos
+            const photoCount = profile.media?.filter((m: any) => m.type === "photo").length || 0;
+            const videoCount = profile.media?.filter((m: any) => m.type === "video").length || 0;
 
             return (
               <Card
-                key={profile.id}
+                key={profile.boost_id || profile.id}
                 className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-purple-200"
                 onClick={() => onProfileClick(profile)}
               >
@@ -129,21 +138,45 @@ export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarou
                     <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                       ⭐ DESTAQUE
                     </div>
+                    {/* Media Counter Overlay */}
+                    <div className="absolute bottom-2 left-2 flex gap-2">
+                      {photoCount > 0 && (
+                        <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                          </svg>
+                          {photoCount}
+                        </div>
+                      )}
+                      {videoCount > 0 && (
+                        <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                          </svg>
+                          {videoCount}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{profile.display_name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {age} anos • {profile.city}, {profile.region}
-                  </p>
-                  <p className="text-sm font-medium text-purple-600">
-                    {profile.category}
-                  </p>
-                  {profile.hourly_rate && (
-                    <p className="text-lg font-bold text-gray-900 mt-2">
-                      {formatBRL(profile.hourly_rate)}/h
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-lg">{profile.display_name}</h3>
+                    {/* Verification Badge */}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#10b981" stroke="white" strokeWidth="2">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  {profile.short_description && (
+                    <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                      {profile.short_description}
                     </p>
                   )}
+                  <p className="text-sm text-gray-600">
+                    {profile.age_attribute ? `${profile.age_attribute} anos • ` : ''}{profile.city}, {profile.region}
+                  </p>
                 </CardContent>
               </Card>
             );

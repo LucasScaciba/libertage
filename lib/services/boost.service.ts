@@ -98,6 +98,25 @@ export class BoostService {
 
     const context = this.getBoostContext(profile as any);
 
+    // Check if profile already has a boost in the same time window or within 1 hour
+    const oneHourBefore = new Date(startTime.getTime() - 60 * 60 * 1000);
+    const oneHourAfter = new Date(endTime.getTime() + 60 * 60 * 1000);
+
+    const { data: existingBoosts } = await supabase
+      .from("boosts")
+      .select("*")
+      .eq("profile_id", profileId)
+      .in("status", ["scheduled", "active"])
+      .or(
+        `and(start_time.lte.${oneHourAfter.toISOString()},end_time.gte.${oneHourBefore.toISOString()})`
+      );
+
+    if (existingBoosts && existingBoosts.length > 0) {
+      throw new Error(
+        "Você já possui um boost agendado neste período. Deve haver pelo menos 1 hora de diferença entre boosts."
+      );
+    }
+
     // Check availability
     const isAvailable = await this.checkAvailability(context, startTime, endTime);
     if (!isAvailable) {

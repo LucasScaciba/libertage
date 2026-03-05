@@ -14,6 +14,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { 
+  IconBrandInstagram, 
+  IconBrandTiktok, 
+  IconBrandYoutube, 
+  IconBrandFacebook,
+  IconBrandOnlyfans,
+  IconBrandPatreon,
+  IconDiamond,
+  IconHeart,
+  IconMovie
+} from '@tabler/icons-react';
+
+const SOCIAL_NETWORKS = [
+  { value: 'Instagram', label: 'Instagram', icon: IconBrandInstagram },
+  { value: 'Tiktok', label: 'Tiktok', icon: IconBrandTiktok },
+  { value: 'Youtube', label: 'Youtube', icon: IconBrandYoutube },
+  { value: 'Facebook', label: 'Facebook', icon: IconBrandFacebook },
+  { value: 'Onlyfans', label: 'Onlyfans', icon: IconBrandOnlyfans },
+  { value: 'Patreon', label: 'Patreon', icon: IconBrandPatreon },
+  { value: 'Privacy', label: 'Privacy', icon: IconDiamond },
+  { value: 'Fansly', label: 'Fansly', icon: IconHeart },
+  { value: 'Canal Adulto', label: 'Canal Adulto', icon: IconMovie },
+];
 
 interface LinkFormDialogProps {
   isOpen: boolean;
@@ -146,43 +169,37 @@ export function LinkFormDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent>
-        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing ? 'Editar Link' : 'Adicionar Link'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? 'Editar Link' : 'Adicionar Link'}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4" style={{ padding: '1.5rem' }}>
-              {/* Title Field */}
+              {/* Social Network Select */}
               <div className="space-y-2">
                 <Label htmlFor="title">
-                  Título <span className="text-red-500">*</span>
+                  Rede Social <span className="text-red-500">*</span>
                 </Label>
-                <Input
+                <select
                   id="title"
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
-                  onBlur={() => validateTitle(title)}
-                  placeholder="Ex: Meu Instagram"
-                  maxLength={100}
                   disabled={submitting}
-                  className={titleError ? 'border-red-500' : ''}
-                />
-                <div className="flex justify-between items-center">
-                  {titleError ? (
-                    <p className="text-sm text-red-600">{titleError}</p>
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      Máximo 100 caracteres
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-400">
-                    {title.length}/100
-                  </p>
-                </div>
+                  className={`flex h-10 w-full rounded-md border ${titleError ? 'border-red-500' : 'border-input'} bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
+                >
+                  <option value="">Selecione uma rede social</option>
+                  {SOCIAL_NETWORKS.map((network) => (
+                    <option key={network.value} value={network.value}>
+                      {network.label}
+                    </option>
+                  ))}
+                </select>
+                {titleError && (
+                  <p className="text-sm text-red-600">{titleError}</p>
+                )}
               </div>
 
               {/* URL Field */}
@@ -233,7 +250,6 @@ export function LinkFormDialog({
               </Button>
             </div>
           </form>
-        </div>
       </DialogContent>
     </Dialog>
   );

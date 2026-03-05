@@ -12,13 +12,26 @@ import { Slider } from "@/components/ui/slider";
 import { calculateAge } from "@/lib/utils/age-calculator";
 import { formatBRL } from "@/lib/utils/currency-formatter";
 import { Calendar, Weight, Ruler, Footprints } from "lucide-react";
-import { IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react";
-import { IconMapper } from "@/lib/utils/icon-mapper";
+import { 
+  IconBrandWhatsapp, 
+  IconBrandTelegram,
+  IconBrandInstagram,
+  IconBrandTiktok,
+  IconBrandYoutube,
+  IconBrandFacebook,
+  IconBrandOnlyfans,
+  IconBrandPatreon,
+  IconDiamond,
+  IconHeart,
+  IconMovie,
+  IconLink
+} from "@tabler/icons-react";
 import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
 import { BoostedProfilesCarousel } from "@/app/components/boosted-profiles/BoostedProfilesCarousel";
 
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
+  const [boostedProfileIds, setBoostedProfileIds] = useState<string[]>([]);
   const [regularProfiles, setRegularProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
@@ -52,6 +65,23 @@ export default function Home() {
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+
+  // Map social network titles to Tabler icons
+  const getSocialIcon = (title: string) => {
+    const iconMap: Record<string, any> = {
+      'Instagram': IconBrandInstagram,
+      'Tiktok': IconBrandTiktok,
+      'Youtube': IconBrandYoutube,
+      'Facebook': IconBrandFacebook,
+      'Onlyfans': IconBrandOnlyfans,
+      'Patreon': IconBrandPatreon,
+      'Privacy': IconDiamond,
+      'Fansly': IconHeart,
+      'Canal Adulto': IconMovie,
+    };
+    
+    return iconMap[title] || IconLink;
+  };
 
   // Gallery images from profile media
   const galleryImages = selectedProfile?.media?.map((m: any) => m.public_url) || [];
@@ -113,6 +143,7 @@ export default function Home() {
 
   useEffect(() => {
     loadProfiles();
+    loadBoostedProfileIds();
     
     // Check if age warning has been shown
     const hasSeenWarning = localStorage.getItem('age_warning_seen');
@@ -120,6 +151,19 @@ export default function Home() {
       setIsAgeWarningOpen(true);
     }
   }, []);
+
+  const loadBoostedProfileIds = async () => {
+    try {
+      const res = await fetch("/api/boosts/active");
+      if (res.ok) {
+        const data = await res.json();
+        const ids = data.profiles?.map((p: any) => p.id) || [];
+        setBoostedProfileIds(ids);
+      }
+    } catch (error) {
+      console.error("Error loading boosted profile IDs:", error);
+    }
+  };
 
   // Auto-apply filters when they change
   useEffect(() => {
@@ -272,11 +316,6 @@ export default function Home() {
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              {isBoosted && (
-                <Badge style={{ backgroundColor: "hsl(45 93% 47%)", color: "hsl(26 90% 10%)" }}>
-                  Destaque
-                </Badge>
-              )}
             </div>
             <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {profile.short_description}
@@ -376,6 +415,14 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Boosted Profiles Carousel - Full Width */}
+      <BoostedProfilesCarousel 
+        onProfileClick={(profile) => {
+          setSelectedProfile(profile);
+          setIsModalOpen(true);
+        }}
+      />
+
       {/* Catalog Content */}
       <div className="container-custom" style={{ padding: "2rem 1rem" }}>
         {/* Stories Carousel */}
@@ -383,42 +430,22 @@ export default function Home() {
           <StoriesCarousel />
         </div>
 
-        {/* Boosted Profiles Carousel */}
-        <BoostedProfilesCarousel 
-          onProfileClick={(profile) => {
-            setSelectedProfile(profile);
-            setIsModalOpen(true);
-          }}
-        />
-
         {loading ? (
           <div style={{ textAlign: "center", padding: "3rem 0" }}>
             <p style={{ color: "hsl(var(--muted-foreground))" }}>Carregando...</p>
           </div>
         ) : (
           <>
-            {/* Boosted Profiles Section */}
-            {boostedProfiles.length > 0 && (
-              <div style={{ marginBottom: "3rem" }}>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" }}>
-                  Perfis em Destaque
-                </h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
-                  {boostedProfiles.map((profile) => (
-                    <ProfileCard key={profile.id} profile={profile} isBoosted />
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Regular Profiles Section */}
             <div>
               {regularProfiles.length > 0 ? (
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
-                    {regularProfiles.map((profile) => (
-                      <ProfileCard key={profile.id} profile={profile} />
-                    ))}
+                    {regularProfiles
+                      .filter((profile) => !boostedProfileIds.includes(profile.id))
+                      .map((profile) => (
+                        <ProfileCard key={profile.id} profile={profile} />
+                      ))}
                   </div>
 
                   {/* Pagination */}
@@ -729,81 +756,85 @@ export default function Home() {
                         Minhas redes
                       </h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        {selectedProfile.external_links.map((link: any) => (
-                          <button
-                            key={link.id}
-                            onClick={() => {
-                              trackContactClick(selectedProfile.id, link.title || "external_link");
-                              window.open(link.url, "_blank");
-                            }}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "1rem",
-                              padding: "1rem",
-                              backgroundColor: "white",
-                              border: "1px solid hsl(var(--border))",
-                              borderRadius: "0.5rem",
-                              cursor: "pointer",
-                              transition: "all 0.2s",
-                              width: "100%",
-                              textAlign: "left"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = "hsl(var(--primary))";
-                              e.currentTarget.style.backgroundColor = "hsl(var(--accent))";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = "hsl(var(--border))";
-                              e.currentTarget.style.backgroundColor = "white";
-                            }}
-                          >
-                            {/* Icon */}
-                            <div style={{
-                              flexShrink: 0,
-                              width: "2.5rem",
-                              height: "2.5rem",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "hsl(var(--accent))",
-                              borderRadius: "50%"
-                            }}>
-                              <IconMapper iconKey={link.icon_key} size={20} />
-                            </div>
-                            
-                            {/* Title */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{
-                                fontSize: "0.9375rem",
-                                fontWeight: "500",
-                                color: "hsl(var(--foreground))",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap"
+                        {selectedProfile.external_links.map((link: any) => {
+                          const IconComponent = getSocialIcon(link.title);
+                          
+                          return (
+                            <button
+                              key={link.id}
+                              onClick={() => {
+                                trackContactClick(selectedProfile.id, link.title || "external_link");
+                                window.open(link.url, "_blank");
+                              }}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "1rem",
+                                padding: "1rem",
+                                backgroundColor: "white",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "0.5rem",
+                                cursor: "pointer",
+                                transition: "all 0.2s",
+                                width: "100%",
+                                textAlign: "left"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = "hsl(var(--primary))";
+                                e.currentTarget.style.backgroundColor = "hsl(var(--accent))";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = "hsl(var(--border))";
+                                e.currentTarget.style.backgroundColor = "white";
+                              }}
+                            >
+                              {/* Icon */}
+                              <div style={{
+                                flexShrink: 0,
+                                width: "2.5rem",
+                                height: "2.5rem",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "hsl(var(--accent))",
+                                borderRadius: "50%"
                               }}>
-                                {link.title}
-                              </p>
-                            </div>
-                            
-                            {/* Arrow */}
-                            <div style={{ flexShrink: 0 }}>
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                style={{ color: "hsl(var(--muted-foreground))" }}
-                              >
-                                <path d="M9 5l7 7-7 7" />
-                              </svg>
-                            </div>
-                          </button>
-                        ))}
+                                <IconComponent size={20} className="text-gray-700" />
+                              </div>
+                              
+                              {/* Title */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{
+                                  fontSize: "0.9375rem",
+                                  fontWeight: "500",
+                                  color: "hsl(var(--foreground))",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap"
+                                }}>
+                                  {link.title}
+                                </p>
+                              </div>
+                              
+                              {/* Arrow */}
+                              <div style={{ flexShrink: 0 }}>
+                                <svg
+                                  width="20"
+                                  height="20"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{ color: "hsl(var(--muted-foreground))" }}
+                                >
+                                  <path d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

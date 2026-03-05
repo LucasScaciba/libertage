@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -55,17 +56,13 @@ export default function BoostsPage() {
     const boostCanceled = searchParams.get("boost_canceled");
 
     if (boostSuccess === "true") {
-      setSuccessMessage("Boost adquirido com sucesso! Seu perfil será promovido no horário agendado.");
+      toast.success("Boost adquirido com sucesso! Seu perfil será promovido no horário agendado.");
       // Clean URL
       window.history.replaceState({}, "", "/portal/boosts");
-      // Clear message after 5 seconds
-      setTimeout(() => setSuccessMessage(""), 5000);
     } else if (boostCanceled === "true") {
-      setError("A compra do boost foi cancelada.");
+      toast.error("A compra do boost foi cancelada.");
       // Clean URL
       window.history.replaceState({}, "", "/portal/boosts");
-      // Clear message after 5 seconds
-      setTimeout(() => setError(""), 5000);
     }
   }, [searchParams]);
 
@@ -104,7 +101,7 @@ export default function BoostsPage() {
 
   const checkAvailability = async () => {
     if (!profile || !selectedDate || !selectedTime) {
-      setError("Por favor, selecione data e hora");
+      toast.error("Por favor, selecione data e hora");
       return;
     }
 
@@ -121,12 +118,22 @@ export default function BoostsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Erro ao verificar disponibilidade");
+        // Check if it's a profile conflict error
+        if (data.error === "PROFILE_CONFLICT") {
+          toast.error(data.message);
+          return;
+        }
+        throw new Error(data.message || data.error || "Erro ao verificar disponibilidade");
       }
 
       setAvailability(data);
+      
+      // Show success message if available
+      if (data.available) {
+        toast.success("Horário disponível! Você pode prosseguir com a compra.");
+      }
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setCheckingAvailability(false);
     }
@@ -226,12 +233,6 @@ export default function BoostsPage() {
                   Promova seu perfil no topo dos resultados por 2 horas
                 </p>
               </div>
-
-              {successMessage && (
-                <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-                  {successMessage}
-                </div>
-              )}
 
               {error && (
                 <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">

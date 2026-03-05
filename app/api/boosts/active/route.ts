@@ -14,16 +14,10 @@ export async function GET(request: NextRequest) {
         start_time,
         end_time,
         profiles!inner(
-          id,
-          slug,
-          display_name,
-          category,
-          city,
-          region,
-          age,
-          hourly_rate,
-          selected_features,
-          media(id, public_url, type, is_cover, display_order)
+          *,
+          media(*),
+          external_links(*),
+          availability(*)
         )
       `)
       .eq("status", "active")

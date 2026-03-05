@@ -87,6 +87,37 @@ export async function GET(request: Request) {
     const start = new Date(startTime);
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2 hours
 
+    // Check if profile already has a boost in the same time window or within 1 hour
+    const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
+    const oneHourAfter = new Date(end.getTime() + 60 * 60 * 1000);
+
+    const { data: existingBoosts } = await supabase
+      .from("boosts")
+      .select("*")
+      .eq("profile_id", profileId)
+      .in("status", ["scheduled", "active"])
+      .or(
+        `and(start_time.lte.${oneHourAfter.toISOString()},end_time.gte.${oneHourBefore.toISOString()})`
+      );
+
+    if (existingBoosts && existingBoosts.length > 0) {
+      return NextResponse.json(
+        {
+          available: false,
+          error: "PROFILE_CONFLICT",
+          message: "Você já possui um boost agendado neste período. Deve haver pelo menos 1 hora de diferença entre boosts.",
+        },
+        {
+          status: 400,
+          headers: {
+            "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetAt.toISOString(),
+          },
+        }
+      );
+    }
+
     const context = BoostService.getBoostContext(profile as any);
     const isAvailable = await BoostService.checkAvailability(context, start, end);
 

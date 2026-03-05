@@ -10,13 +10,41 @@
  */
 
 import { useState, useEffect } from 'react';
-import { IconMapper } from '@/lib/utils/icon-mapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUp, ArrowDown, Edit, Trash2, Plus } from 'lucide-react';
+import { 
+  IconBrandInstagram, 
+  IconBrandTiktok, 
+  IconBrandYoutube, 
+  IconBrandFacebook,
+  IconBrandOnlyfans,
+  IconBrandPatreon,
+  IconDiamond,
+  IconHeart,
+  IconMovie,
+  IconLink
+} from '@tabler/icons-react';
 import type { ExternalLinkRecord } from '@/types';
 import { LinkFormDialog } from './LinkFormDialog';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+
+// Map social network titles to icons
+const getSocialIcon = (title: string) => {
+  const iconMap: Record<string, any> = {
+    'Instagram': IconBrandInstagram,
+    'Tiktok': IconBrandTiktok,
+    'Youtube': IconBrandYoutube,
+    'Facebook': IconBrandFacebook,
+    'Onlyfans': IconBrandOnlyfans,
+    'Patreon': IconBrandPatreon,
+    'Privacy': IconDiamond,
+    'Fansly': IconHeart,
+    'Canal Adulto': IconMovie,
+  };
+  
+  return iconMap[title] || IconLink;
+};
 
 interface ExternalLinksManagerProps {
   profileId: string;
@@ -264,21 +292,24 @@ export function ExternalLinksManager({ profileId }: ExternalLinksManagerProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {links.map((link, index) => (
-                <div
-                  key={link.id}
-                  className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                >
-                  {/* Icon */}
-                  <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full">
-                    <IconMapper iconKey={link.icon_key} size={20} className="text-gray-700" />
-                  </div>
+              {links.map((link, index) => {
+                const IconComponent = getSocialIcon(link.title);
+                
+                return (
+                  <div
+                    key={link.id}
+                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                  >
+                    {/* Icon */}
+                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full">
+                      <IconComponent size={20} className="text-gray-700" />
+                    </div>
 
-                  {/* Title and URL */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{link.title}</p>
-                    <p className="text-sm text-gray-500 truncate">{link.url}</p>
-                  </div>
+                    {/* Title and URL */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{link.title}</p>
+                      <p className="text-sm text-gray-500 truncate">{link.url}</p>
+                    </div>
 
                   {/* Reorder Buttons */}
                   <div className="flex gap-1">
@@ -326,7 +357,8 @@ export function ExternalLinksManager({ profileId }: ExternalLinksManagerProps) {
                     <Trash2 size={16} />
                   </Button>
                 </div>
-              ))}
+              );
+            })}
             </div>
           )}
         </CardContent>
