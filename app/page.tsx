@@ -244,97 +244,62 @@ export default function Home() {
     const photoCount = profile.media?.filter((m: any) => m.type === "photo").length || 0;
     const videoCount = profile.media?.filter((m: any) => m.type === "video").length || 0;
     
-    // Get services from selected_features
-    const services = profile.selected_features?.filter((f: string) => 
-      ["Massagem", "Acompanhante", "Chamada de vídeo"].includes(f)
-    ) || [];
-    
     return (
-      <div onClick={() => {
-        setSelectedProfile(profile);
-        setIsModalOpen(true);
-      }}>
-        <Card style={{ cursor: "pointer", transition: "box-shadow 0.2s", height: "100%" }} className="hover:shadow-lg">
-          {displayPhoto?.public_url && (
-            <div style={{ width: "100%", aspectRatio: "3/4", overflow: "hidden", borderTopLeftRadius: "var(--radius)", borderTopRightRadius: "var(--radius)", position: "relative" }}>
-              <img
-                src={displayPhoto.public_url}
-                alt={profile.display_name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              {/* Media Counter Overlay */}
-              <div style={{ position: "absolute", bottom: "0.5rem", left: "0.5rem", display: "flex", gap: "0.5rem" }}>
-                {photoCount > 0 && (
-                  <div style={{ 
-                    backgroundColor: "rgba(0, 0, 0, 0.7)", 
-                    color: "white", 
-                    padding: "0.25rem 0.5rem", 
-                    borderRadius: "0.375rem",
-                    fontSize: "0.875rem",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem"
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                      <circle cx="12" cy="13" r="4"></circle>
-                    </svg>
-                    {photoCount}
-                  </div>
-                )}
-                {videoCount > 0 && (
-                  <div style={{ 
-                    backgroundColor: "rgba(0, 0, 0, 0.7)", 
-                    color: "white", 
-                    padding: "0.25rem 0.5rem", 
-                    borderRadius: "0.375rem",
-                    fontSize: "0.875rem",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem"
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                    </svg>
-                    {videoCount}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          <CardContent style={{ padding: "1rem" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <h3 style={{ fontSize: "1.125rem", fontWeight: "600" }}>
-                  {profile.display_name}
-                </h3>
-                {/* Verification Badge */}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#10b981" stroke="white" strokeWidth="2">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-              {profile.short_description}
-            </p>
-            <div style={{ display: "flex", alignItems: "center", fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", gap: "0.5rem", marginBottom: "0.5rem" }}>
-              <span>{profile.city}</span>
-              {profile.region && (
-                <>
-                  <span>•</span>
-                  <span>{profile.region}</span>
-                </>
+      <Card 
+        className="cursor-pointer hover:shadow-xl transition-all duration-300 h-full"
+        onClick={() => {
+          setSelectedProfile(profile);
+          setIsModalOpen(true);
+        }}
+      >
+        {displayPhoto?.public_url && (
+          <div className="relative w-full aspect-[3/4] overflow-hidden rounded-t-lg">
+            <img
+              src={displayPhoto.public_url}
+              alt={profile.display_name}
+              className="w-full h-full object-cover"
+            />
+            {/* Media Counter Overlay */}
+            <div className="absolute bottom-2 left-2 flex gap-2">
+              {photoCount > 0 && (
+                <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  {photoCount}
+                </div>
+              )}
+              {videoCount > 0 && (
+                <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                  </svg>
+                  {videoCount}
+                </div>
               )}
             </div>
-            {services.length > 0 && (
-              <Badge variant="secondary">{services.join(", ")}</Badge>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        )}
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold text-lg">{profile.display_name}</h3>
+            {/* Verification Badge */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#10b981" stroke="white" strokeWidth="2">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          {profile.short_description && (
+            <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+              {profile.short_description}
+            </p>
+          )}
+          <p className="text-sm text-gray-600">
+            {profile.city}, {profile.region}
+          </p>
+        </CardContent>
+      </Card>
     );
   };
 
