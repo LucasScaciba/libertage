@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar"
 import {
@@ -20,7 +20,7 @@ import {
 import { PricingCards } from "@/components/pricing-cards";
 import { Button } from "@/components/ui/button";
 
-export default function PlansPage() {
+function PlansContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState<any[]>([]);
@@ -210,5 +210,13 @@ export default function PlansPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function PlansPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <PlansContent />
+    </Suspense>
   );
 }
