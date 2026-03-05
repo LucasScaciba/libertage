@@ -296,7 +296,7 @@ export default function Home() {
             </p>
           )}
           <p className="text-sm text-gray-600">
-            {profile.city}, {profile.region}
+            {profile.age_attribute ? `${profile.age_attribute} anos • ` : ''}{profile.city}, {profile.region}
           </p>
         </CardContent>
       </Card>
