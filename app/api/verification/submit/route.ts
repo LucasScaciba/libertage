@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Compress image before upload
     const compressedBuffer = await ImageValidationService.compressImage(selfieImage);
-    const compressedFile = new File([compressedBuffer], selfieImage.name, {
+    const compressedFile = new File([new Uint8Array(compressedBuffer)], selfieImage.name, {
       type: 'image/jpeg',
     });
 
