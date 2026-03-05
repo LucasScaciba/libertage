@@ -11,10 +11,11 @@ const RadioGroup = React.forwardRef<
     <div ref={ref} className={className} role="radiogroup" {...props}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child as React.ReactElement<any>, {
-            checked: child.props.value === value,
-            onCheckedChange: () => onValueChange?.(child.props.value),
-          })
+          const childElement = child as React.ReactElement<{ value: string }>;
+          return React.cloneElement(childElement, {
+            checked: childElement.props.value === value,
+            onCheckedChange: () => onValueChange?.(childElement.props.value),
+          } as any)
         }
         return child
       })}
