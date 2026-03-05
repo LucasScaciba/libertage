@@ -1,4 +1,4 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+import { IconTrendingDown, IconTrendingUp, IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,12 +11,20 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+interface ContactChannel {
+  channel: string
+  contact_count: number
+}
+
 interface AnalyticsSummary {
   visitsToday: number
   visits7Days: number
   visits30Days: number
   visits12Months: number
   clicksByMethod: Record<string, number>
+  indicators?: {
+    contactChannels?: ContactChannel[]
+  }
 }
 
 interface SectionCardsProps {
@@ -43,8 +51,14 @@ export function SectionCards({ analytics, loading }: SectionCardsProps) {
     )
   }
 
-  const totalClicks = analytics
-    ? Object.values(analytics.clicksByMethod).reduce((sum, count) => sum + count, 0)
+  // Calculate total clicks only for WhatsApp and Telegram
+  const totalClicks = analytics?.indicators?.contactChannels
+    ? analytics.indicators.contactChannels
+        .filter((channel) => {
+          const channelLower = channel.channel?.toLowerCase() || '';
+          return channelLower === 'whatsapp' || channelLower === 'telegram';
+        })
+        .reduce((sum, channel) => sum + channel.contact_count, 0)
     : 0
 
   // Calculate trends (comparing last 7 days vs previous 7 days)
@@ -54,29 +68,6 @@ export function SectionCards({ analytics, loading }: SectionCardsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4 lg:px-6 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs dark:*:data-[slot=card]:bg-card">
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Visitas Hoje</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {analytics?.visitsToday || 0}
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              Hoje
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Visitantes de hoje
-          </div>
-          <div className="text-muted-foreground">
-            Total de visualizações do perfil
-          </div>
-        </CardFooter>
-      </Card>
-
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Últimos 7 Dias</CardDescription>
@@ -137,11 +128,78 @@ export function SectionCards({ analytics, loading }: SectionCardsProps) {
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          {analytics?.indicators?.contactChannels && analytics.indicators.contactChannels.length > 0 ? (
+            <>
+              {analytics.indicators.contactChannels
+                .filter((channel) => {
+                  const channelLower = channel.channel?.toLowerCase() || '';
+                  return channelLower === 'whatsapp' || channelLower === 'telegram';
+                })
+                .map((channel) => {
+                  const channelLower = channel.channel?.toLowerCase() || '';
+                  
+                  return (
+                    <div key={channel.channel} className="flex items-center gap-2 font-medium">
+                      {channelLower === 'whatsapp' ? (
+                        <>
+                          <IconBrandWhatsapp className="h-4 w-4 text-green-600" />
+                          <span>WhatsApp: {channel.contact_count}</span>
+                        </>
+                      ) : channelLower === 'telegram' ? (
+                        <>
+                          <IconBrandTelegram className="h-4 w-4 text-blue-500" />
+                          <span>Telegram: {channel.contact_count}</span>
+                        </>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              {analytics.indicators.contactChannels.filter((channel) => {
+                const channelLower = channel.channel?.toLowerCase() || '';
+                return channelLower === 'whatsapp' || channelLower === 'telegram';
+              }).length === 0 && (
+                <>
+                  <div className="line-clamp-1 flex gap-2 font-medium">
+                    Interações com contato
+                  </div>
+                  <div className="text-muted-foreground">
+                    WhatsApp, Telegram e outros
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="line-clamp-1 flex gap-2 font-medium">
+                Interações com contato
+              </div>
+              <div className="text-muted-foreground">
+                WhatsApp, Telegram e outros
+              </div>
+            </>
+          )}
+        </CardFooter>
+      </Card>
+
+      <Card className="@container/card">
+        <CardHeader>
+          <CardDescription>Visitas Hoje</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {analytics?.visitsToday || 0}
+          </CardTitle>
+          <CardAction>
+            <Badge variant="outline">
+              <IconTrendingUp />
+              Hoje
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Interações com contato
+            Visitantes de hoje
           </div>
           <div className="text-muted-foreground">
-            WhatsApp, Telegram e outros
+            Total de visualizações do perfil
           </div>
         </CardFooter>
       </Card>

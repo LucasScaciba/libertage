@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { trackSocialClick } from '@/lib/utils/analytics-tracking';
 import { 
   IconBrandInstagram, 
   IconBrandTiktok, 
@@ -103,12 +104,22 @@ export function ExternalLinksDisplay({ profileId }: ExternalLinksDisplayProps) {
           const IconComponent = getSocialIcon(link.title);
           
           return (
-            <a
+            <button
               key={link.id}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group"
+              onClick={() => {
+                console.log('[ExternalLinksDisplay] Tracking click:', { 
+                  title: link.title, 
+                  profileId,
+                  linkId: link.id 
+                });
+                
+                // Track social click before opening link
+                trackSocialClick(link.title, profileId);
+                
+                // Open link in new tab
+                window.open(link.url, "_blank", "noopener,noreferrer");
+              }}
+              className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group cursor-pointer"
             >
               {/* Icon */}
               <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full group-hover:bg-blue-100 transition-colors">
@@ -138,7 +149,7 @@ export function ExternalLinksDisplay({ profileId }: ExternalLinksDisplayProps) {
                   />
                 </svg>
               </div>
-            </a>
+            </button>
           );
         })}
       </div>

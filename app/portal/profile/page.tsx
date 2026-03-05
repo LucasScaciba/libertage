@@ -52,6 +52,7 @@ export default function ProfileEditPage() {
     latitude: 0,
     longitude: 0,
     birthdate: "",
+    gender_identity: "Mulher",
     whatsapp_number: "",
     whatsapp_enabled: false,
     telegram_username: "",
@@ -94,6 +95,7 @@ export default function ProfileEditPage() {
           latitude: data.profile.latitude || 0,
           longitude: data.profile.longitude || 0,
           birthdate: data.profile.birthdate || "",
+          gender_identity: data.profile.gender_identity || "Mulher",
           whatsapp_number: data.profile.whatsapp_number || "",
           whatsapp_enabled: data.profile.whatsapp_enabled || false,
           telegram_username: data.profile.telegram_username || "",
@@ -248,6 +250,7 @@ export default function ProfileEditPage() {
         return !!(
           formData.display_name &&
           formData.slug &&
+          formData.gender_identity &&
           formData.service_categories.length > 0 &&
           formData.city &&
           formData.birthdate
@@ -403,14 +406,41 @@ export default function ProfileEditPage() {
                     <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                         <div>
-                          <Label htmlFor="display_name">Nome de Exibição *</Label>
+                          <Label htmlFor="display_name">Nome de exibição no perfil *</Label>
                           <Input
                             id="display_name"
                             required
+                            maxLength={21}
                             value={formData.display_name}
                             onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                             placeholder="Seu nome profissional"
                           />
+                          <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
+                            {formData.display_name.length}/21
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="gender_identity">Eu me identifico como: *</Label>
+                          <select
+                            id="gender_identity"
+                            required
+                            value={formData.gender_identity}
+                            onChange={(e) => setFormData({ ...formData, gender_identity: e.target.value })}
+                            style={{ 
+                              width: "100%",
+                              padding: "0.5rem",
+                              borderRadius: "var(--radius)",
+                              border: "1px solid hsl(var(--input))",
+                              backgroundColor: "hsl(var(--background))",
+                              fontSize: "0.875rem"
+                            }}
+                          >
+                            <option value="Mulher">Mulher</option>
+                            <option value="Homem">Homem</option>
+                            <option value="Trans">Trans</option>
+                            <option value="Casal">Casal</option>
+                          </select>
                         </div>
                       </div>
 

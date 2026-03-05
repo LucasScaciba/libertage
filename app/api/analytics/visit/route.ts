@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AnalyticsService } from "@/lib/services/analytics.service";
+import { GeolocationService } from "@/lib/services/geolocation.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +14,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract IP address from headers
+    const ip = request.headers.get("x-forwarded-for")?.split(',')[0].trim() 
+      || request.headers.get("x-real-ip") 
+      || "unknown";
+
     // Generate a simple visitor fingerprint (IP + user-agent)
     const fingerprint =
-      request.headers.get("x-forwarded-for") ||
-      request.headers.get("user-agent") ||
-      "anonymous";
+      ip !== "unknown" ? ip : request.headers.get("user-agent") || "anonymous";
 
-    await AnalyticsService.trackVisit(profile_id, fingerprint, device_type);
+    // Get state from IP (with caching)
+    let state = "Não identificado";
+    if (ip !== "unknown") {
+      state = await GeolocationService.getStateFromIP(ip);
+    }
+
+    // Track visit with state in metadata
+    await AnalyticsService.trackVisit(profile_id, fingerprint, device_type, state);
 
     return NextResponse.json({ success: true });
   } catch (error) {

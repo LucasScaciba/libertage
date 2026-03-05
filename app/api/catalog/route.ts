@@ -54,6 +54,7 @@ export async function GET(request: Request) {
     // Parse filters
     const filters = {
       search: searchParams.get("search") || undefined,
+      gender: searchParams.get("gender") || undefined,
       service: searchParams.get("service") || undefined,
       city: searchParams.get("city") || undefined,
       region: searchParams.get("region") || undefined,
@@ -67,7 +68,19 @@ export async function GET(request: Request) {
     // Get catalog results
     const result = await CatalogService.searchCatalog(filters, page, pageSize);
 
-    return NextResponse.json(result, {
+    // Get available filters (cities, categories, regions)
+    const cities = await CatalogService.getCities();
+    const categories = await CatalogService.getCategories();
+    const regions = await CatalogService.getRegions();
+
+    return NextResponse.json({
+      ...result,
+      filters: {
+        cities,
+        categories,
+        regions,
+      },
+    }, {
       headers: {
         "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
         "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),

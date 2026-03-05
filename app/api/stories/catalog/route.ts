@@ -8,6 +8,14 @@ export async function GET(request: NextRequest) {
     
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
+    
+    // Parse filters
+    const filters = {
+      gender: searchParams.get("gender") || undefined,
+      service: searchParams.get("service") || undefined,
+      city: searchParams.get("city") || undefined,
+      search: searchParams.get("search") || undefined,
+    };
 
     // Get active stories with profile info
     const { data: stories, error, count } = await supabase
@@ -36,11 +44,33 @@ export async function GET(request: NextRequest) {
     // Get unique user IDs
     const userIds = [...new Set(stories?.map(s => s.user_id) || [])];
 
-    // Fetch profiles for these users
-    const { data: profiles, error: profilesError } = await supabase
+    // Fetch profiles for these users with filters
+    let profilesQuery = supabase
       .from('profiles')
-      .select('id, user_id, display_name, slug')
-      .in('user_id', userIds);
+      .select('id, user_id, display_name, slug, gender_identity, service_categories, city, short_description, long_description')
+      .in('user_id', userIds)
+      .neq('status', 'unpublished');
+
+    // Apply filters to profiles
+    if (filters.gender) {
+      profilesQuery = profilesQuery.eq('gender_identity', filters.gender);
+    }
+    
+    if (filters.service) {
+      profilesQuery = profilesQuery.filter('service_categories', 'cs', `["${filters.service}"]`);
+    }
+    
+    if (filters.city) {
+      profilesQuery = profilesQuery.eq('city', filters.city);
+    }
+    
+    if (filters.search) {
+      profilesQuery = profilesQuery.or(
+        `display_name.ilike.%${filters.search}%,short_description.ilike.%${filters.search}%,long_description.ilike.%${filters.search}%`
+      );
+    }
+
+    const { data: profiles, error: profilesError } = await profilesQuery;
 
     if (profilesError) {
       console.error('Error fetching profiles:', profilesError);
@@ -69,29 +99,31 @@ export async function GET(request: NextRequest) {
     const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
     const coverPhotoMap = new Map(coverPhotos?.map(m => [m.profile_id, m.public_url]) || []);
 
-    // Transform data to include profile info
-    const transformedStories = stories?.map(story => {
-      const profile = profileMap.get(story.user_id);
-      const coverPhoto = profile ? coverPhotoMap.get(profile.id) : null;
-      return {
-        id: story.id,
-        user_id: story.user_id,
-        video_url: story.video_url,
-        thumbnail_url: story.thumbnail_url,
-        created_at: story.created_at,
-        expires_at: story.expires_at,
-        profile: {
-          name: profile?.display_name || 'Usuário',
-          avatar_url: coverPhoto || null,
-          slug: profile?.slug || ''
-        }
-      };
-    }) || [];
+    // Transform data to include profile info - only include stories from filtered profiles
+    const transformedStories = stories
+      ?.filter(story => profileMap.has(story.user_id)) // Only include stories from profiles that match filters
+      ?.map(story => {
+        const profile = profileMap.get(story.user_id);
+        const coverPhoto = profile ? coverPhotoMap.get(profile.id) : null;
+        return {
+          id: story.id,
+          user_id: story.user_id,
+          video_url: story.video_url,
+          thumbnail_url: story.thumbnail_url,
+          created_at: story.created_at,
+          expires_at: story.expires_at,
+          profile: {
+            name: profile?.display_name || 'Usuário',
+            avatar_url: coverPhoto || null,
+            slug: profile?.slug || ''
+          }
+        };
+      }) || [];
 
     return NextResponse.json({
       success: true,
       stories: transformedStories,
-      total: count || 0
+      total: transformedStories.length
     });
 
   } catch (error: any) {

@@ -109,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconClock,
     },
     {
-      title: "Boosts",
+      title: "Impulsionar Perfil",
       url: "/portal/boosts",
       icon: IconRocket,
     },

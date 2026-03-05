@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { trackStoryView } from '@/lib/utils/analytics-tracking';
 
 interface Story {
   id: string;
@@ -23,9 +24,15 @@ interface StoryWithProfile extends Story {
 
 interface StoriesCarouselProps {
   size?: 'default' | 'small';
+  filters?: {
+    gender?: string;
+    service?: string;
+    city?: string;
+    search?: string;
+  };
 }
 
-export function StoriesCarousel({ size = 'default' }: StoriesCarouselProps) {
+export function StoriesCarousel({ size = 'default', filters }: StoriesCarouselProps) {
   const [stories, setStories] = useState<StoryWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -33,12 +40,20 @@ export function StoriesCarousel({ size = 'default' }: StoriesCarouselProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    setLoading(true);
     fetchStories();
-  }, []);
+  }, [filters?.gender, filters?.service, filters?.city, filters?.search]);
 
   const fetchStories = async () => {
     try {
-      const response = await fetch('/api/stories/catalog');
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filters?.gender) params.append('gender', filters.gender);
+      if (filters?.service) params.append('service', filters.service);
+      if (filters?.city) params.append('city', filters.city);
+      if (filters?.search) params.append('search', filters.search);
+
+      const response = await fetch(`/api/stories/catalog?${params.toString()}`);
       const data = await response.json();
 
       if (data.success) {
@@ -74,6 +89,9 @@ export function StoriesCarousel({ size = 'default' }: StoriesCarouselProps) {
     if (videoRef.current && currentStory) {
       videoRef.current.load();
       videoRef.current.play().catch(err => console.error('Error playing video:', err));
+      
+      // Track story view
+      trackStoryView(currentStory.id);
     }
   }, [currentStory]);
 

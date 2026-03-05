@@ -18,7 +18,9 @@
         "list_columns",
         "list_projects",
         "execute_sql",
-        "apply_migration"
+        "apply_migration",
+        "list_migrations",
+        "search_docs"
       ]
     },
     "shadcn": {

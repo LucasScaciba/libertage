@@ -13,6 +13,7 @@ import { VerificationBadge } from "@/app/components/verification/VerificationBad
 import { ExternalLinksDisplay } from "@/app/components/external-links/ExternalLinksDisplay";
 import { calculateAge } from "@/lib/utils/age-calculator";
 import { formatBRL } from "@/lib/utils/currency-formatter";
+import { trackMediaView } from "@/lib/utils/analytics-tracking";
 
 interface ProfileData {
   profile: any;
@@ -167,6 +168,12 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
   const openGallery = (index: number) => {
     setSelectedMediaIndex(index);
     setIsGalleryOpen(true);
+    
+    // Track media view
+    const media = displayMedia[index];
+    if (media?.id && profile?.id) {
+      trackMediaView(media.id, profile.id);
+    }
   };
 
   const nextImage = () => {

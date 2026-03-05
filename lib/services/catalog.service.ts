@@ -4,6 +4,7 @@ import { withCache } from "@/lib/utils/cache";
 
 export interface CatalogFilters {
   search?: string;
+  gender?: string;
   service?: string;
   city?: string;
   region?: string;
@@ -210,10 +211,15 @@ export class CatalogService {
       );
     }
 
+    // Gender filter
+    if (filters.gender) {
+      query = query.eq("gender_identity", filters.gender);
+    }
+
     // Service filter (check if service is in service_categories array)
-    // Using cs (contains) operator for array containment
+    // Using filter with cs (contains) operator for JSONB array containment
     if (filters.service) {
-      query = query.cs("service_categories", `{${filters.service}}`);
+      query = query.filter("service_categories", "cs", `["${filters.service}"]`);
     }
 
     // City filter

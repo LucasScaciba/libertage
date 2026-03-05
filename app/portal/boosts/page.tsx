@@ -47,7 +47,7 @@ function BoostsContent() {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    document.title = "Boosts — Libertage";
+    document.title = "Impulsionar Perfil — Libertage";
   }, []);
 
   useEffect(() => {
@@ -56,11 +56,11 @@ function BoostsContent() {
     const boostCanceled = searchParams.get("boost_canceled");
 
     if (boostSuccess === "true") {
-      toast.success("Boost adquirido com sucesso! Seu perfil será promovido no horário agendado.");
+      toast.success("Impulsionamento adquirido com sucesso! Seu perfil será promovido no horário agendado.");
       // Clean URL
       window.history.replaceState({}, "", "/portal/boosts");
     } else if (boostCanceled === "true") {
-      toast.error("A compra do boost foi cancelada.");
+      toast.error("A compra do impulsionamento foi cancelada.");
       // Clean URL
       window.history.replaceState({}, "", "/portal/boosts");
     }
@@ -218,7 +218,7 @@ function BoostsContent() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Boosts</BreadcrumbPage>
+                  <BreadcrumbPage>Impulsionar Perfil</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -228,7 +228,7 @@ function BoostsContent() {
           <div className="min-h-screen bg-white">
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Boosts</h1>
+                <h1 className="text-3xl font-bold text-gray-900">Impulsionar Perfil</h1>
                 <p className="mt-2 text-sm text-gray-600">
                   Promova seu perfil no topo dos resultados por 2 horas
                 </p>
@@ -242,7 +242,7 @@ function BoostsContent() {
 
               {/* Purchase Boost Section */}
               <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">Comprar Boost</h2>
+                <h2 className="text-xl font-semibold mb-4">Impulsionar Perfil</h2>
                 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <div className="flex">
@@ -261,13 +261,13 @@ function BoostsContent() {
                     </div>
                     <div className="ml-3">
                       <h3 className="text-sm font-medium text-blue-800">
-                        Como funciona o Boost?
+                        Como funciona o Impulsionamento?
                       </h3>
                       <div className="mt-2 text-sm text-blue-700">
                         <ul className="list-disc list-inside space-y-1">
                           <li>Seu perfil aparece no topo dos resultados por 2 horas</li>
                           <li>Máximo de 15 perfis promovidos por região/categoria</li>
-                          <li>Valor: R$ 50,00 por boost</li>
+                          <li>Valor: R$ 50,00 por impulsionamento</li>
                         </ul>
                       </div>
                     </div>
@@ -337,7 +337,7 @@ function BoostsContent() {
                                 onClick={handlePurchaseBoost}
                                 disabled={loading}
                               >
-                                {loading ? "Processando..." : "Comprar Boost - R$ 50,00"}
+                                {loading ? "Processando..." : "Impulsionar Perfil - R$ 50,00"}
                               </Button>
                             </div>
                           </div>
@@ -384,11 +384,11 @@ function BoostsContent() {
 
               {/* Active and Scheduled Boosts */}
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Meus Boosts</h2>
+                <h2 className="text-xl font-semibold mb-4">Meus Impulsionamentos</h2>
 
                 {boosts.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
-                    Você ainda não possui boosts
+                    Você ainda não possui impulsionamentos
                   </p>
                 ) : (
                   <div className="space-y-4">

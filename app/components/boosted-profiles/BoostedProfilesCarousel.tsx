@@ -8,9 +8,15 @@ import { formatBRL } from "@/lib/utils/currency-formatter";
 
 interface BoostedProfilesCarouselProps {
   onProfileClick: (profile: any) => void;
+  filters?: {
+    gender?: string;
+    service?: string;
+    city?: string;
+    search?: string;
+  };
 }
 
-export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarouselProps) {
+export function BoostedProfilesCarousel({ onProfileClick, filters }: BoostedProfilesCarouselProps) {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,11 +36,18 @@ export function BoostedProfilesCarousel({ onProfileClick }: BoostedProfilesCarou
 
   useEffect(() => {
     loadBoostedProfiles();
-  }, []);
+  }, [filters?.gender, filters?.service, filters?.city, filters?.search]);
 
   const loadBoostedProfiles = async () => {
     try {
-      const res = await fetch("/api/boosts/active");
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filters?.gender) params.append('gender', filters.gender);
+      if (filters?.service) params.append('service', filters.service);
+      if (filters?.city) params.append('city', filters.city);
+      if (filters?.search) params.append('search', filters.search);
+
+      const res = await fetch(`/api/boosts/active?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         console.log("Boosted profiles loaded:", data.profiles);

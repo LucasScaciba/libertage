@@ -28,6 +28,7 @@ import {
 } from "@tabler/icons-react";
 import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
 import { BoostedProfilesCarousel } from "@/app/components/boosted-profiles/BoostedProfilesCarousel";
+import { trackMediaView } from "@/lib/utils/analytics-tracking";
 
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
@@ -42,6 +43,14 @@ export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [filters, setFilters] = useState({
     search: "",
+    gender: "Mulher",
+    service: "",
+    city: "",
+    region: "",
+  });
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: "",
+    gender: "Mulher",
     service: "",
     city: "",
     region: "",
@@ -89,6 +98,12 @@ export default function Home() {
   const openGallery = (index: number) => {
     setCurrentImageIndex(index);
     setIsGalleryOpen(true);
+    
+    // Track media view
+    const media = selectedProfile?.media?.[index];
+    if (media?.id && selectedProfile?.id) {
+      trackMediaView(media.id, selectedProfile.id);
+    }
   };
 
   const nextImage = () => {
@@ -165,40 +180,17 @@ export default function Home() {
     }
   };
 
-  // Auto-apply filters when they change
-  useEffect(() => {
-    const applyFilters = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (filters.search) params.append("search", filters.search);
-        if (filters.service) params.append("service", filters.service);
-        if (filters.city) params.append("city", filters.city);
-        if (filters.region) params.append("region", filters.region);
-
-        const res = await fetch(`/api/catalog?${params.toString()}`);
-        if (res.ok) {
-          const data = await res.json();
-          setBoostedProfiles(data.boostedProfiles || []);
-          setRegularProfiles(data.regularProfiles || []);
-        }
-      } catch (error) {
-        console.error("Error applying filters:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Only apply if at least one filter is set (to avoid double loading on mount)
-    if (filters.service || filters.city || filters.region || filters.search) {
-      applyFilters();
-    }
-  }, [filters.service, filters.city, filters.region]); // Don't include search to avoid triggering on every keystroke
+  // Auto-apply filters when they change - REMOVED
+  // Filters are now only applied when clicking the "Buscar" button
 
   const loadProfiles = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/catalog");
+      const params = new URLSearchParams();
+      // Load with default gender filter
+      if (filters.gender) params.append("gender", filters.gender);
+      
+      const res = await fetch(`/api/catalog?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setBoostedProfiles(data.boostedProfiles || []);
@@ -218,6 +210,7 @@ export default function Home() {
       setLoading(true);
       const params = new URLSearchParams();
       if (filters.search) params.append("search", filters.search);
+      if (filters.gender) params.append("gender", filters.gender);
       if (filters.service) params.append("service", filters.service);
       if (filters.city) params.append("city", filters.city);
       if (filters.region) params.append("region", filters.region);
@@ -227,6 +220,16 @@ export default function Home() {
         const data = await res.json();
         setBoostedProfiles(data.boostedProfiles || []);
         setRegularProfiles(data.regularProfiles || []);
+        setAvailableFilters(data.filters || { categories: [], cities: [], regions: [] });
+        
+        // Update applied filters to trigger stories reload
+        setAppliedFilters({
+          search: filters.search,
+          gender: filters.gender,
+          service: filters.service,
+          city: filters.city,
+          region: filters.region,
+        });
       }
     } catch (error) {
       console.error("Error searching profiles:", error);
@@ -319,7 +322,7 @@ export default function Home() {
           {/* Right Buttons */}
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <Link href="/login">
-              <Button style={{ backgroundColor: "black", color: "white" }}>Acessar/Anunciar</Button>
+              <Button style={{ backgroundColor: "#f92e54", color: "white" }}>Acessar/Anunciar</Button>
             </Link>
           </div>
         </div>
@@ -327,6 +330,19 @@ export default function Home() {
         {/* Search Bar */}
         <div className="container-custom" style={{ padding: "0 1rem 1rem" }}>
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            {/* Filtro de Gênero */}
+            <select
+              value={filters.gender}
+              onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+              style={{ minWidth: "150px" }}
+            >
+              <option value="">Ver tudo</option>
+              <option value="Mulher">Mulheres</option>
+              <option value="Homem">Homens</option>
+              <option value="Trans">Trans</option>
+              <option value="Casal">Casais</option>
+            </select>
+
             {/* Tipo de Profissional */}
             <select
               value={filters.service}
@@ -356,7 +372,7 @@ export default function Home() {
             {/* Search Input */}
             <Input
               type="text"
-              placeholder="Digite para buscar"
+              placeholder="Busque por uma palavra específica"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               style={{ flex: 1, minWidth: "200px" }}
@@ -364,7 +380,7 @@ export default function Home() {
 
             {/* Buscar Button */}
             <Button onClick={handleSearch} style={{ backgroundColor: "black", color: "white" }}>
-              BUSCAR
+              Buscar
             </Button>
 
             {/* Filtros Avançados Button */}
@@ -382,6 +398,7 @@ export default function Home() {
 
       {/* Boosted Profiles Carousel - Full Width */}
       <BoostedProfilesCarousel 
+        filters={appliedFilters}
         onProfileClick={(profile) => {
           setSelectedProfile(profile);
           setIsModalOpen(true);
@@ -392,7 +409,7 @@ export default function Home() {
       <div className="container-custom" style={{ padding: "2rem 1rem" }}>
         {/* Stories Carousel */}
         <div style={{ marginBottom: "2rem" }}>
-          <StoriesCarousel />
+          <StoriesCarousel filters={appliedFilters} />
         </div>
 
         {loading ? (
