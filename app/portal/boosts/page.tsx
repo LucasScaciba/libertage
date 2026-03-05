@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar"
@@ -34,7 +34,7 @@ interface Boost {
   };
 }
 
-export default function BoostsPage() {
+function BoostsContent() {
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<any>(null);
   const [boosts, setBoosts] = useState<Boost[]>([]);
@@ -431,5 +431,13 @@ export default function BoostsPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function BoostsPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <BoostsContent />
+    </Suspense>
   );
 }
