@@ -96,7 +96,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const profileId = searchParams.get('profileId');
 
+    console.log('[External Links API] GET request - profileId:', profileId);
+
     if (!profileId) {
+      console.error('[External Links API] Missing profileId');
       return NextResponse.json(
         { success: false, error: 'profileId é obrigatório' },
         { status: 400 }
@@ -110,6 +113,8 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    console.log('[External Links API] User authenticated:', !!user);
+
     // If authenticated, check if this is their own profile
     let isOwnProfile = false;
     if (user) {
@@ -121,17 +126,29 @@ export async function GET(request: NextRequest) {
         .single();
       
       isOwnProfile = !!userProfile;
+      console.log('[External Links API] Is own profile:', isOwnProfile);
     }
 
     // If not own profile, check if profile is published (public access)
     if (!isOwnProfile) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('is_published')
+        .select('status')
         .eq('id', profileId)
         .single();
 
-      if (!profile || !profile.is_published) {
+      console.log('[External Links API] Profile check:', { profile, profileError });
+
+      if (profileError) {
+        console.error('[External Links API] Profile fetch error:', profileError);
+        return NextResponse.json(
+          { success: false, error: 'Erro ao verificar perfil: ' + profileError.message },
+          { status: 500 }
+        );
+      }
+
+      if (!profile || profile.status !== 'published') {
+        console.error('[External Links API] Profile not found or not published');
         return NextResponse.json(
           { success: false, error: 'Perfil não encontrado ou não publicado' },
           { status: 404 }
@@ -140,14 +157,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Get links for profile
+    console.log('[External Links API] Fetching links for profile:', profileId);
     const links = await ExternalLinkService.getLinksForProfile(profileId);
+    console.log('[External Links API] Links fetched:', links.length);
 
     return NextResponse.json(
       { success: true, data: links },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('Error fetching external links:', error);
+    console.error('[External Links API] Error fetching external links:', error);
     return NextResponse.json(
       { 
         success: false, 

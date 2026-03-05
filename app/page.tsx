@@ -526,9 +526,10 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Photo Gallery */}
+                  {/* Photo and Video Gallery */}
                   <div style={{ marginBottom: "1.5rem" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+                      {/* Photos */}
                       {selectedProfile.media?.filter((m: any) => m.type === "photo").slice(0, 8).map((media: any, i: number) => (
                         <div
                           key={media.id}
@@ -550,33 +551,43 @@ export default function Home() {
                           />
                         </div>
                       ))}
-                    </div>
-                    {/* Video Thumbnails */}
-                    {selectedProfile.media?.filter((m: any) => m.type === "video").map((media: any, i: number) => (
-                      <div 
-                        key={media.id}
-                        onClick={() => openGallery(selectedProfile.media.filter((m: any) => m.type === "photo").length + i)}
-                        style={{ marginTop: "0.5rem", position: "relative", borderRadius: "var(--radius)", overflow: "hidden", cursor: "pointer", aspectRatio: "3/4" }}
-                      >
-                        <video
-                          src={media.public_url}
-                          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.7)" }}
-                        />
-                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-                          <div style={{ 
-                            width: "3rem", 
-                            height: "3rem", 
-                            borderRadius: "50%", 
-                            backgroundColor: "rgba(255,255,255,0.9)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}>
-                            ▶
+                      
+                      {/* Videos */}
+                      {selectedProfile.media?.filter((m: any) => m.type === "video").map((media: any, i: number) => (
+                        <div 
+                          key={media.id}
+                          onClick={() => openGallery(selectedProfile.media.filter((m: any) => m.type === "photo").length + i)}
+                          style={{ 
+                            position: "relative", 
+                            borderRadius: "var(--radius)", 
+                            overflow: "hidden", 
+                            cursor: "pointer", 
+                            aspectRatio: "3/4",
+                            transition: "opacity 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
+                          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                        >
+                          <video
+                            src={media.public_url}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.7)" }}
+                          />
+                          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+                            <div style={{ 
+                              width: "3rem", 
+                              height: "3rem", 
+                              borderRadius: "50%", 
+                              backgroundColor: "rgba(255,255,255,0.9)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}>
+                              ▶
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Descrição Longa */}
@@ -1130,17 +1141,33 @@ export default function Home() {
               ‹
             </button>
 
-            {/* Image */}
-            <img
-              src={galleryImages[currentImageIndex] || ""}
-              alt={`Imagem ${currentImageIndex + 1}`}
-              style={{
-                maxWidth: "100%",
-                maxHeight: "70vh",
-                objectFit: "contain",
-                borderRadius: "var(--radius)",
-              }}
-            />
+            {/* Image or Video */}
+            {selectedProfile?.media?.[currentImageIndex]?.type === "video" ? (
+              <video
+                src={galleryImages[currentImageIndex] || ""}
+                controls
+                autoPlay
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "70vh",
+                  width: "auto",
+                  height: "auto",
+                  objectFit: "contain",
+                  borderRadius: "var(--radius)",
+                }}
+              />
+            ) : (
+              <img
+                src={galleryImages[currentImageIndex] || ""}
+                alt={`Imagem ${currentImageIndex + 1}`}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "70vh",
+                  objectFit: "contain",
+                  borderRadius: "var(--radius)",
+                }}
+              />
+            )}
 
             {/* Next Button */}
             <button

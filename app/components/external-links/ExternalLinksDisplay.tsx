@@ -27,20 +27,26 @@ export function ExternalLinksDisplay({ profileId }: ExternalLinksDisplayProps) {
 
   const fetchLinks = async () => {
     try {
+      console.log('[ExternalLinksDisplay] Fetching links for profileId:', profileId);
       const response = await fetch(`/api/external-links?profileId=${profileId}`);
       
+      console.log('[ExternalLinksDisplay] Response status:', response.status);
+      
       if (!response.ok) {
-        console.error('Failed to fetch external links');
+        const errorData = await response.json();
+        console.error('[ExternalLinksDisplay] Failed to fetch external links:', errorData);
         setLinks([]);
         return;
       }
 
       const data = await response.json();
+      console.log('[ExternalLinksDisplay] Data received:', data);
+      
       if (data.success && data.data) {
         setLinks(data.data);
       }
     } catch (error) {
-      console.error('Error fetching external links:', error);
+      console.error('[ExternalLinksDisplay] Error fetching external links:', error);
       setLinks([]);
     } finally {
       setLoading(false);
