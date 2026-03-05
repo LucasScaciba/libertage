@@ -183,7 +183,7 @@ export default function CatalogPage() {
             <h2 style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "1rem" }}>
               Stories
             </h2>
-            <StoriesCarousel storiesByUser={storiesByUser} />
+            <StoriesCarousel />
           </div>
         )}
 
