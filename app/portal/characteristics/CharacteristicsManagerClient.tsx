@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,8 +52,6 @@ const CHARACTERISTICS_CONFIG = {
 
 export default function CharacteristicsManagerClient({ profileId }: CharacteristicsManagerClientProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [characteristics, setCharacteristics] = useState<CharacteristicsData>({
     payment_methods: [],
     service_locations: [],
@@ -89,14 +88,12 @@ export default function CharacteristicsManagerClient({ profileId }: Characterist
       }
     } catch (err) {
       console.error("Error fetching characteristics:", err);
-      setError("Erro ao carregar características");
+      toast.error("Erro ao carregar características");
     }
   };
 
   const handleSave = async () => {
     setLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       const res = await fetch("/api/characteristics", {
@@ -111,10 +108,9 @@ export default function CharacteristicsManagerClient({ profileId }: Characterist
         throw new Error(data.error || "Erro ao salvar características");
       }
 
-      setSuccess("Características salvas com sucesso!");
-      setTimeout(() => setSuccess(""), 3000);
+      toast.success("Características salvas com sucesso!");
     } catch (err: any) {
-      setError(err.message || "Erro ao salvar características");
+      toast.error(err.message || "Erro ao salvar características");
     } finally {
       setLoading(false);
     }
@@ -323,30 +319,6 @@ export default function CharacteristicsManagerClient({ profileId }: Characterist
             Gerencie suas características físicas e detalhes de serviço
           </p>
         </div>
-
-        {error && (
-          <div style={{ 
-            marginBottom: "1rem", 
-            backgroundColor: "hsl(var(--destructive))", 
-            color: "white", 
-            padding: "1rem", 
-            borderRadius: "var(--radius)" 
-          }}>
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div style={{ 
-            marginBottom: "1rem", 
-            backgroundColor: "#10b981", 
-            color: "white", 
-            padding: "1rem", 
-            borderRadius: "var(--radius)" 
-          }}>
-            {success}
-          </div>
-        )}
 
         {/* Services Section */}
         <Card style={{ marginBottom: "2rem" }}>

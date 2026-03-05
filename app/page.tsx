@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Slider } from "@/components/ui/slider";
 import { calculateAge } from "@/lib/utils/age-calculator";
 import { formatBRL } from "@/lib/utils/currency-formatter";
-import { Calendar, Weight, Ruler, Footprints, MessageCircle, Send } from "lucide-react";
+import { Calendar, Weight, Ruler, Footprints } from "lucide-react";
+import { IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react";
 import { IconMapper } from "@/lib/utils/icon-mapper";
 import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
 
@@ -533,19 +534,47 @@ export default function Home() {
                     </p>
                   </div>
 
-                  {/* Características e Serviços */}
-                  {selectedProfile.selected_features && selectedProfile.selected_features.length > 0 && (
-                    <div style={{ marginBottom: "1.5rem" }}>
-                      <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
-                        Características e Serviços
-                      </h3>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        {selectedProfile.selected_features.map((feature: string, i: number) => (
-                          <Badge key={i} variant="outline">{feature}</Badge>
-                        ))}
+                  {/* Serviços */}
+                  {selectedProfile.selected_features && selectedProfile.selected_features.length > 0 && (() => {
+                    const serviceKeywords = ['dinheiro', 'pix', 'cartão', 'débito', 'crédito', 'local', 'hotel', 'motel', 'residência', 'homens', 'mulheres', 'casais', 'português', 'inglês', 'espanhol', 'francês'];
+                    const services = selectedProfile.selected_features.filter((f: string) => 
+                      serviceKeywords.some(keyword => f.toLowerCase().includes(keyword.toLowerCase()))
+                    );
+                    
+                    return services.length > 0 ? (
+                      <div style={{ marginBottom: "1.5rem" }}>
+                        <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                          Serviços
+                        </h3>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          {services.map((feature: string, i: number) => (
+                            <Badge key={i} variant="outline">{feature}</Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null;
+                  })()}
+
+                  {/* Características */}
+                  {selectedProfile.selected_features && selectedProfile.selected_features.length > 0 && (() => {
+                    const serviceKeywords = ['dinheiro', 'pix', 'cartão', 'débito', 'crédito', 'local', 'hotel', 'motel', 'residência', 'homens', 'mulheres', 'casais', 'português', 'inglês', 'espanhol', 'francês'];
+                    const characteristics = selectedProfile.selected_features.filter((f: string) => 
+                      !serviceKeywords.some(keyword => f.toLowerCase().includes(keyword.toLowerCase()))
+                    );
+                    
+                    return characteristics.length > 0 ? (
+                      <div style={{ marginBottom: "1.5rem" }}>
+                        <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "0.75rem" }}>
+                          Características
+                        </h3>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          {characteristics.map((feature: string, i: number) => (
+                            <Badge key={i} variant="outline">{feature}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
 
                 {/* Right Column - Sidebar (will be below on mobile) */}
@@ -566,7 +595,7 @@ export default function Home() {
                       }}
                       size="lg"
                     >
-                      <MessageCircle size={20} />
+                      <IconBrandWhatsapp size={20} />
                       WHATSAPP
                     </Button>
                   )}
@@ -586,7 +615,7 @@ export default function Home() {
                       }}
                       size="lg"
                     >
-                      <Send size={20} />
+                      <IconBrandTelegram size={20} />
                       TELEGRAM
                     </Button>
                   )}

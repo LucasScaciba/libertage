@@ -4,6 +4,21 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,14 +44,14 @@ export default function ProfileEditPage() {
   const [formData, setFormData] = useState({
     display_name: "",
     slug: "",
-    service_categories: [] as string[], // NEW
+    service_categories: [] as string[],
     short_description: "",
     long_description: "",
     city: "",
     region: "",
     latitude: 0,
     longitude: 0,
-    birthdate: "", // NEW: replaces age_attribute
+    birthdate: "",
     whatsapp_number: "",
     whatsapp_enabled: false,
     telegram_username: "",
@@ -46,7 +61,6 @@ export default function ProfileEditPage() {
     selected_features: [] as string[],
   });
 
-  // Load features and services from config
   const featuresAndServices = featuresServicesConfig.categories.reduce((acc, category) => {
     acc[category.name] = category.options;
     return acc;
@@ -56,7 +70,6 @@ export default function ProfileEditPage() {
     fetchProfile();
     fetchSubscription();
     
-    // Check if welcome modal has been shown
     const hasSeenWelcome = localStorage.getItem('profile_welcome_seen');
     if (!hasSeenWelcome) {
       setIsWelcomeModalOpen(true);
@@ -135,7 +148,6 @@ export default function ProfileEditPage() {
         setProfile(data.profile);
       }
       
-      // Refresh profile data
       await fetchProfile();
     } catch (err: any) {
       toast.error(err.message);
@@ -176,14 +188,12 @@ export default function ProfileEditPage() {
   };
 
   const toggleFeatureSingleSelect = (categoryId: string, feature: string) => {
-    // Remove all features from this category first
     const categoryConfig = featuresServicesConfig.categories.find(c => c.id === categoryId);
     if (!categoryConfig) return;
 
     const categoryOptions = categoryConfig.options;
     const withoutCategory = formData.selected_features.filter(f => !categoryOptions.includes(f));
     
-    // Add the new selection (or leave empty if deselecting)
     const isCurrentlySelected = formData.selected_features.includes(feature);
     const updated = isCurrentlySelected ? withoutCategory : [...withoutCategory, feature];
     
@@ -191,7 +201,6 @@ export default function ProfileEditPage() {
   };
 
   const handleSlugUpdate = async (newSlug: string) => {
-    // If profile doesn't exist yet, just update the form data
     if (!profile) {
       setFormData({ ...formData, slug: newSlug });
       toast.success("Slug será salvo junto com o perfil");
@@ -199,49 +208,29 @@ export default function ProfileEditPage() {
     }
 
     try {
-      console.log('Sending slug update request:', newSlug);
       const response = await fetch("/api/profiles/update-slug", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug: newSlug }),
       });
 
-      console.log('Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-      });
-
       let data;
       try {
         data = await response.json();
-        console.log('Response data:', data);
       } catch (jsonError) {
-        console.error("Failed to parse JSON response:", jsonError);
-        console.error("Response status:", response.status);
-        console.error("Response statusText:", response.statusText);
         throw new Error(`Erro ao processar resposta do servidor (${response.status})`);
       }
 
       if (!response.ok) {
-        // More detailed error message
         const errorMessage = data.error?.message || data.error || data.message || "Erro ao atualizar slug";
-        console.error("Slug update error:", {
-          status: response.status,
-          statusText: response.statusText,
-          data: data,
-        });
         throw new Error(errorMessage);
       }
 
-      // Update local state
       setFormData({ ...formData, slug: data.slug });
       toast.success("Slug atualizado com sucesso!");
       
-      // Refresh profile to get updated slug_last_changed_at
       await fetchProfile();
     } catch (err: any) {
-      console.error("handleSlugUpdate error:", err);
       toast.error(err.message);
       throw err;
     }
@@ -253,7 +242,6 @@ export default function ProfileEditPage() {
     { id: "pricing", label: "Valores" },
   ];
 
-  // Validation functions for each section
   const validateSection = (sectionId: string): boolean => {
     switch (sectionId) {
       case "basic":
@@ -270,7 +258,7 @@ export default function ProfileEditPage() {
           formData.long_description
         );
       case "pricing":
-        return true; // Optional section
+        return true;
       default:
         return true;
     }
@@ -300,400 +288,417 @@ export default function ProfileEditPage() {
   const isLastSection = currentSectionIndex === sections.length - 1;
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "white" }}>
-      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "2rem 1rem" }}>
-        {/* Header */}
-        <div style={{ marginBottom: "2rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "0.5rem" }}>
-            <div>
-              <h1 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: "0.5rem" }}>
-                {profile ? "Editar Perfil" : "Criar Perfil"}
-              </h1>
-              <p style={{ color: "hsl(var(--muted-foreground))" }}>
-                Preencha as informações do seu perfil profissional
-              </p>
-            </div>
-            {profile?.slug && (
-              <Link href={`/perfil/@${profile.slug}`} target="_blank">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                  Ver meu perfil público
-                </Button>
-              </Link>
-            )}
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="/portal">
+                    Portal
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Meu Perfil</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          {subscription && (
-            <div style={{ marginTop: "1rem" }}>
-              <Badge>
-                Plano {subscription.plan?.name}
-              </Badge>
-            </div>
-          )}
-        </div>
-
-        {/* Profile Completeness Alert */}
-        <ProfileCompletenessAlert profileId={profile?.id || null} />
-        {/* Navigation Tabs */}
-        <div style={{ marginBottom: "2rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", backgroundColor: "hsl(var(--muted))", padding: "1rem", borderRadius: "var(--radius)" }}>
-          {sections.map((section) => {
-            const isValid = validateSection(section.id);
-            const isActive = activeSection === section.id;
-            
-            return (
-              <Button
-                key={section.id}
-                variant={isActive ? "default" : "ghost"}
-                onClick={() => setActiveSection(section.id)}
-                size="sm"
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                {section.label}
-                {!isValid && (
-                  <span style={{ 
-                    color: "#f97316", 
-                    fontSize: "1.125rem", 
-                    fontWeight: "700",
-                    marginLeft: "0.25rem"
-                  }}>
-                    *
-                  </span>
-                )}
-              </Button>
-            );
-          })}
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* Basic Information */}
-          {activeSection === "basic" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div style={{ minHeight: "100vh", backgroundColor: "white" }}>
+            <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "2rem 1rem" }}>
+              {/* Header */}
+              <div style={{ marginBottom: "2rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "0.5rem" }}>
                   <div>
-                    <Label htmlFor="display_name">Nome de Exibição *</Label>
-                    <Input
-                      id="display_name"
-                      required
-                      value={formData.display_name}
-                      onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                      placeholder="Seu nome profissional"
-                    />
+                    <h1 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: "0.5rem" }}>
+                      {profile ? "Editar Perfil" : "Criar Perfil"}
+                    </h1>
+                    <p style={{ color: "hsl(var(--muted-foreground))" }}>
+                      Preencha as informações do seu perfil profissional
+                    </p>
                   </div>
+                  {profile?.slug && (
+                    <Link href={`/perfil/@${profile.slug}`} target="_blank">
+                      <Button variant="outline" className="flex items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                        Ver meu perfil público
+                      </Button>
+                    </Link>
+                  )}
                 </div>
+                {subscription && (
+                  <div style={{ marginTop: "1rem" }}>
+                    <Badge>
+                      Plano {subscription.plan?.name}
+                    </Badge>
+                  </div>
+                )}
+              </div>
 
-                {/* Slug Editor Component */}
-                <SlugEditor
-                  currentSlug={formData.slug}
-                  onChange={(newSlug) => setFormData({ ...formData, slug: newSlug })}
-                  lastChangedAt={profile?.slug_last_changed_at || null}
-                  profileExists={!!profile}
-                />
-
-                <ServiceCategoriesSelector
-                  value={formData.service_categories}
-                  onChange={(categories) => setFormData({ ...formData, service_categories: categories })}
-                  required
-                />
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
-                  <div>
-                    <Label htmlFor="city">Estado *</Label>
-                    <select
-                      id="city"
-                      required
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      style={{ 
-                        width: "100%",
-                        padding: "0.5rem",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid hsl(var(--input))",
-                        backgroundColor: "hsl(var(--background))",
-                        fontSize: "0.875rem"
+              <ProfileCompletenessAlert profileId={profile?.id || null} />
+              
+              {/* Navigation Tabs */}
+              <div style={{ marginBottom: "2rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", backgroundColor: "hsl(var(--muted))", padding: "1rem", borderRadius: "var(--radius)" }}>
+                {sections.map((section) => {
+                  const isValid = validateSection(section.id);
+                  const isActive = activeSection === section.id;
+                  
+                  return (
+                    <Button
+                      key={section.id}
+                      variant={isActive ? "default" : "ghost"}
+                      onClick={() => setActiveSection(section.id)}
+                      size="sm"
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
                       }}
                     >
-                      <option value="">Selecione um estado</option>
-                      {brazilianStates.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      {section.label}
+                      {!isValid && (
+                        <span style={{ 
+                          color: "#f97316", 
+                          fontSize: "1.125rem", 
+                          fontWeight: "700",
+                          marginLeft: "0.25rem"
+                        }}>
+                          *
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
 
-                  <BirthdatePicker
-                    value={formData.birthdate}
-                    onChange={(date) => setFormData({ ...formData, birthdate: date })}
-                    required
-                  />
-                </div>
-
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Contact and Description */}
-          {activeSection === "contact-description" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Contato e Descrição</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                {/* Contact Information */}
-                <div style={{ 
-                  padding: "1.5rem", 
-                  backgroundColor: "hsl(var(--muted))", 
-                  borderRadius: "var(--radius)"
-                }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1.5rem" }}>
-                    Informações de Contato
-                  </h3>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
-                    {/* WhatsApp */}
-                    <div>
-                      <Label htmlFor="whatsapp_number">WhatsApp (+55)</Label>
-                      <Input
-                        id="whatsapp_number"
-                        type="tel"
-                        value={formData.whatsapp_number}
-                        onChange={(e) => {
-                          const numericValue = e.target.value.replace(/\D/g, '');
-                          setFormData({ ...formData, whatsapp_number: numericValue });
-                        }}
-                        placeholder="11987654321"
-                      />
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
-                        <input
-                          type="checkbox"
-                          id="whatsapp_enabled"
-                          checked={formData.whatsapp_enabled}
-                          onChange={(e) => setFormData({ ...formData, whatsapp_enabled: e.target.checked })}
-                          style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
-                        />
-                        <Label htmlFor="whatsapp_enabled" style={{ cursor: "pointer", fontWeight: "normal" }}>
-                          Exibir botão de WhatsApp no perfil
-                        </Label>
+              <form onSubmit={handleSubmit}>
+                {/* Basic Information */}
+                {activeSection === "basic" && (
+                  <Card style={{ marginBottom: "1.5rem" }}>
+                    <CardHeader>
+                      <CardTitle>Informações Básicas</CardTitle>
+                    </CardHeader>
+                    <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+                        <div>
+                          <Label htmlFor="display_name">Nome de Exibição *</Label>
+                          <Input
+                            id="display_name"
+                            required
+                            value={formData.display_name}
+                            onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                            placeholder="Seu nome profissional"
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Telegram */}
-                    <div>
-                      <Label htmlFor="telegram_username">Telegram</Label>
-                      <Input
-                        id="telegram_username"
-                        type="text"
-                        value={formData.telegram_username}
-                        onChange={(e) => {
-                          const cleanValue = e.target.value.replace(/@/g, '');
-                          setFormData({ ...formData, telegram_username: cleanValue });
-                        }}
-                        placeholder="username"
+                      <SlugEditor
+                        currentSlug={formData.slug}
+                        onChange={(newSlug) => setFormData({ ...formData, slug: newSlug })}
+                        lastChangedAt={profile?.slug_last_changed_at || null}
+                        profileExists={!!profile}
                       />
-                      <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                        Sem o símbolo @
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
-                        <input
-                          type="checkbox"
-                          id="telegram_enabled"
-                          checked={formData.telegram_enabled}
-                          onChange={(e) => setFormData({ ...formData, telegram_enabled: e.target.checked })}
-                          style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+
+                      <ServiceCategoriesSelector
+                        value={formData.service_categories}
+                        onChange={(categories) => setFormData({ ...formData, service_categories: categories })}
+                        required
+                      />
+
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+                        <div>
+                          <Label htmlFor="city">Estado *</Label>
+                          <select
+                            id="city"
+                            required
+                            value={formData.city}
+                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                            style={{ 
+                              width: "100%",
+                              padding: "0.5rem",
+                              borderRadius: "var(--radius)",
+                              border: "1px solid hsl(var(--input))",
+                              backgroundColor: "hsl(var(--background))",
+                              fontSize: "0.875rem"
+                            }}
+                          >
+                            <option value="">Selecione um estado</option>
+                            {brazilianStates.map((state) => (
+                              <option key={state} value={state}>
+                                {state}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <BirthdatePicker
+                          value={formData.birthdate}
+                          onChange={(date) => setFormData({ ...formData, birthdate: date })}
+                          required
                         />
-                        <Label htmlFor="telegram_enabled" style={{ cursor: "pointer", fontWeight: "normal" }}>
-                          Exibir botão de Telegram no perfil
-                        </Label>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Descriptions */}
-                <div>
-                  <Label htmlFor="short_description">
-                    Descrição Curta * (máx. 160 caracteres)
-                  </Label>
-                  <Input
-                    id="short_description"
-                    required
-                    maxLength={160}
-                    value={formData.short_description}
-                    onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
-                    placeholder="Uma breve descrição dos seus serviços"
-                  />
-                  <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
-                    {formData.short_description.length}/160
-                  </p>
-                </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-                <div>
-                  <Label htmlFor="long_description">Descrição Completa *</Label>
-                  <Textarea
-                    id="long_description"
-                    required
-                    rows={10}
-                    value={formData.long_description}
-                    onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
-                    placeholder="Descreva seus serviços em detalhes. Esta descrição aparecerá no modal do seu perfil."
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                {/* Contact and Description */}
+                {activeSection === "contact-description" && (
+                  <Card style={{ marginBottom: "1.5rem" }}>
+                    <CardHeader>
+                      <CardTitle>Contato e Descrição</CardTitle>
+                    </CardHeader>
+                    <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                      <div style={{ 
+                        padding: "1.5rem", 
+                        backgroundColor: "hsl(var(--muted))", 
+                        borderRadius: "var(--radius)"
+                      }}>
+                        <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "1.5rem" }}>
+                          Informações de Contato
+                        </h3>
+                        
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+                          <div>
+                            <Label htmlFor="whatsapp_number">WhatsApp (+55)</Label>
+                            <Input
+                              id="whatsapp_number"
+                              type="tel"
+                              value={formData.whatsapp_number}
+                              onChange={(e) => {
+                                const numericValue = e.target.value.replace(/\D/g, '');
+                                setFormData({ ...formData, whatsapp_number: numericValue });
+                              }}
+                              placeholder="11987654321"
+                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+                              <input
+                                type="checkbox"
+                                id="whatsapp_enabled"
+                                checked={formData.whatsapp_enabled}
+                                onChange={(e) => setFormData({ ...formData, whatsapp_enabled: e.target.checked })}
+                                style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                              />
+                              <Label htmlFor="whatsapp_enabled" style={{ cursor: "pointer", fontWeight: "normal" }}>
+                                Exibir botão de WhatsApp no perfil
+                              </Label>
+                            </div>
+                          </div>
 
-          {/* Pricing */}
-          {activeSection === "pricing" && (
-            <Card style={{ marginBottom: "1.5rem" }}>
-              <CardHeader>
-                <CardTitle>Tabela de Valores</CardTitle>
-              </CardHeader>
-              <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                {formData.pricing_packages.map((pkg, index) => (
-                  <div key={index} style={{ padding: "1rem", border: "1px solid hsl(var(--border))", borderRadius: "var(--radius)", display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: "1rem", alignItems: "end" }}>
+                          <div>
+                            <Label htmlFor="telegram_username">Telegram</Label>
+                            <Input
+                              id="telegram_username"
+                              type="text"
+                              value={formData.telegram_username}
+                              onChange={(e) => {
+                                const cleanValue = e.target.value.replace(/@/g, '');
+                                setFormData({ ...formData, telegram_username: cleanValue });
+                              }}
+                              placeholder="username"
+                            />
+                            <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
+                              Sem o símbolo @
+                            </p>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+                              <input
+                                type="checkbox"
+                                id="telegram_enabled"
+                                checked={formData.telegram_enabled}
+                                onChange={(e) => setFormData({ ...formData, telegram_enabled: e.target.checked })}
+                                style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                              />
+                              <Label htmlFor="telegram_enabled" style={{ cursor: "pointer", fontWeight: "normal" }}>
+                                Exibir botão de Telegram no perfil
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       <div>
-                        <Label>Serviço</Label>
+                        <Label htmlFor="short_description">
+                          Descrição Curta * (máx. 160 caracteres)
+                        </Label>
                         <Input
-                          value={pkg.label}
-                          onChange={(e) => updatePricingPackage(index, "label", e.target.value)}
-                          placeholder="Ex: 1h, 2h, Pernoite"
+                          id="short_description"
+                          required
+                          maxLength={160}
+                          value={formData.short_description}
+                          onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                          placeholder="Uma breve descrição dos seus serviços"
                         />
+                        <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
+                          {formData.short_description.length}/160
+                        </p>
                       </div>
+
                       <div>
-                        <Label>Valor</Label>
-                        <CurrencyInput
-                          value={pkg.price}
-                          onChange={(value) => updatePricingPackage(index, "price", value)}
-                          placeholder="300"
+                        <Label htmlFor="long_description">Descrição Completa *</Label>
+                        <Textarea
+                          id="long_description"
+                          required
+                          rows={10}
+                          value={formData.long_description}
+                          onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
+                          placeholder="Descreva seus serviços em detalhes. Esta descrição aparecerá no modal do seu perfil."
                         />
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => removePricingPackage(index)}
-                        style={{ color: "hsl(var(--destructive))" }}
-                      >
-                        Remover
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Pricing */}
+                {activeSection === "pricing" && (
+                  <Card style={{ marginBottom: "1.5rem" }}>
+                    <CardHeader>
+                      <CardTitle>Tabela de Valores</CardTitle>
+                    </CardHeader>
+                    <CardContent style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                      {formData.pricing_packages.map((pkg, index) => (
+                        <div key={index} style={{ padding: "1rem", border: "1px solid hsl(var(--border))", borderRadius: "var(--radius)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: "1rem", alignItems: "end" }}>
+                            <div>
+                              <Label>Serviço</Label>
+                              <Input
+                                value={pkg.label}
+                                onChange={(e) => updatePricingPackage(index, "label", e.target.value)}
+                                placeholder="Ex: 1h, 2h, Pernoite"
+                              />
+                            </div>
+                            <div>
+                              <Label>Valor</Label>
+                              <CurrencyInput
+                                value={pkg.price}
+                                onChange={(value) => updatePricingPackage(index, "price", value)}
+                                placeholder="300"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => removePricingPackage(index)}
+                              style={{ color: "hsl(var(--destructive))" }}
+                            >
+                              Remover
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" onClick={addPricingPackage}>
+                        + Adicionar Valor
                       </Button>
-                    </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Action Buttons */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginTop: "2rem" }}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/portal")}
+                  >
+                    Cancelar
+                  </Button>
+                  
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={goToPreviousSection}
+                      disabled={isFirstSection}
+                    >
+                      ← Anterior
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={goToNextSection}
+                      disabled={isLastSection}
+                    >
+                      Próximo →
+                    </Button>
                   </div>
-                ))}
-                <Button type="button" variant="outline" onClick={addPricingPackage}>
-                  + Adicionar Valor
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
+                  <Button 
+                    type="submit" 
+                    disabled={loading || !isFormValid()}
+                    style={{
+                      opacity: !isFormValid() ? 0.5 : 1,
+                      cursor: !isFormValid() ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {loading ? "Salvando..." : "Salvar Alterações"}
+                  </Button>
+                </div>
+              </form>
 
+              {/* Welcome Modal */}
+              <Dialog open={isWelcomeModalOpen} onOpenChange={() => {}}>
+                <DialogContent>
+                  <div style={{ textAlign: "center", padding: "1rem" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎉</div>
+                    
+                    <h2 style={{ fontSize: "1.75rem", fontWeight: "700", marginBottom: "1rem" }}>
+                      Boas vindas!
+                    </h2>
+                    
+                    <p style={{ 
+                      color: "hsl(var(--muted-foreground))", 
+                      marginBottom: "2rem",
+                      lineHeight: "1.6",
+                      fontSize: "1rem"
+                    }}>
+                      É mais do que um prazer ter você aqui conosco! Agora é hora de customizar o seu anúncio personalizado com todo carinho!
+                    </p>
 
-
-
-          {/* Action Buttons */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginTop: "2rem" }}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/portal")}
-            >
-              Cancelar
-            </Button>
-            
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={goToPreviousSection}
-                disabled={isFirstSection}
-              >
-                ← Anterior
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={goToNextSection}
-                disabled={isLastSection}
-              >
-                Próximo →
-              </Button>
+                    <Button
+                      onClick={() => {
+                        localStorage.setItem('profile_welcome_seen', 'true');
+                        setIsWelcomeModalOpen(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        backgroundColor: "black",
+                        color: "white",
+                        padding: "1rem",
+                        fontSize: "1rem",
+                        fontWeight: "600"
+                      }}
+                      size="lg"
+                    >
+                      Vamos começar!
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-
-            <Button 
-              type="submit" 
-              disabled={loading || !isFormValid()}
-              style={{
-                opacity: !isFormValid() ? 0.5 : 1,
-                cursor: !isFormValid() ? "not-allowed" : "pointer",
-              }}
-            >
-              {loading ? "Salvando..." : "Salvar Alterações"}
-            </Button>
           </div>
-        </form>
-
-        {/* Welcome Modal */}
-        <Dialog open={isWelcomeModalOpen} onOpenChange={() => {}}>
-          <DialogContent>
-            <div style={{ textAlign: "center", padding: "1rem" }}>
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎉</div>
-              
-              <h2 style={{ fontSize: "1.75rem", fontWeight: "700", marginBottom: "1rem" }}>
-                Boas vindas!
-              </h2>
-              
-              <p style={{ 
-                color: "hsl(var(--muted-foreground))", 
-                marginBottom: "2rem",
-                lineHeight: "1.6",
-                fontSize: "1rem"
-              }}>
-                É mais do que um prazer ter você aqui conosco! Agora é hora de customizar o seu anúncio personalizado com todo carinho!
-              </p>
-
-              <Button
-                onClick={() => {
-                  localStorage.setItem('profile_welcome_seen', 'true');
-                  setIsWelcomeModalOpen(false);
-                }}
-                style={{
-                  width: "100%",
-                  backgroundColor: "black",
-                  color: "white",
-                  padding: "1rem",
-                  fontSize: "1rem",
-                  fontWeight: "600"
-                }}
-                size="lg"
-              >
-                Vamos começar!
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

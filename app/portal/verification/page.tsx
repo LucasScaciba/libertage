@@ -1,6 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import { VerificationStatusCard } from '@/app/components/verification/VerificationStatusCard';
 import { VerificationSubmitForm } from '@/app/components/verification/VerificationSubmitForm';
 import type { VerificationStatusResponse } from '@/types';
@@ -33,39 +48,61 @@ export default function VerificationPage() {
     fetchStatus();
   };
 
-  if (isLoading) {
-    return (
-      <div className="container max-w-4xl mx-auto py-8 space-y-6">
-        <div>
-          <Skeleton className="h-8 w-64 mb-2" />
-          <Skeleton className="h-4 w-96" />
-        </div>
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
   return (
-    <div className="container max-w-4xl mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Verificação de Perfil</h1>
-        <p className="text-muted-foreground mt-2">
-          Verifique seu perfil para aumentar a confiança dos usuários da plataforma
-        </p>
-      </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="/portal">Portal</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Verificação</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          {isLoading ? (
+            <div className="container max-w-4xl mx-auto py-8 space-y-6">
+              <div>
+                <Skeleton className="h-8 w-64 mb-2" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+              <Skeleton className="h-64 w-full" />
+            </div>
+          ) : (
+            <div className="container max-w-4xl mx-auto py-8 space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold">Verificação de Perfil</h1>
+                <p className="text-muted-foreground mt-2">
+                  Verifique seu perfil para aumentar a confiança dos usuários da plataforma
+                </p>
+              </div>
 
-      {status && (
-        <VerificationStatusCard
-          status={status.status}
-          verifiedAt={status.verifiedAt}
-          expiresAt={status.expiresAt}
-          rejectionReason={status.rejectionReason}
-          submittedAt={status.submittedAt}
-          onSubmitNew={() => setShowForm(true)}
-        />
-      )}
+              {status && (
+                <VerificationStatusCard
+                  status={status.status}
+                  verifiedAt={status.verifiedAt}
+                  expiresAt={status.expiresAt}
+                  rejectionReason={status.rejectionReason}
+                  submittedAt={status.submittedAt}
+                  onSubmitNew={() => setShowForm(true)}
+                />
+              )}
 
-      {showForm && <VerificationSubmitForm onSuccess={handleSubmitSuccess} />}
-    </div>
+              {showForm && <VerificationSubmitForm onSuccess={handleSubmitSuccess} />}
+            </div>
+          )}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

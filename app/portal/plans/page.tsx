@@ -2,6 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import { PricingCards } from "@/components/pricing-cards";
 import { Button } from "@/components/ui/button";
 
@@ -21,7 +36,6 @@ export default function PlansPage() {
   useEffect(() => {
     fetchPlans();
     
-    // Check if coming back from successful payment
     const success = searchParams.get('success');
     const sessionId = searchParams.get('session_id');
     
@@ -41,9 +55,7 @@ export default function PlansPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Reload plans to show updated subscription
         await fetchPlans();
-        // Wait a moment then redirect
         setTimeout(() => {
           router.push('/portal/profile');
         }, 1000);
@@ -62,7 +74,6 @@ export default function PlansPage() {
       const res = await fetch("/api/subscriptions/plans");
       const data = await res.json();
       
-      // Transform plans to include features
       const transformedPlans = (data.plans || []).map((plan: any) => ({
         ...plan,
         features: {
@@ -106,7 +117,6 @@ export default function PlansPage() {
         throw new Error(data.error || "Failed to create checkout");
       }
 
-      // Redirect to Stripe Checkout
       window.location.href = data.url;
     } catch (err: any) {
       setError(err.message);
@@ -129,10 +139,8 @@ export default function PlansPage() {
         throw new Error(data.error || "Failed to sync subscription");
       }
 
-      // Reload plans
       await fetchPlans();
       
-      // Reload page to update sidebar
       window.location.reload();
     } catch (err: any) {
       setError(err.message);
@@ -142,41 +150,65 @@ export default function PlansPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Meu Plano</h1>
-        <p className="mt-2 text-muted-foreground">
-          Escolha o plano ideal para o seu negócio
-        </p>
-        
-        {currentPlan && currentPlan.code === "free" && (
-          <div className="mt-4">
-            <Button
-              onClick={handleRefreshPlan}
-              disabled={syncing}
-              variant="outline"
-            >
-              {syncing ? "Atualizando..." : "Atualizar Plano do Stripe"}
-            </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Se você acabou de fazer um pagamento, clique aqui para sincronizar com o Stripe
-            </p>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="/portal">Portal</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Meu Plano</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-        )}
-      </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="container mx-auto py-8 px-4">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold">Meu Plano</h1>
+              <p className="mt-2 text-muted-foreground">
+                Escolha o plano ideal para o seu negócio
+              </p>
+              
+              {currentPlan && currentPlan.code === "free" && (
+                <div className="mt-4">
+                  <Button
+                    onClick={handleRefreshPlan}
+                    disabled={syncing}
+                    variant="outline"
+                  >
+                    {syncing ? "Atualizando..." : "Atualizar Plano do Stripe"}
+                  </Button>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Se você acabou de fazer um pagamento, clique aqui para sincronizar com o Stripe
+                  </p>
+                </div>
+              )}
+            </div>
 
-      {error && (
-        <div className="mb-6 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
-          {error}
+            {error && (
+              <div className="mb-6 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
+
+            <PricingCards
+              plans={plans}
+              currentPlanCode={currentPlan?.code}
+              onSelectPlan={handleSubscribe}
+              loading={loading}
+            />
+          </div>
         </div>
-      )}
-
-      <PricingCards
-        plans={plans}
-        currentPlanCode={currentPlan?.code}
-        onSelectPlan={handleSubscribe}
-        loading={loading}
-      />
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

@@ -3,6 +3,13 @@
 /* v2: Force consistent heights across all form elements */
 /* v3: Fix button padding for tabs and navigation */
 
+
+/* Custom */
+[data-sidebar="sidebar"] > div:first-child,
+.group[data-collapsible="icon"] .group-data-\[collapsible\=icon\]\:overflow-hidden{
+  min-width:60px;
+}
+
 /* Container utility */
 .container-custom {
   width: 100%;
@@ -439,17 +446,13 @@ button[class*="text-sm"] {
 }
 
 [data-sidebar="sidebar"] {
-  position: fixed;
-  left: 0;
-  top: 0;
   height: 100vh;
   width: var(--sidebar-width, 16rem);
   background-color: hsl(var(--sidebar-background));
   border-right: 1px solid hsl(var(--sidebar-border));
   display: flex;
   flex-direction: column;
-  z-index: 40;
-  transition: width 0.2s ease-in-out, transform 0.2s ease-in-out;
+  transition: width 0.2s ease-in-out;
 }
 
 [data-sidebar="sidebar"][data-state="collapsed"] {
@@ -464,17 +467,14 @@ button[class*="text-sm"] {
 }
 
 [data-sidebar="sidebar-inset"] {
-  margin-left: var(--sidebar-width, 16rem);
-  width: calc(100% - var(--sidebar-width, 16rem));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.2s ease-in-out, width 0.2s ease-in-out;
+  flex: 1;
 }
 
 .group\/sidebar-wrapper:has([data-sidebar="sidebar"][data-state="collapsed"]) [data-sidebar="sidebar-inset"] {
-  margin-left: var(--sidebar-width-icon, 3rem);
-  width: calc(100% - var(--sidebar-width-icon, 3rem));
+  /* O flex layout cuida do espaço automaticamente */
 }
 
 /* Sidebar Header */

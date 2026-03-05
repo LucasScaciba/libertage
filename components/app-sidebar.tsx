@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   IconDashboard,
   IconRocket,
@@ -12,6 +13,7 @@ import {
   IconPhoto,
   IconClock,
   IconList,
+  IconChartBar,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -63,7 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title: "Painel",
       url: "/portal",
-      icon: IconDashboard,
+      icon: IconChartBar,
     },
     {
       title: "Meu Perfil",
@@ -105,14 +107,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const planName = subscription?.plan?.name || "Gratuito"
 
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible="icon" variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/portal">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <IconDashboard className="size-4" />
+                  <Image 
+                    src="/logo-icon.png" 
+                    alt="Libertage" 
+                    width={32} 
+                    height={32}
+                    className="size-8 rounded-[3px]"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Libertage</span>
