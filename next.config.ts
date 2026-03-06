@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '80mb',
     },
   },
-  // Increase max body size for API routes
-  serverRuntimeConfig: {
-    maxBodySize: '80mb',
-  },
 };
 
 export default nextConfig;
