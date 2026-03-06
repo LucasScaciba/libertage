@@ -167,7 +167,7 @@ export class StorageManager {
     }
 
     // Build full paths for all files
-    const filePaths = files.map((file) => `${path}/${file.name}`);
+    const filePaths = files.map((file: { name: string }) => `${path}/${file.name}`);
 
     // Delete all files
     const { error: deleteError } = await supabase.storage
