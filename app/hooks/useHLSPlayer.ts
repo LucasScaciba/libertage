@@ -23,7 +23,7 @@ interface UseHLSPlayerOptions {
 }
 
 interface UseHLSPlayerReturn {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   isLoading: boolean;
   error: string | null;
   isHLSSupported: boolean;
