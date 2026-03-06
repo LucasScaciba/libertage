@@ -47,6 +47,14 @@ export interface Profile {
   online_status_updated_at: Date;
   external_links: ExternalLink[];
   pricing_packages: PricingPackage[];
+  // Location management fields
+  has_no_location: boolean;
+  address_cep: string | null;
+  address_street: string | null;
+  address_neighborhood: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_number: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -279,4 +287,29 @@ export interface ReorderExternalLinkInput {
 
 export interface ExternalLinkWithIcon extends ExternalLinkRecord {
   iconComponent: React.ComponentType;
+}
+
+// Location Management types
+export interface LocationData {
+  hasNoLocation: boolean;
+  cep: string | null;
+  street: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  number: string | null;
+}
+
+export interface ViaCepResponse {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  ibge: string;
+  gia: string;
+  ddd: string;
+  siafi: string;
+  erro?: boolean;
 }

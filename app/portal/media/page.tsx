@@ -100,18 +100,18 @@ export default async function MediaPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Minha Mídia</BreadcrumbPage>
+                  <BreadcrumbPage>Minhas Mídias</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="max-w-7xl mx-auto p-6">
+          <div className="max-w-7xl mx-auto p-6 w-full">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">Minha Mídia</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Minhas Mídias</h1>
               <p className="text-gray-600 mt-2">
-                Gerencie suas fotos, vídeos e stories em um só lugar.
+                Faça upload e gerencie suas imagens e vídeos com processamento automático.
               </p>
             </div>
 

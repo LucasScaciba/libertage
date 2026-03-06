@@ -1,96 +1,130 @@
-import { CatalogService } from "@/lib/services/catalog.service";
-import { NextResponse } from "next/server";
-import { RateLimiter } from "@/lib/utils/rate-limiter";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * GET /api/catalog - Search and filter catalog (public, rate limited)
- * Rate limit: 60 requests per minute per IP
- * Validates: Requirements 9.1, 9.2, 9.3, 9.5, 22.1, 22.4, 22.5
- */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Apply rate limiting: 60 requests per minute per IP
-    const ip = RateLimiter.getIpAddress(request);
-    const rateLimitKey = `catalog:${ip}`;
-    const rateLimitConfig = {
-      maxRequests: 60,
-      windowMs: 60 * 1000, // 1 minute
-      keyGenerator: () => rateLimitKey,
-    };
+    const supabase = await createClient();
+    const searchParams = request.nextUrl.searchParams;
+    
+    const gender = searchParams.get("gender");
+    const service = searchParams.get("service");
+    const city = searchParams.get("city");
+    const region = searchParams.get("region");
+    const search = searchParams.get("search");
 
-    const rateLimitResult = await RateLimiter.checkLimit(
-      rateLimitKey,
-      rateLimitConfig
-    );
+    // Build query for published profiles
+    let query = supabase
+      .from("profiles")
+      .select("*")
+      .eq("status", "published");
 
-    if (!rateLimitResult.allowed) {
-      const retryAfter = Math.ceil(
-        (rateLimitResult.resetAt.getTime() - Date.now()) / 1000
-      );
+    // Apply filters
+    if (gender) {
+      query = query.eq("gender_identity", gender);
+    }
+    if (city) {
+      query = query.eq("city", city);
+    }
+    if (region) {
+      query = query.eq("region", region);
+    }
+    if (service) {
+      query = query.contains("service_categories", [service]);
+    }
+    if (search) {
+      query = query.or(`display_name.ilike.%${search}%,short_description.ilike.%${search}%,long_description.ilike.%${search}%`);
+    }
+
+    const { data: profiles, error: profilesError } = await query;
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
       return NextResponse.json(
-        {
-          error: {
-            code: "RATE_LIMIT_EXCEEDED",
-            message: "Too many requests. Please try again later.",
-          },
-        },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": retryAfter.toString(),
-            "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": rateLimitResult.resetAt.toISOString(),
-          },
-        }
+        { error: "Failed to fetch profiles" },
+        { status: 500 }
       );
     }
 
-    // Increment counter
-    await RateLimiter.incrementCounter(rateLimitKey, rateLimitConfig);
+    // Fetch media for all profiles (both old and new formats)
+    const profileIds = profiles?.map((p) => p.id) || [];
+    
+    // Fetch from new media_processing table
+    const { data: newMedia } = await supabase
+      .from("media_processing")
+      .select("*")
+      .in("profile_id", profileIds)
+      .eq("status", "ready")
+      .order("sort_order", { ascending: true });
 
-    const { searchParams } = new URL(request.url);
+    // Fetch from old media table as fallback
+    const { data: oldMedia } = await supabase
+      .from("media")
+      .select("*")
+      .in("profile_id", profileIds)
+      .order("created_at", { ascending: true });
 
-    // Parse filters
-    const filters = {
-      search: searchParams.get("search") || undefined,
-      gender: searchParams.get("gender") || undefined,
-      service: searchParams.get("service") || undefined,
-      city: searchParams.get("city") || undefined,
-      region: searchParams.get("region") || undefined,
-      features: searchParams.get("features")?.split(",") || undefined,
-    };
+    // Combine media data - prefer new format (media_processing), fallback to old (media)
+    const mediaByProfile = new Map<string, any[]>();
+    
+    // First, add new media (processed media with variants)
+    newMedia?.forEach((m) => {
+      if (!mediaByProfile.has(m.profile_id)) {
+        mediaByProfile.set(m.profile_id, []);
+      }
+      mediaByProfile.get(m.profile_id)!.push(m);
+    });
+    
+    // Then, add old media ONLY if profile has no new media
+    oldMedia?.forEach((m) => {
+      if (!mediaByProfile.has(m.profile_id)) {
+        // Profile has no new media, use old media
+        mediaByProfile.set(m.profile_id, []);
+        mediaByProfile.get(m.profile_id)!.push(m);
+      }
+      // If profile already has new media, skip old media entirely
+    });
 
-    // Parse pagination
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
+    // Attach media to profiles
+    const profilesWithMedia = profiles?.map((profile) => ({
+      ...profile,
+      media: mediaByProfile.get(profile.id) || [],
+    })) || [];
 
-    // Get catalog results
-    const result = await CatalogService.searchCatalog(filters, page, pageSize);
+    // Get active boosts
+    const { data: activeBoosts } = await supabase
+      .from("boosts")
+      .select("profile_id")
+      .lte("boost_start", new Date().toISOString())
+      .gte("boost_end", new Date().toISOString());
 
-    // Get available filters (cities, categories, regions)
-    const cities = await CatalogService.getCities();
-    const categories = await CatalogService.getCategories();
-    const regions = await CatalogService.getRegions();
+    const boostedProfileIds = new Set(activeBoosts?.map((b) => b.profile_id) || []);
+
+    // Separate boosted and regular profiles
+    const boostedProfiles = profilesWithMedia.filter((p) =>
+      boostedProfileIds.has(p.id)
+    );
+    const regularProfiles = profilesWithMedia.filter((p) =>
+      !boostedProfileIds.has(p.id)
+    );
+
+    // Get available filter options
+    const categories = [...new Set(profiles?.flatMap((p) => p.service_categories || []))];
+    const cities = [...new Set(profiles?.map((p) => p.city).filter(Boolean))];
+    const regions = [...new Set(profiles?.map((p) => p.region).filter(Boolean))];
 
     return NextResponse.json({
-      ...result,
+      boostedProfiles,
+      regularProfiles,
       filters: {
-        cities,
         categories,
+        cities,
         regions,
       },
-    }, {
-      headers: {
-        "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
-        "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-        "X-RateLimit-Reset": rateLimitResult.resetAt.toISOString(),
-      },
     });
-  } catch (error: any) {
-    console.error("Error fetching catalog:", error);
+  } catch (error) {
+    console.error("Error in catalog API:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch catalog" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

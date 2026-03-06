@@ -15,6 +15,7 @@ import {
   IconList,
   IconChartBar,
   IconExternalLink,
+  IconMapPin,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -87,6 +88,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Meu Perfil",
       url: "/portal/profile",
       icon: IconUser,
+    },
+    {
+      title: "Meu Local",
+      url: "/portal/location",
+      icon: IconMapPin,
     },
     {
       title: "Características e Serviços",

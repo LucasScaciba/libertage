@@ -8,7 +8,7 @@ interface MediaView {
   media_id: string;
   thumbnail_url: string;
   filename: string;
-  media_type: "photo" | "video";
+  media_type: "image" | "video";
   view_count: number;
 }
 
@@ -60,27 +60,36 @@ export default function MediaViewsIndicator({ data }: MediaViewsIndicatorProps) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.slice(0, 10).map((media) => (
+            {data.slice(0, 3).map((media) => (
               <TableRow key={media.media_id}>
                 <TableCell>
                   <div className="relative w-16 h-16 rounded overflow-hidden bg-gray-100">
-                    {media.thumbnail_url && media.media_type === "photo" ? (
-                      <Image
-                        src={media.thumbnail_url}
-                        alt={media.filename || "Mídia"}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    ) : media.thumbnail_url && media.media_type === "video" ? (
-                      <video
-                        src={media.thumbnail_url}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
+                    {media.thumbnail_url ? (
+                      media.media_type === "image" ? (
+                        <Image
+                          src={media.thumbnail_url}
+                          alt={media.filename || "Mídia"}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                        />
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={media.thumbnail_url}
+                            alt={media.filename || "Vídeo"}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <IconVideo className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                      )
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                        {media.media_type === "photo" ? (
+                        {media.media_type === "image" ? (
                           <IconPhoto className="h-6 w-6 text-gray-400" />
                         ) : (
                           <IconVideo className="h-6 w-6 text-gray-400" />
@@ -96,7 +105,7 @@ export default function MediaViewsIndicator({ data }: MediaViewsIndicatorProps) 
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="gap-1">
-                    {media.media_type === "photo" ? (
+                    {media.media_type === "image" ? (
                       <>
                         <IconPhoto className="h-3 w-3" />
                         Foto

@@ -444,22 +444,9 @@ export default function ProfileEditPage() {
                         </div>
                       </div>
 
-                      <SlugEditor
-                        currentSlug={formData.slug}
-                        onChange={(newSlug) => setFormData({ ...formData, slug: newSlug })}
-                        lastChangedAt={profile?.slug_last_changed_at || null}
-                        profileExists={!!profile}
-                      />
-
-                      <ServiceCategoriesSelector
-                        value={formData.service_categories}
-                        onChange={(categories) => setFormData({ ...formData, service_categories: categories })}
-                        required
-                      />
-
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                         <div>
-                          <Label htmlFor="city">Estado *</Label>
+                          <Label htmlFor="city">Estado Base *</Label>
                           <select
                             id="city"
                             required
@@ -481,6 +468,9 @@ export default function ProfileEditPage() {
                               </option>
                             ))}
                           </select>
+                          <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", marginTop: "0.25rem" }}>
+                            Caso você não tenha Local cadastrado no menu Meu Local, vamos utilizar esse estado base para aplicar o filtro no Catálogo
+                          </p>
                         </div>
 
                         <BirthdatePicker
@@ -489,6 +479,19 @@ export default function ProfileEditPage() {
                           required
                         />
                       </div>
+
+                      <SlugEditor
+                        currentSlug={formData.slug}
+                        onChange={(newSlug) => setFormData({ ...formData, slug: newSlug })}
+                        lastChangedAt={profile?.slug_last_changed_at || null}
+                        profileExists={!!profile}
+                      />
+
+                      <ServiceCategoriesSelector
+                        value={formData.service_categories}
+                        onChange={(categories) => setFormData({ ...formData, service_categories: categories })}
+                        required
+                      />
 
                     </CardContent>
                   </Card>

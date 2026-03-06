@@ -22,12 +22,7 @@ export async function GET(request: NextRequest) {
         id,
         start_time,
         end_time,
-        profiles!inner(
-          *,
-          media(*),
-          external_links(*),
-          availability(*)
-        )
+        profiles!inner(*)
       `)
       .eq("status", "active")
       .lte("start_time", now)
@@ -61,9 +56,49 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Transform data to include profile info at top level
+    // Get profile IDs to fetch media
+    const profileIds = boosts?.map((b: any) => b.profiles.id) || [];
+
+    // Fetch media from new media_processing table
+    const { data: newMedia } = await supabase
+      .from("media_processing")
+      .select("*")
+      .in("profile_id", profileIds)
+      .eq("status", "ready")
+      .order("sort_order", { ascending: true });
+
+    // Fetch from old media table as fallback
+    const { data: oldMedia } = await supabase
+      .from("media")
+      .select("*")
+      .in("profile_id", profileIds)
+      .order("created_at", { ascending: true });
+
+    // Combine media data - prefer new format (media_processing), fallback to old (media)
+    const mediaByProfile = new Map<string, any[]>();
+    
+    // First, add new media (processed media with variants)
+    newMedia?.forEach((m) => {
+      if (!mediaByProfile.has(m.profile_id)) {
+        mediaByProfile.set(m.profile_id, []);
+      }
+      mediaByProfile.get(m.profile_id)!.push(m);
+    });
+    
+    // Then, add old media ONLY if profile has no new media
+    oldMedia?.forEach((m) => {
+      if (!mediaByProfile.has(m.profile_id)) {
+        // Profile has no new media, use old media
+        mediaByProfile.set(m.profile_id, []);
+        mediaByProfile.get(m.profile_id)!.push(m);
+      }
+      // If profile already has new media, skip old media entirely
+    });
+
+    // Transform data to include profile info at top level with media
     const boostedProfiles = boosts?.map((boost: any) => ({
       ...boost.profiles,
+      media: mediaByProfile.get(boost.profiles.id) || [],
       boost_id: boost.id,
       boost_start: boost.start_time,
       boost_end: boost.end_time,

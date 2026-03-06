@@ -1,86 +1,153 @@
-import geohash from "geohash";
+import type { Profile, LocationData, ViaCepResponse } from "@/types";
+
+/**
+ * Valid Brazilian state codes
+ */
+const VALID_BRAZILIAN_STATES = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
+  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+] as const;
 
 export class LocationService {
   /**
-   * Generate a geohash from latitude and longitude
-   * @param lat Latitude
-   * @param lon Longitude
-   * @param precision Precision level (default: 5 for neighborhood-level)
+   * Fetch address data from ViaCEP API
+   * @param cep - 8-digit CEP string
+   * @returns Address data or error
    */
-  static generateGeohash(lat: number, lon: number, precision: number = 5): string {
-    return geohash.encode(lat, lon, precision);
+  static async fetchAddressByCep(cep: string): Promise<ViaCepResponse> {
+    // Validate CEP format before making API call
+    if (!this.validateCep(cep)) {
+      throw new Error('CEP inválido. Deve conter exatamente 8 dígitos numéricos.');
+    }
+
+    // Remove any non-numeric characters
+    const cleanCep = cep.replace(/\D/g, '');
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('CEP não encontrado. Verifique o número digitado.');
+        }
+        throw new Error('Erro ao buscar CEP. Tente novamente.');
+      }
+
+      const data: ViaCepResponse = await response.json();
+
+      // ViaCEP returns { erro: true } for invalid CEPs
+      if (data.erro) {
+        throw new Error('CEP não encontrado. Verifique o número digitado.');
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        // Re-throw known errors
+        if (error.message.includes('CEP não encontrado') || 
+            error.message.includes('CEP inválido')) {
+          throw error;
+        }
+      }
+      
+      // Network or other errors
+      throw new Error('Erro ao buscar CEP. Verifique sua conexão e tente novamente.');
+    }
   }
 
   /**
-   * Truncate a geohash to a specific precision
-   * @param hash The geohash to truncate
-   * @param targetPrecision Target precision level
+   * Validate CEP format
+   * @param cep - CEP string to validate
+   * @returns true if valid, false otherwise
    */
-  static truncateGeohash(hash: string, targetPrecision: number): string {
-    return hash.substring(0, targetPrecision);
-  }
-
-  /**
-   * Decode a geohash to get approximate coordinates
-   * @param hash The geohash to decode
-   */
-  static decodeGeohash(hash: string): {
-    lat: number;
-    lon: number;
-    latError: number;
-    lonError: number;
-  } {
-    const decoded = geohash.decode(hash);
-    const bounds = geohash.decode_bbox(hash);
+  static validateCep(cep: string): boolean {
+    if (!cep) return false;
     
-    return {
-      lat: decoded.latitude,
-      lon: decoded.longitude,
-      latError: (bounds[2] - bounds[0]) / 2,
-      lonError: (bounds[3] - bounds[1]) / 2,
-    };
-  }
-
-  /**
-   * Get approximate location for privacy (truncated to 5 characters)
-   * @param lat Latitude
-   * @param lon Longitude
-   */
-  static getApproximateLocation(lat: number, lon: number): {
-    geohash: string;
-    displayLat: number;
-    displayLon: number;
-  } {
-    const hash = this.generateGeohash(lat, lon, 5);
-    const decoded = this.decodeGeohash(hash);
+    // Remove any non-numeric characters
+    const cleanCep = cep.replace(/\D/g, '');
     
-    return {
-      geohash: hash,
-      displayLat: decoded.lat,
-      displayLon: decoded.lon,
-    };
+    // Must be exactly 8 digits
+    return cleanCep.length === 8 && /^\d{8}$/.test(cleanCep);
   }
 
   /**
-   * Get bounding box for a geohash
-   * @param hash The geohash
+   * Validate Brazilian state code
+   * @param state - State code to validate
+   * @returns true if valid, false otherwise
    */
-  static getBoundingBox(hash: string): {
-    minLat: number;
-    minLon: number;
-    maxLat: number;
-    maxLon: number;
-  } {
-    const [minLat, minLon, maxLat, maxLon] = geohash.decode_bbox(hash);
-    return { minLat, minLon, maxLat, maxLon };
+  static validateStateCode(state: string): boolean {
+    if (!state) return false;
+    
+    const upperState = state.toUpperCase();
+    return VALID_BRAZILIAN_STATES.includes(upperState as typeof VALID_BRAZILIAN_STATES[number]);
   }
 
   /**
-   * Get neighbors of a geohash (for proximity search)
-   * @param hash The geohash
+   * Get effective state for filtering
+   * Prioritizes address_state over city (Estado Base)
+   * @param profile - Profile object
+   * @returns State code to use for filtering
    */
-  static getNeighbors(hash: string): string[] {
-    const neighbors = geohash.neighbors(hash);
-    return Object.values(neighbors);
+  static getEffectiveState(profile: Profile): string {
+    // Prioritize address_state if available
+    if (profile.address_state && profile.address_state.trim() !== '') {
+      return profile.address_state;
+    }
+    
+    // Fall back to city (Estado Base)
+    return profile.city;
+  }
+
+  /**
+   * Format address for display
+   * @param location - Location data
+   * @returns Formatted address string or null if incomplete
+   */
+  static formatAddress(location: LocationData): string | null {
+    // Check if we have the minimum required fields
+    if (!location.street || !location.number || !location.neighborhood || 
+        !location.city || !location.state) {
+      return null;
+    }
+
+    // Format: "Rua, Número - Bairro, Cidade - Estado, CEP"
+    let formatted = `${location.street}, ${location.number} - ${location.neighborhood}, ${location.city} - ${location.state}`;
+    
+    // Add CEP if available
+    if (location.cep) {
+      formatted += `, ${location.cep}`;
+    }
+
+    return formatted;
+  }
+
+  /**
+   * Format approximate location for public display (privacy-safe)
+   * Only shows neighborhood, city, and state - no exact address
+   * @param location - Location data
+   * @returns Formatted approximate location string or null if incomplete
+   */
+  static formatApproximateLocation(location: LocationData): string | null {
+    // Check if we have the minimum required fields for approximate location
+    if (!location.neighborhood || !location.city || !location.state) {
+      return null;
+    }
+
+    // Format: "Bairro, Cidade - Estado"
+    return `${location.neighborhood}, ${location.city} - ${location.state}`;
+  }
+
+  /**
+   * Get list of valid Brazilian state codes
+   * @returns Array of valid state codes
+   */
+  static getValidStates(): readonly string[] {
+    return VALID_BRAZILIAN_STATES;
   }
 }

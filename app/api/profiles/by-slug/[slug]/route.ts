@@ -35,12 +35,16 @@ export async function GET(
     profile.verified_at = isVerified ? verification.verified_at : null;
     delete profile.profile_verifications;
 
-    // Fetch media
-    const { data: media } = await supabase
-      .from("media")
+    // Fetch media from new processing pipeline
+    const { data: mediaData } = await supabase
+      .from("media_processing")
       .select("*")
       .eq("profile_id", profile.id)
+      .eq("status", "ready") // Only show processed media
       .order("sort_order", { ascending: true });
+
+    // Media is already in the correct format with public URLs (bucket is public)
+    const media = mediaData || [];
 
     // Fetch availability
     const { data: availability } = await supabase

@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Increase body size limit for video uploads (80MB)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '80mb',
+    },
+  },
+  // Increase max body size for API routes
+  serverRuntimeConfig: {
+    maxBodySize: '80mb',
+  },
 };
 
 export default nextConfig;

@@ -100,7 +100,7 @@ export function BirthdatePicker({ value, onChange, required }: BirthdatePickerPr
       <Label htmlFor="birthdate">
         Data de Nascimento {required && "*"}
       </Label>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1.5fr", gap: "0.5rem", marginTop: "0.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1.5fr", gap: "0.5rem" }}>
         <select
           value={day}
           onChange={(e) => {

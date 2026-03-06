@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { formatBRL } from "@/lib/utils/currency-formatter";
 
 interface BoostedProfilesCarouselProps {
   onProfileClick: (profile: any) => void;
@@ -127,11 +126,23 @@ export function BoostedProfilesCarousel({ onProfileClick, filters }: BoostedProf
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {visibleProfiles.map((profile) => {
-            const coverPhoto = profile.media?.find((m: any) => m.is_cover && m.type === "photo");
-            const displayPhoto = coverPhoto || profile.media?.find((m: any) => m.type === "photo");
+            // Support both old and new media formats
+            // New format: type="image", variants.thumb_240.url
+            // Old format: type="photo", public_url
+            const coverPhoto = profile.media?.find((m: any) => 
+              m.is_cover && (m.type === "image" || m.type === "photo")
+            );
+            const displayPhoto = coverPhoto || profile.media?.find((m: any) => 
+              m.type === "image" || m.type === "photo"
+            );
             
-            // Count photos and videos
-            const photoCount = profile.media?.filter((m: any) => m.type === "photo").length || 0;
+            // Get thumbnail URL from new or old format
+            const thumbnailUrl = displayPhoto?.variants?.thumb_240?.url || displayPhoto?.public_url;
+            
+            // Count photos and videos (support both formats)
+            const photoCount = profile.media?.filter((m: any) => 
+              m.type === "photo" || m.type === "image"
+            ).length || 0;
             const videoCount = profile.media?.filter((m: any) => m.type === "video").length || 0;
 
             return (
@@ -140,10 +151,10 @@ export function BoostedProfilesCarousel({ onProfileClick, filters }: BoostedProf
                 className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-purple-200"
                 onClick={() => onProfileClick(profile)}
               >
-                {displayPhoto?.public_url && (
+                {thumbnailUrl ? (
                   <div className="relative w-full aspect-[3/4] overflow-hidden rounded-t-lg">
                     <img
-                      src={displayPhoto.public_url}
+                      src={thumbnailUrl}
                       alt={profile.display_name}
                       className="w-full h-full object-cover"
                     />
@@ -171,6 +182,14 @@ export function BoostedProfilesCarousel({ onProfileClick, filters }: BoostedProf
                           {videoCount}
                         </div>
                       )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative w-full aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
+                    <p className="text-gray-500 text-sm">Sem foto</p>
+                    {/* Boost Badge even without photo */}
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                      ⭐ DESTAQUE
                     </div>
                   </div>
                 )}

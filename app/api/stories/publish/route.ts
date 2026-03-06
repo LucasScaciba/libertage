@@ -46,12 +46,16 @@ export async function POST(request: NextRequest) {
 
     const maxStories = (subscription.plans as any)?.max_stories || 0;
 
-    // Count active stories
+    // Get current timestamp
+    const now = new Date().toISOString();
+
+    // Count active and non-expired stories
     const { count: activeCount } = await supabase
       .from('stories')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('status', 'active');
+      .eq('status', 'active')
+      .gt('expires_at', now); // Only count stories that haven't expired yet
 
     if ((activeCount || 0) >= maxStories) {
       return NextResponse.json(

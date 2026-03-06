@@ -11,12 +11,16 @@ export async function GET(
 
     console.log('[Stories API] Fetching stories for user:', userId);
 
-    // Fetch user's stories
+    // Get current timestamp
+    const now = new Date().toISOString();
+
+    // Fetch user's active and non-expired stories
     const { data: stories, error } = await supabase
       .from('stories')
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'active')
+      .gt('expires_at', now) // Only stories that haven't expired yet
       .order('created_at', { ascending: false });
 
     if (error) {

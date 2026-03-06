@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
@@ -28,7 +28,11 @@ import {
 } from "@tabler/icons-react";
 import { StoriesCarousel } from "@/app/components/stories/StoriesCarousel";
 import { BoostedProfilesCarousel } from "@/app/components/boosted-profiles/BoostedProfilesCarousel";
+import { MediaLightbox } from "@/app/components/media/MediaLightbox";
 import { trackMediaView } from "@/lib/utils/analytics-tracking";
+import { LocationService } from "@/lib/services/location.service";
+import { ApproximateLocationMap } from "@/app/components/location/ApproximateLocationMap";
+import type { LocationData } from "@/types";
 
 export default function Home() {
   const [boostedProfiles, setBoostedProfiles] = useState<any[]>([]);
@@ -92,26 +96,24 @@ export default function Home() {
     return iconMap[title] || IconLink;
   };
 
-  // Gallery images from profile media
-  const galleryImages = selectedProfile?.media?.map((m: any) => m.public_url) || [];
+  // Sort media: videos first, then photos
+  const sortedMedia = (() => {
+    if (!selectedProfile?.media) return [];
+    
+    const videos = selectedProfile.media.filter((m: any) => m.type === "video");
+    const photos = selectedProfile.media.filter((m: any) => m.type === "photo" || m.type === "image");
+    return [...videos, ...photos];
+  })();
 
   const openGallery = (index: number) => {
     setCurrentImageIndex(index);
     setIsGalleryOpen(true);
     
     // Track media view
-    const media = selectedProfile?.media?.[index];
+    const media = sortedMedia[index];
     if (media?.id && selectedProfile?.id) {
       trackMediaView(media.id, selectedProfile.id);
     }
-  };
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   };
 
   // Track visit when modal opens with a profile
@@ -239,12 +241,23 @@ export default function Home() {
   };
 
   const ProfileCard = ({ profile, isBoosted = false }: any) => {
-    // Find cover photo or use first photo
-    const coverPhoto = profile.media?.find((m: any) => m.is_cover && m.type === "photo");
-    const displayPhoto = coverPhoto || profile.media?.find((m: any) => m.type === "photo");
+    // Support both old and new media formats
+    // New format: type="image", variants.thumb_240.url
+    // Old format: type="photo", public_url
+    const coverPhoto = profile.media?.find((m: any) => 
+      m.is_cover && (m.type === "image" || m.type === "photo")
+    );
+    const displayPhoto = coverPhoto || profile.media?.find((m: any) => 
+      m.type === "image" || m.type === "photo"
+    );
     
-    // Count photos and videos
-    const photoCount = profile.media?.filter((m: any) => m.type === "photo").length || 0;
+    // Get thumbnail URL from new or old format
+    const thumbnailUrl = displayPhoto?.variants?.thumb_240?.url || displayPhoto?.public_url;
+    
+    // Count photos and videos (support both formats)
+    const photoCount = profile.media?.filter((m: any) => 
+      m.type === "photo" || m.type === "image"
+    ).length || 0;
     const videoCount = profile.media?.filter((m: any) => m.type === "video").length || 0;
     
     return (
@@ -255,10 +268,10 @@ export default function Home() {
           setIsModalOpen(true);
         }}
       >
-        {displayPhoto?.public_url && (
+        {thumbnailUrl ? (
           <div className="relative w-full aspect-[3/4] overflow-hidden rounded-t-lg">
             <img
-              src={displayPhoto.public_url}
+              src={thumbnailUrl}
               alt={profile.display_name}
               className="w-full h-full object-cover"
             />
@@ -283,6 +296,10 @@ export default function Home() {
                 </div>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="relative w-full aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
+            <p className="text-gray-500 text-sm">Sem foto</p>
           </div>
         )}
         <CardContent className="p-4">
@@ -533,78 +550,76 @@ export default function Home() {
                     <p style={{ color: "hsl(var(--muted-foreground))", marginBottom: "1rem" }}>
                       {selectedProfile.short_description}
                     </p>
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1rem" }}>
                       {selectedProfile.service_categories?.map((service: string, i: number) => (
                         <Badge key={i}>{service}</Badge>
                       ))}
-                      <Badge variant="secondary">{selectedProfile.city}</Badge>
-                      {selectedProfile.region && (
-                        <Badge variant="secondary">{selectedProfile.region}</Badge>
+                      {/* Show address location if available, otherwise show base location */}
+                      <Badge variant="secondary">
+                        {selectedProfile.address_city || selectedProfile.city}
+                      </Badge>
+                      {(selectedProfile.address_state || selectedProfile.region) && (
+                        <Badge variant="secondary">
+                          {selectedProfile.address_state || selectedProfile.region}
+                        </Badge>
                       )}
                     </div>
                   </div>
 
                   {/* Photo and Video Gallery */}
                   <div style={{ marginBottom: "1.5rem" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
-                      {/* Photos */}
-                      {selectedProfile.media?.filter((m: any) => m.type === "photo").slice(0, 8).map((media: any, i: number) => (
-                        <div
-                          key={media.id}
-                          onClick={() => openGallery(i)}
-                          style={{
-                            aspectRatio: "3/4",
-                            borderRadius: "var(--radius)",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            transition: "opacity 0.2s",
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
-                          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
-                        >
-                          <img
-                            src={media.public_url}
-                            alt={`Foto ${i + 1}`}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        </div>
-                      ))}
-                      
-                      {/* Videos */}
-                      {selectedProfile.media?.filter((m: any) => m.type === "video").map((media: any, i: number) => (
-                        <div 
-                          key={media.id}
-                          onClick={() => openGallery(selectedProfile.media.filter((m: any) => m.type === "photo").length + i)}
-                          style={{ 
-                            position: "relative", 
-                            borderRadius: "var(--radius)", 
-                            overflow: "hidden", 
-                            cursor: "pointer", 
-                            aspectRatio: "3/4",
-                            transition: "opacity 0.2s"
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
-                          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
-                        >
-                          <video
-                            src={media.public_url}
-                            style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.7)" }}
-                          />
-                          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-                            <div style={{ 
-                              width: "3rem", 
-                              height: "3rem", 
-                              borderRadius: "50%", 
-                              backgroundColor: "rgba(255,255,255,0.9)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center"
-                            }}>
-                              ▶
-                            </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 150px), 1fr))", gap: "0.5rem" }} className="sm:grid-cols-3 md:grid-cols-5">
+                      {sortedMedia.map((media: any, i: number) => {
+                        const isVideo = media.type === "video";
+                        // Get thumbnail URL - support both formats
+                        const thumbnailUrl = media.variants?.thumb_240?.url || media.public_url;
+                        
+                        return (
+                          <div
+                            key={media.id}
+                            onClick={() => openGallery(i)}
+                            style={{
+                              position: "relative",
+                              aspectRatio: "3/4",
+                              borderRadius: "var(--radius)",
+                              overflow: "hidden",
+                              cursor: "pointer",
+                              transition: "opacity 0.2s",
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                          >
+                            {isVideo ? (
+                              <>
+                                <img
+                                  src={thumbnailUrl}
+                                  alt={`Vídeo ${i + 1}`}
+                                  style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.7)" }}
+                                />
+                                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+                                  <div style={{ 
+                                    width: "3rem", 
+                                    height: "3rem", 
+                                    borderRadius: "50%", 
+                                    backgroundColor: "rgba(255,255,255,0.9)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center"
+                                  }}>
+                                    ▶
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <img
+                                src={thumbnailUrl}
+                                alt={`Foto ${i + 1}`}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -854,6 +869,59 @@ export default function Home() {
                     </Card>
                   )}
 
+                  {/* Endereço */}
+                  {(() => {
+                    const locationData: LocationData = {
+                      hasNoLocation: selectedProfile.has_no_location || false,
+                      cep: selectedProfile.address_cep,
+                      street: selectedProfile.address_street,
+                      neighborhood: selectedProfile.address_neighborhood,
+                      city: selectedProfile.address_city,
+                      state: selectedProfile.address_state,
+                      number: selectedProfile.address_number,
+                    };
+                    const formattedAddress = LocationService.formatApproximateLocation(locationData);
+                    
+                    return formattedAddress && locationData.neighborhood && locationData.city && locationData.state ? (
+                      <div style={{ marginBottom: "1rem", padding: "1rem", border: "1px solid hsl(var(--border))", borderRadius: "var(--radius)", backgroundColor: "hsl(var(--card))" }}>
+                        <h3 style={{ fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          Localização
+                        </h3>
+                        
+                        {/* Map */}
+                        <ApproximateLocationMap
+                          cep={locationData.cep || undefined}
+                          street={locationData.street || undefined}
+                          neighborhood={locationData.neighborhood || ""}
+                          city={locationData.city || ""}
+                          state={locationData.state || ""}
+                          radiusMeters={500}
+                        />
+                        
+                        <p style={{ fontSize: "0.875rem", color: "hsl(var(--muted-foreground))", marginBottom: "0.5rem" }}>
+                          {formattedAddress}
+                        </p>
+                        <p style={{ fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>
+                          Por segurança, exibimos apenas a região aproximada (raio de 500m)
+                        </p>
+                      </div>
+                    ) : null;
+                  })()}
+
                   {/* Denunciar Perfil */}
                   <Button variant="ghost" style={{ color: "hsl(var(--muted-foreground))", fontSize: "0.875rem" }}>
                     Denunciar Perfil
@@ -1081,198 +1149,16 @@ export default function Home() {
       </Dialog>
 
       {/* Gallery Modal */}
-      {isGalleryOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 60,
-            backgroundColor: "rgba(0, 0, 0, 0.95)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "1rem",
-          }}
-          onClick={() => setIsGalleryOpen(false)}
-        >
-          {/* Close Button */}
-          <button
-            onClick={() => setIsGalleryOpen(false)}
-            style={{
-              position: "absolute",
-              right: "2rem",
-              top: "2rem",
-              fontSize: "2.5rem",
-              cursor: "pointer",
-              color: "white",
-              zIndex: 70,
-              width: "3rem",
-              height: "3rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "0.25rem",
-              transition: "background-color 0.2s",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-          >
-            ×
-          </button>
-
-          {/* Main Image Container */}
-          <div
-            style={{
-              position: "relative",
-              maxWidth: "60rem",
-              maxHeight: "70vh",
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Previous Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                prevImage();
-              }}
-              style={{
-                position: "absolute",
-                left: "-4rem",
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: "3rem",
-                cursor: "pointer",
-                color: "white",
-                zIndex: 70,
-                width: "3rem",
-                height: "3rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "0.25rem",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)"}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-            >
-              ‹
-            </button>
-
-            {/* Image or Video */}
-            {selectedProfile?.media?.[currentImageIndex]?.type === "video" ? (
-              <video
-                src={galleryImages[currentImageIndex] || ""}
-                controls
-                autoPlay
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "70vh",
-                  width: "auto",
-                  height: "auto",
-                  objectFit: "contain",
-                  borderRadius: "var(--radius)",
-                }}
-              />
-            ) : (
-              <img
-                src={galleryImages[currentImageIndex] || ""}
-                alt={`Imagem ${currentImageIndex + 1}`}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "70vh",
-                  objectFit: "contain",
-                  borderRadius: "var(--radius)",
-                }}
-              />
-            )}
-
-            {/* Next Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                nextImage();
-              }}
-              style={{
-                position: "absolute",
-                right: "-4rem",
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: "3rem",
-                cursor: "pointer",
-                color: "white",
-                zIndex: 70,
-                width: "3rem",
-                height: "3rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "0.25rem",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)"}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-            >
-              ›
-            </button>
-          </div>
-
-          {/* Thumbnails */}
-          <div
-            style={{
-              marginTop: "2rem",
-              display: "flex",
-              gap: "0.5rem",
-              maxWidth: "60rem",
-              overflowX: "auto",
-              padding: "0.5rem",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {galleryImages.map((img: string, index: number) => (
-              <div
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                style={{
-                  width: "5rem",
-                  height: "5rem",
-                  flexShrink: 0,
-                  borderRadius: "0.25rem",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  border: currentImageIndex === index ? "3px solid white" : "3px solid transparent",
-                  opacity: currentImageIndex === index ? 1 : 0.6,
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (currentImageIndex !== index) {
-                    e.currentTarget.style.opacity = "0.8";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (currentImageIndex !== index) {
-                    e.currentTarget.style.opacity = "0.6";
-                  }
-                }}
-              >
-                <img
-                  src={img || ""}
-                  alt={`Thumbnail ${index + 1}`}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <MediaLightbox
+        media={sortedMedia}
+        initialIndex={currentImageIndex}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        onMediaView={(mediaId, profileId) => {
+          if (profileId) trackMediaView(mediaId, profileId);
+        }}
+        profileId={selectedProfile?.id}
+      />
 
       {/* Age Warning Modal */}
       <Dialog open={isAgeWarningOpen} onOpenChange={() => {}}>

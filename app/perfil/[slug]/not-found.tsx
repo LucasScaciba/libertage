@@ -13,7 +13,7 @@ export default function ProfileNotFound() {
           O perfil que você está procurando não existe ou foi removido.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/catalog">
+          <Link href="/">
             <Button size="lg">
               Ver Catálogo
             </Button>

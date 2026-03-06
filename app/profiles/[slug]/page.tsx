@@ -95,7 +95,7 @@ export default function PublicProfilePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-900 text-xl mb-4">{error}</p>
-          <Link href="/catalog">
+          <Link href="/">
             <Button>Voltar ao Catálogo</Button>
           </Link>
         </div>
@@ -149,7 +149,7 @@ export default function PublicProfilePage() {
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <Link href="/catalog" className="text-blue-600 hover:text-blue-800">
+          <Link href="/" className="text-blue-600 hover:text-blue-800">
             ← Voltar ao Catálogo
           </Link>
         </div>

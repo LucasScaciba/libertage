@@ -4,16 +4,22 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Weight, Ruler, Footprints } from "lucide-react";
+import { Calendar, Weight, Ruler, Footprints, X } from "lucide-react";
 import { IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react";
 import Link from "next/link";
 import { StoryIndicator } from "@/app/components/stories/StoryIndicator";
 import { StoryViewer } from "@/app/components/stories/StoryViewer";
 import { VerificationBadge } from "@/app/components/verification/VerificationBadge";
 import { ExternalLinksDisplay } from "@/app/components/external-links/ExternalLinksDisplay";
+import { MediaDisplay } from "@/app/components/media/MediaDisplay";
+import { MediaLightbox } from "@/app/components/media/MediaLightbox";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { calculateAge } from "@/lib/utils/age-calculator";
 import { formatBRL } from "@/lib/utils/currency-formatter";
 import { trackMediaView } from "@/lib/utils/analytics-tracking";
+import { LocationService } from "@/lib/services/location.service";
+import { ApproximateLocationMap } from "@/app/components/location/ApproximateLocationMap";
+import type { LocationData } from "@/types";
 
 interface ProfileData {
   profile: any;
@@ -127,9 +133,17 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
 
   const { profile, media, availability, features, pricing_packages, external_links } = data;
 
+  // Media is already processed with variants - no need for additional processing
   // Get cover image or first media
-  const coverMedia = media.find((m) => m.is_cover) || media[0];
-  const displayMedia = media.length > 0 ? media : [];
+  const coverMedia = media.find((m: any) => m.is_cover) || media[0];
+  
+  // Sort media: videos first, then photos
+  const displayMedia = (() => {
+    if (media.length === 0) return [];
+    const videos = media.filter((m: any) => m.type === "video");
+    const photos = media.filter((m: any) => m.type === "photo" || m.type === "image");
+    return [...videos, ...photos];
+  })();
 
   // Group features by group_name
   const groupedFeatures = features.reduce((acc: any, feature: any) => {
@@ -237,13 +251,18 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
               
               <p className="text-gray-600 mb-4">{profile.short_description}</p>
               
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap mb-4">
                 {profile.service_categories?.map((service: string, i: number) => (
                   <Badge key={i}>{service}</Badge>
                 ))}
-                <Badge variant="secondary">{profile.city}</Badge>
-                {profile.region && (
-                  <Badge variant="secondary">{profile.region}</Badge>
+                {/* Show address location if available, otherwise show base location */}
+                <Badge variant="secondary">
+                  {profile.address_city || profile.city}
+                </Badge>
+                {(profile.address_state || profile.region) && (
+                  <Badge variant="secondary">
+                    {profile.address_state || profile.region}
+                  </Badge>
                 )}
               </div>
             </div>
@@ -251,38 +270,33 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
             {/* Photo Gallery */}
             {displayMedia.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <div className="grid grid-cols-4 gap-2">
-                  {displayMedia.slice(0, 8).map((media, index) => (
-                    <div
-                      key={media.id}
-                      onClick={() => openGallery(index)}
-                      className="rounded overflow-hidden cursor-pointer hover:opacity-80 transition-opacity relative"
-                      style={{ aspectRatio: "3/4" }}
-                    >
-                      {media.type === 'video' ? (
-                        <>
-                          <video
-                            src={media.public_url}
-                            className="w-full h-full object-cover"
-                          />
-                          {/* Play icon overlay */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {displayMedia.map((mediaItem, index) => {
+                    const isVideo = mediaItem.type === "video";
+                    
+                    return (
+                      <div
+                        key={mediaItem.id}
+                        onClick={() => openGallery(index)}
+                        className="rounded overflow-hidden cursor-pointer hover:opacity-80 transition-opacity relative"
+                        style={{ aspectRatio: "3/4" }}
+                      >
+                        <MediaDisplay
+                          mediaId={mediaItem.id}
+                          context="grid"
+                          className="w-full h-full object-cover"
+                          mediaData={mediaItem}
+                        />
+                        {isVideo && (
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                             <div className="w-12 h-12 rounded-full bg-white bg-opacity-90 flex items-center justify-center">
-                              <svg className="w-6 h-6 text-gray-900 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
+                              ▶
                             </div>
                           </div>
-                        </>
-                      ) : (
-                        <img
-                          src={media.public_url}
-                          alt={`Foto ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -417,7 +431,7 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
                   <StoryIndicator
                     user={{
                       name: profile.display_name,
-                      profile_photo_url: coverMedia?.public_url || null,
+                      profile_photo_url: coverMedia?.variants?.thumb_240?.url || null,
                       slug: profile.slug
                     }}
                     hasActiveStory={true}
@@ -480,18 +494,70 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
               </div>
             )}
 
-            {/* Approximate Location */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Localização</h3>
-              <div className="space-y-2">
-                <p className="text-gray-700">
-                  <strong>Região:</strong> {profile.city}, {profile.region}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Localização aproximada de atendimento
-                </p>
-              </div>
-            </div>
+            {/* Location / Address */}
+            {(() => {
+              const locationData: LocationData = {
+                hasNoLocation: profile.has_no_location || false,
+                cep: profile.address_cep,
+                street: profile.address_street,
+                neighborhood: profile.address_neighborhood,
+                city: profile.address_city,
+                state: profile.address_state,
+                number: profile.address_number,
+              };
+              const formattedAddress = LocationService.formatApproximateLocation(locationData);
+              
+              return (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    Localização
+                  </h3>
+                  <div className="space-y-2">
+                    {formattedAddress && locationData.neighborhood && locationData.city && locationData.state ? (
+                      <>
+                        {/* Map */}
+                        <ApproximateLocationMap
+                          cep={locationData.cep}
+                          street={locationData.street}
+                          neighborhood={locationData.neighborhood}
+                          city={locationData.city}
+                          state={locationData.state}
+                          radiusMeters={500}
+                        />
+                        
+                        <p className="text-sm text-gray-700">{formattedAddress}</p>
+                        <p className="text-xs text-gray-500 italic">
+                          Por segurança, exibimos apenas a região aproximada (raio de 500m)
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-gray-700">
+                          <strong>Região:</strong> {profile.city}, {profile.region}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Localização aproximada de atendimento
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Report Button */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -509,96 +575,14 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
       </div>
 
       {/* Gallery Lightbox */}
-      {isGalleryOpen && displayMedia.length > 0 && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-95 flex flex-col items-center justify-center p-4"
-          onClick={() => setIsGalleryOpen(false)}
-        >
-          {/* Close Button */}
-          <button
-            onClick={() => setIsGalleryOpen(false)}
-            className="absolute right-8 top-8 text-white text-4xl w-12 h-12 flex items-center justify-center rounded hover:bg-white hover:bg-opacity-10 transition-colors z-10"
-          >
-            ×
-          </button>
-
-          {/* Main Image/Video Container */}
-          <div
-            className="relative max-w-5xl max-h-[70vh] w-full flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Previous Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                prevImage();
-              }}
-              className="absolute left-[-4rem] top-1/2 -translate-y-1/2 text-white text-5xl w-12 h-12 flex items-center justify-center rounded hover:bg-white hover:bg-opacity-10 transition-colors"
-            >
-              ‹
-            </button>
-
-            {/* Media Display */}
-            {displayMedia[selectedMediaIndex]?.type === 'video' ? (
-              <video
-                src={displayMedia[selectedMediaIndex].public_url}
-                autoPlay
-                loop
-                muted
-                className="max-w-full max-h-[70vh] rounded"
-              />
-            ) : (
-              <img
-                src={displayMedia[selectedMediaIndex]?.public_url}
-                alt={`Imagem ${selectedMediaIndex + 1}`}
-                className="max-w-full max-h-[70vh] object-contain rounded"
-              />
-            )}
-
-            {/* Next Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                nextImage();
-              }}
-              className="absolute right-[-4rem] top-1/2 -translate-y-1/2 text-white text-5xl w-12 h-12 flex items-center justify-center rounded hover:bg-white hover:bg-opacity-10 transition-colors"
-            >
-              ›
-            </button>
-          </div>
-
-          {/* Thumbnails */}
-          <div
-            className="mt-8 flex gap-2 max-w-5xl overflow-x-auto p-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {displayMedia.map((media, index) => (
-              <div
-                key={media.id}
-                onClick={() => setSelectedMediaIndex(index)}
-                className={`w-20 h-20 flex-shrink-0 rounded overflow-hidden cursor-pointer transition-all ${
-                  selectedMediaIndex === index
-                    ? 'border-3 border-white opacity-100'
-                    : 'border-3 border-transparent opacity-60 hover:opacity-80'
-                }`}
-              >
-                {media.type === 'video' ? (
-                  <video
-                    src={media.public_url}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img
-                    src={media.public_url}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <MediaLightbox
+        media={displayMedia}
+        initialIndex={selectedMediaIndex}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        onMediaView={trackMediaView}
+        profileId={profile?.id}
+      />
 
       {/* Story Viewer */}
       {storyViewerOpen && stories.length > 0 && (
@@ -609,7 +593,7 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
               id: profile.user_id,
               name: profile.display_name,
               slug: profile.slug,
-              profile_photo_url: coverMedia?.public_url || null
+              profile_photo_url: coverMedia?.variants?.thumb_240?.url || null
             }
           }))}
           initialStoryId={stories[0].id}

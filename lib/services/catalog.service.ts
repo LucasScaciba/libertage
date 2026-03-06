@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types";
 import { withCache } from "@/lib/utils/cache";
+import { LocationService } from "@/lib/services/location.service";
 
 export interface CatalogFilters {
   search?: string;
@@ -88,7 +89,6 @@ export class CatalogService {
       .from("profiles")
       .select(`
         *, 
-        media(*),
         external_links(*),
         availability(*)
       `)
@@ -109,9 +109,50 @@ export class CatalogService {
 
     if (!profiles) return [];
 
+    // Fetch media from media_processing table for each profile
+    const profilesWithMedia = await Promise.all(
+      profiles.map(async (profile) => {
+        // Try new media_processing table first
+        const { data: processedMedia } = await supabase
+          .from("media_processing")
+          .select("*")
+          .eq("profile_id", profile.id)
+          .eq("status", "ready")
+          .order("sort_order", { ascending: true });
+
+        // Fallback to old media table if no processed media
+        let media = processedMedia || [];
+        if (media.length === 0) {
+          const { data: oldMedia } = await supabase
+            .from("media")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .eq("type", "photo")
+            .order("created_at", { ascending: true });
+          
+          // Transform old media format to new format
+          media = (oldMedia || []).map((m: any) => ({
+            ...m,
+            type: "image", // Convert "photo" to "image"
+            status: "ready",
+            variants: {
+              thumb_240: {
+                url: m.public_url
+              }
+            }
+          }));
+        }
+
+        return {
+          ...profile,
+          media,
+        };
+      })
+    );
+
     // Filter profiles that have at least one photo
-    const profilesWithPhotos = profiles.filter(p => 
-      p.media && p.media.some((m: any) => m.type === "photo")
+    const profilesWithPhotos = profilesWithMedia.filter(p => 
+      p.media && p.media.some((m: any) => m.type === "image")
     ).map(p => {
       // Verification will be added later when the verification system is implemented
       return {
@@ -155,7 +196,6 @@ export class CatalogService {
       .from("profiles")
       .select(`
         *, 
-        media(*),
         external_links(*),
         availability(*)
       `)
@@ -187,9 +227,50 @@ export class CatalogService {
 
     if (!profiles) return [];
 
+    // Fetch media from media_processing table for each profile
+    const profilesWithMedia = await Promise.all(
+      profiles.map(async (profile) => {
+        // Try new media_processing table first
+        const { data: processedMedia } = await supabase
+          .from("media_processing")
+          .select("*")
+          .eq("profile_id", profile.id)
+          .eq("status", "ready")
+          .order("sort_order", { ascending: true });
+
+        // Fallback to old media table if no processed media
+        let media = processedMedia || [];
+        if (media.length === 0) {
+          const { data: oldMedia } = await supabase
+            .from("media")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .eq("type", "photo")
+            .order("created_at", { ascending: true });
+          
+          // Transform old media format to new format
+          media = (oldMedia || []).map((m: any) => ({
+            ...m,
+            type: "image", // Convert "photo" to "image"
+            status: "ready",
+            variants: {
+              thumb_240: {
+                url: m.public_url
+              }
+            }
+          }));
+        }
+
+        return {
+          ...profile,
+          media,
+        };
+      })
+    );
+
     // Filter profiles that have at least one photo
-    return profiles.filter(p => 
-      p.media && p.media.some((m: any) => m.type === "photo")
+    return profilesWithMedia.filter(p => 
+      p.media && p.media.some((m: any) => m.type === "image")
     ).map(p => {
       // Verification will be added later when the verification system is implemented
       return {
@@ -222,9 +303,14 @@ export class CatalogService {
       query = query.filter("service_categories", "cs", `["${filters.service}"]`);
     }
 
-    // City filter
+    // City/State filter - prioritize address_state over city (Estado Base)
+    // This matches profiles where either:
+    // 1. address_state matches the filter (complete address)
+    // 2. address_state is null/empty AND city matches the filter (Estado Base fallback)
     if (filters.city) {
-      query = query.eq("city", filters.city);
+      query = query.or(
+        `address_state.eq.${filters.city},and(address_state.is.null,city.eq.${filters.city}),and(address_state.eq.,city.eq.${filters.city})`
+      );
     }
 
     // Region filter

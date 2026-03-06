@@ -19,7 +19,7 @@ export interface MediaView {
   media_id: string;
   thumbnail_url: string;
   filename: string;
-  media_type: 'photo' | 'video';
+  media_type: 'image' | 'video';
   view_count: number;
 }
 

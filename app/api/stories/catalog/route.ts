@@ -83,21 +83,48 @@ export async function GET(request: NextRequest) {
     // Get profile IDs to fetch cover photos
     const profileIds = profiles?.map(p => p.id) || [];
 
-    // Fetch cover photos for these profiles
-    const { data: coverPhotos, error: coverPhotosError } = await supabase
-      .from('media')
-      .select('profile_id, public_url')
+    // Fetch cover photos from media_processing table first
+    const { data: processedCoverPhotos, error: processedError } = await supabase
+      .from('media_processing')
+      .select('profile_id, variants')
       .in('profile_id', profileIds)
-      .eq('type', 'photo')
-      .eq('is_cover', true);
+      .eq('type', 'image')
+      .eq('is_cover', true)
+      .eq('status', 'ready');
 
-    if (coverPhotosError) {
-      console.error('Error fetching cover photos:', coverPhotosError);
+    // Fallback to old media table if no processed cover photos
+    let coverPhotos = processedCoverPhotos || [];
+    if (coverPhotos.length === 0) {
+      const { data: oldCoverPhotos } = await supabase
+        .from('media')
+        .select('profile_id, public_url')
+        .in('profile_id', profileIds)
+        .eq('type', 'photo')
+        .eq('is_cover', true);
+      
+      // Transform old format to new format
+      coverPhotos = (oldCoverPhotos || []).map(m => ({
+        profile_id: m.profile_id,
+        variants: {
+          thumb_240: {
+            url: m.public_url
+          }
+        }
+      }));
     }
 
-    // Create maps
+    if (processedError) {
+      console.error('Error fetching cover photos:', processedError);
+    }
+
+    // Create maps - extract thumb_240 URL from variants
     const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-    const coverPhotoMap = new Map(coverPhotos?.map(m => [m.profile_id, m.public_url]) || []);
+    const coverPhotoMap = new Map(
+      coverPhotos?.map(m => [
+        m.profile_id, 
+        m.variants?.thumb_240?.url || null
+      ]) || []
+    );
 
     // Transform data to include profile info - only include stories from filtered profiles
     const transformedStories = stories
