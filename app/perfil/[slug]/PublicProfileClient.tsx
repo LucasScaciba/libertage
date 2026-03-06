@@ -531,8 +531,8 @@ export default function PublicProfileClient({ slug }: PublicProfileClientProps) 
                       <>
                         {/* Map */}
                         <ApproximateLocationMap
-                          cep={locationData.cep}
-                          street={locationData.street}
+                          cep={locationData.cep ?? undefined}
+                          street={locationData.street ?? undefined}
                           neighborhood={locationData.neighborhood}
                           city={locationData.city}
                           state={locationData.state}
