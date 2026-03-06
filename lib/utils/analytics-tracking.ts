@@ -8,9 +8,11 @@
 /**
  * Track media view event when a user opens media in the lightbox
  * @param mediaId - The ID of the media item being viewed
- * @param profileId - The ID of the profile being viewed
+ * @param profileId - The ID of the profile being viewed (optional)
  */
-export async function trackMediaView(mediaId: string, profileId: string): Promise<void> {
+export async function trackMediaView(mediaId: string, profileId?: string): Promise<void> {
+  if (!profileId) return; // Skip if no profileId provided
+  
   try {
     await fetch('/api/analytics/track-media-view', {
       method: 'POST',
